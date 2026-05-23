@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { extractApiError } from '@/shared/api/axios'
 import { registerSchema, type RegisterSchema } from '../schemas'
 import { useRegister } from '../hooks/useRegister'
@@ -16,16 +17,22 @@ export function RegisterForm() {
 
   const form = useForm<RegisterSchema>({
     resolver: zodResolver(registerSchema),
-    defaultValues: { fullName: '', email: '', password: '', confirmPassword: '' },
+    defaultValues: { fullName: '', role: 'SUBSCRIBER', email: '', password: '', confirmPassword: '' },
   })
 
   function onSubmit(values: RegisterSchema) {
     register(
-      { fullName: values.fullName, email: values.email, password: values.password },
       {
-        onSuccess: () => {
+        fullName: values.fullName,
+        email: values.email,
+        password: values.password,
+        role: values.role,
+      },
+      {
+        onSuccess: (data) => {
           toast.success('Аккаунт создан!')
-          void navigate('/catalog', { replace: true })
+          const dest = data.user.role === 'AUTHOR' ? '/studio' : '/catalog'
+          void navigate(dest, { replace: true })
         },
         onError: (err) => {
           const apiErr = extractApiError(err)
@@ -57,6 +64,28 @@ export function RegisterForm() {
                   <FormControl>
                     <Input placeholder="Иван Иванов" {...field} />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="role"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Роль</FormLabel>
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <FormControl>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Выберите роль" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="SUBSCRIBER">Студент (подписчик)</SelectItem>
+                      <SelectItem value="AUTHOR">Автор курсов</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}

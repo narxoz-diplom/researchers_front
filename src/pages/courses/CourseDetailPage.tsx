@@ -1,28 +1,36 @@
+import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, BookOpen, Lock } from 'lucide-react'
 import { format } from 'date-fns'
 import { ru } from 'date-fns/locale'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Textarea } from '@/components/ui/textarea'
 import { ErrorState } from '@/shared/ui/ErrorState'
 import { StatusBadge } from '@/shared/ui/StatusBadge'
 import { api } from '@/shared/api/axios'
 import { API } from '@/shared/api/endpoints'
 import { useAuthStore } from '@/features/auth/store/auth.store'
-import type { Course, Lesson } from '@/shared/types'
+import { formatPriceCents } from '@/lib/format-price'
+import type { Course, LessonSummary, MyEnrollment } from '@/shared/types'
 
 interface CourseDetail extends Course {
-  lessons: Lesson[]
+  hasAccess: boolean
+  myEnrollment?: MyEnrollment | null
+  lessons: LessonSummary[]
 }
 
 export function CourseDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const user = useAuthStore((s) => s.user)
+  const qc = useQueryClient()
+  const [requestMessage, setRequestMessage] = useState('')
 
   const { data: course, isLoading, isError, refetch } = useQuery({
     queryKey: ['course', id],
@@ -30,11 +38,26 @@ export function CourseDetailPage() {
     enabled: !!id,
   })
 
-  const { data: lessons } = useQuery({
-    queryKey: ['lessons', id],
-    queryFn: () =>
-      api.get<Lesson[]>(API.lessons.byCourse(id!)).then((r) => r.data),
-    enabled: !!id,
+  const { mutate: requestEnrollment, isPending: requesting } = useMutation({
+    mutationFn: () =>
+      api.post<MyEnrollment>(API.courses.enrollmentRequest(id!), {
+        message: requestMessage.trim() || undefined,
+      }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['course', id] })
+      toast.success('Заявка отправлена автору')
+      setRequestMessage('')
+    },
+    onError: () => toast.error('Не удалось отправить заявку'),
+  })
+
+  const { mutate: purchaseEnrollment, isPending: purchasing } = useMutation({
+    mutationFn: () => api.post<MyEnrollment>(API.courses.enrollmentPurchase(id!)),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['course', id] })
+      toast.success('Оплата принята. Ожидайте подтверждения автора')
+    },
+    onError: () => toast.error('Сначала подайте заявку на курс'),
   })
 
   if (isLoading) return <CourseDetailSkeleton />
@@ -42,10 +65,13 @@ export function CourseDetailPage() {
   if (!course) return null
 
   const isOwner = user?.id === course.author.id || user?.role === 'ADMIN'
+  const isSubscriber = user?.role === 'SUBSCRIBER'
+  const lessons = course.lessons
+  const firstLessonId = lessons[0]?.id
+  const enrollment = course.myEnrollment
 
   return (
     <div className="pb-12">
-      {/* Back button */}
       <Button
         variant="ghost"
         size="sm"
@@ -56,9 +82,7 @@ export function CourseDetailPage() {
         Каталог
       </Button>
 
-      {/* Hero */}
       <div className="grid gap-8 lg:grid-cols-5">
-        {/* Cover */}
         <div className="relative lg:col-span-2">
           <div className="relative aspect-video overflow-hidden rounded-2xl bg-muted">
             {course.coverUrl ? (
@@ -76,11 +100,9 @@ export function CourseDetailPage() {
           </div>
         </div>
 
-        {/* Info */}
         <div className="flex flex-col gap-4 lg:col-span-3">
           <h1 className="text-3xl font-semibold tracking-tight">{course.title}</h1>
 
-          {/* Author */}
           <div className="flex items-center gap-2">
             <Avatar className="h-7 w-7">
               <AvatarFallback className="text-xs bg-primary/10 text-primary">
@@ -94,28 +116,44 @@ export function CourseDetailPage() {
             <p className="text-sm text-muted-foreground leading-relaxed">{course.description}</p>
           )}
 
-          {/* Meta */}
           <div className="flex items-center gap-3 flex-wrap">
             <Badge variant="secondary" className="gap-1">
               <BookOpen className="h-3 w-3" />
               {course.lessonsCount} уроков
             </Badge>
+            <Badge variant="outline">{formatPriceCents(course.priceCents)}</Badge>
             <span className="text-xs text-muted-foreground">
               {format(new Date(course.createdAt), 'd MMMM yyyy', { locale: ru })}
             </span>
           </div>
 
-          {/* Actions */}
           {isOwner ? (
             <div className="flex gap-2 flex-wrap">
               <Button onClick={() => navigate(`/studio/courses/${course.id}`)}>
                 Редактировать
               </Button>
+              <Button variant="outline" onClick={() => navigate(`/studio/courses/${course.id}/enrollments`)}>
+                Заявки студентов
+              </Button>
             </div>
-          ) : user?.role === 'SUBSCRIBER' ? (
+          ) : isSubscriber ? (
+            <SubscriberActions
+              course={course}
+              enrollment={enrollment}
+              hasAccess={course.hasAccess}
+              firstLessonId={firstLessonId}
+              requestMessage={requestMessage}
+              onRequestMessageChange={setRequestMessage}
+              onRequest={() => requestEnrollment()}
+              onPurchase={() => purchaseEnrollment()}
+              onStart={() => navigate(`/courses/${course.id}/lessons/${firstLessonId}`)}
+              requesting={requesting}
+              purchasing={purchasing}
+            />
+          ) : course.hasAccess ? (
             <Button
-              onClick={() => navigate(`/courses/${course.id}/lessons/${(lessons ?? [])[0]?.id}`)}
-              disabled={!lessons?.length}
+              onClick={() => navigate(`/courses/${course.id}/lessons/${firstLessonId}`)}
+              disabled={!firstLessonId}
             >
               Начать обучение
             </Button>
@@ -123,7 +161,6 @@ export function CourseDetailPage() {
         </div>
       </div>
 
-      {/* Tabs */}
       <div className="mt-10">
         <Tabs defaultValue="lessons">
           <TabsList>
@@ -132,21 +169,26 @@ export function CourseDetailPage() {
           </TabsList>
 
           <TabsContent value="lessons" className="mt-4">
-            {!lessons?.length ? (
+            {!lessons.length ? (
               <p className="text-sm text-muted-foreground py-8 text-center">В курсе пока нет уроков</p>
             ) : (
               <div className="flex flex-col gap-1">
                 {lessons.map((lesson, index) => (
                   <button
                     key={lesson.id}
-                    onClick={() => navigate(`/courses/${course.id}/lessons/${lesson.id}`)}
-                    className="flex items-center gap-4 rounded-xl p-3 text-left hover:bg-muted transition-colors"
+                    type="button"
+                    onClick={() => {
+                      if (!course.hasAccess) return
+                      navigate(`/courses/${course.id}/lessons/${lesson.id}`)
+                    }}
+                    disabled={!course.hasAccess}
+                    className="flex items-center gap-4 rounded-xl p-3 text-left transition-colors enabled:hover:bg-muted disabled:cursor-not-allowed disabled:opacity-70"
                   >
                     <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground">
                       {index + 1}
                     </span>
                     <span className="flex-1 text-sm font-medium">{lesson.title}</span>
-                    {user?.role === 'SUBSCRIBER' && (
+                    {!course.hasAccess && (
                       <Lock className="h-4 w-4 text-muted-foreground" />
                     )}
                   </button>
@@ -164,6 +206,89 @@ export function CourseDetailPage() {
       </div>
     </div>
   )
+}
+
+function SubscriberActions({
+  course,
+  enrollment,
+  hasAccess,
+  firstLessonId,
+  requestMessage,
+  onRequestMessageChange,
+  onRequest,
+  onPurchase,
+  onStart,
+  requesting,
+  purchasing,
+}: {
+  course: CourseDetail
+  enrollment?: MyEnrollment | null
+  hasAccess: boolean
+  firstLessonId?: string
+  requestMessage: string
+  onRequestMessageChange: (v: string) => void
+  onRequest: () => void
+  onPurchase: () => void
+  onStart: () => void
+  requesting: boolean
+  purchasing: boolean
+}) {
+  if (hasAccess) {
+    return (
+      <Button onClick={onStart} disabled={!firstLessonId}>
+        Начать обучение
+      </Button>
+    )
+  }
+
+  if (!enrollment || enrollment.status === 'REJECTED') {
+    return (
+      <div className="flex flex-col gap-3 max-w-md">
+        <Textarea
+          placeholder="Комментарий к заявке (необязательно)"
+          value={requestMessage}
+          onChange={(e) => onRequestMessageChange(e.target.value)}
+          rows={2}
+        />
+        <Button onClick={onRequest} disabled={requesting}>
+          {requesting ? 'Отправка...' : 'Подать заявку на курс'}
+        </Button>
+        <p className="text-xs text-muted-foreground">
+          Стоимость: {formatPriceCents(course.priceCents)}. После заявки оплатите курс, затем автор выдаст доступ.
+        </p>
+      </div>
+    )
+  }
+
+  if (enrollment.status === 'PENDING') {
+    return (
+      <div className="flex flex-col gap-3 max-w-md">
+        <Badge variant="outline" className="w-fit">Заявка отправлена</Badge>
+        <Button onClick={onPurchase} disabled={purchasing}>
+          {purchasing ? 'Обработка...' : `Оплатить ${formatPriceCents(course.priceCents)}`}
+        </Button>
+        <p className="text-xs text-muted-foreground">
+          После оплаты автор увидит заявку и сможет выдать доступ к материалам.
+        </p>
+      </div>
+    )
+  }
+
+  if (enrollment.status === 'PAID') {
+    return (
+      <div className="flex flex-col gap-2 max-w-md">
+        <Badge variant="outline" className="w-fit gap-1.5 border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-400">
+          <Lock className="h-3.5 w-3.5" />
+          Оплачено — ожидает подтверждения автора
+        </Badge>
+        <p className="text-xs text-muted-foreground">
+          Автор курса получил уведомление. Доступ откроется после подтверждения.
+        </p>
+      </div>
+    )
+  }
+
+  return null
 }
 
 function CourseDetailSkeleton() {

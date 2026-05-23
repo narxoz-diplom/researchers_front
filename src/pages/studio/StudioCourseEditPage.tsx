@@ -21,6 +21,7 @@ interface CourseForm {
   title: string
   description: string
   coverUrl: string
+  priceRub: string
 }
 
 export function StudioCourseEditPage() {
@@ -41,7 +42,7 @@ export function StudioCourseEditPage() {
   })
 
   const { register, handleSubmit, reset, watch } = useForm<CourseForm>({
-    defaultValues: { title: '', description: '', coverUrl: '' },
+    defaultValues: { title: '', description: '', coverUrl: '', priceRub: '' },
   })
 
   useEffect(() => {
@@ -50,6 +51,7 @@ export function StudioCourseEditPage() {
         title: course.title,
         description: course.description ?? '',
         coverUrl: course.coverUrl ?? '',
+        priceRub: String((course.priceCents ?? 0) / 100),
       })
     }
   }, [course, reset])
@@ -57,12 +59,16 @@ export function StudioCourseEditPage() {
   const coverPreview = watch('coverUrl')
 
   const { mutate: updateCourse, isPending: saving } = useMutation({
-    mutationFn: (data: CourseForm) =>
-      api.patch(API.courses.update(id!), {
+    mutationFn: (data: CourseForm) => {
+      const priceRub = Number.parseFloat(data.priceRub.replace(',', '.'))
+      const priceCents = Number.isFinite(priceRub) ? Math.round(priceRub * 100) : 0
+      return api.patch(API.courses.update(id!), {
         title: data.title,
         description: data.description,
         coverUrl: data.coverUrl.trim() || null,
-      }),
+        priceCents,
+      })
+    },
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['course', id] })
       void qc.invalidateQueries({ queryKey: ['courses', 'mine'] })
@@ -130,6 +136,18 @@ export function StudioCourseEditPage() {
             </div>
 
             <div>
+              <Label>Цена (₽)</Label>
+              <Input
+                {...register('priceRub')}
+                className="mt-1"
+                type="number"
+                min={0}
+                step="0.01"
+                placeholder="4990"
+              />
+            </div>
+
+            <div>
               <Label>Обложка (URL)</Label>
               <Input
                 {...register('coverUrl')}
@@ -184,12 +202,21 @@ export function StudioCourseEditPage() {
 
         {/* Right — lessons list */}
         <div className="lg:col-span-2">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-4 gap-2 flex-wrap">
             <h2 className="text-lg font-semibold">Уроки</h2>
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => navigate(`/studio/courses/${id}/enrollments`)}
+              >
+                Заявки студентов
+              </Button>
             <Button size="sm" onClick={() => createLesson()} disabled={creatingLesson}>
               <Plus className="mr-2 h-4 w-4" />
               Добавить урок
             </Button>
+            </div>
           </div>
 
           {lessonsLoading ? (

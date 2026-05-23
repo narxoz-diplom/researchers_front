@@ -6,6 +6,28 @@ export type CourseStatus = 'DRAFT' | 'PUBLISHED' | 'ARCHIVED'
 
 export type SubscriptionStatus = 'ACTIVE' | 'EXPIRED' | 'REVOKED'
 
+export type CourseEnrollmentStatus = 'PENDING' | 'PAID' | 'APPROVED' | 'REJECTED'
+
+export interface MyEnrollment {
+  id: string
+  status: CourseEnrollmentStatus
+  message?: string
+  paidAt?: string
+  approvedAt?: string
+}
+
+export interface CourseEnrollment {
+  id: string
+  courseId: string
+  userId: string
+  status: CourseEnrollmentStatus
+  message?: string
+  paidAt?: string
+  approvedAt?: string
+  createdAt: string
+  user?: Pick<User, 'id' | 'email' | 'fullName'>
+}
+
 export interface Meta {
   total: number
   page: number
@@ -34,6 +56,7 @@ export interface Course {
   title: string
   description: string
   coverUrl?: string
+  priceCents: number
   status: CourseStatus
   author: { id: string; fullName: string; avatarUrl?: string }
   lessonsCount: number

@@ -11,6 +11,7 @@ export interface RegisterPayload {
   email: string
   password: string
   fullName: string
+  role: 'SUBSCRIBER' | 'AUTHOR'
 }
 
 export interface AuthResponse {

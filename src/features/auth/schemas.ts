@@ -8,6 +8,7 @@ export const loginSchema = z.object({
 export const registerSchema = z
   .object({
     fullName: z.string().min(2, 'Имя должно содержать не менее 2 символов'),
+    role: z.enum(['SUBSCRIBER', 'AUTHOR']),
     email: z.string().email('Некорректный email'),
     password: z
       .string()

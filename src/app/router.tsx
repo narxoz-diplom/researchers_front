@@ -13,6 +13,7 @@ const LessonPlayerPage = lazy(() => import('@/pages/courses/LessonPlayerPage').t
 const StudioCoursesPage = lazy(() => import('@/pages/studio/StudioCoursesPage').then((m) => ({ default: m.StudioCoursesPage })))
 const StudioCourseEditPage = lazy(() => import('@/pages/studio/StudioCourseEditPage').then((m) => ({ default: m.StudioCourseEditPage })))
 const StudioLessonEditPage = lazy(() => import('@/pages/studio/StudioLessonEditPage').then((m) => ({ default: m.StudioLessonEditPage })))
+const StudioEnrollmentsPage = lazy(() => import('@/pages/studio/StudioEnrollmentsPage').then((m) => ({ default: m.StudioEnrollmentsPage })))
 const AdminUsersPage = lazy(() => import('@/pages/admin/AdminUsersPage').then((m) => ({ default: m.AdminUsersPage })))
 const AdminSubscriptionsPage = lazy(() => import('@/pages/admin/AdminSubscriptionsPage').then((m) => ({ default: m.AdminSubscriptionsPage })))
 const ProfilePage = lazy(() => import('@/pages/profile/ProfilePage').then((m) => ({ default: m.ProfilePage })))
@@ -53,6 +54,7 @@ export const router = createBrowserRouter([
             children: [
               { path: 'studio', element: <Lazy><StudioCoursesPage /></Lazy> },
               { path: 'studio/courses/:id', element: <Lazy><StudioCourseEditPage /></Lazy> },
+              { path: 'studio/courses/:id/enrollments', element: <Lazy><StudioEnrollmentsPage /></Lazy> },
               { path: 'studio/courses/:id/lessons/:lessonId', element: <Lazy><StudioLessonEditPage /></Lazy> },
             ],
           },

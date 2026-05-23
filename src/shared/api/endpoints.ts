@@ -22,6 +22,13 @@ export const API = {
     publish: (id: string) => `/courses/${id}/publish`,
     archive: (id: string) => `/courses/${id}/archive`,
     delete: (id: string) => `/courses/${id}`,
+    enrollments: (courseId: string) => `/courses/${courseId}/enrollments`,
+    enrollmentRequest: (courseId: string) => `/courses/${courseId}/enrollments/request`,
+    enrollmentPurchase: (courseId: string) => `/courses/${courseId}/enrollments/purchase`,
+    enrollmentApprove: (courseId: string, enrollmentId: string) =>
+      `/courses/${courseId}/enrollments/${enrollmentId}/approve`,
+    enrollmentReject: (courseId: string, enrollmentId: string) =>
+      `/courses/${courseId}/enrollments/${enrollmentId}/reject`,
   },
   lessons: {
     byCourse: (cid: string) => `/courses/${cid}/lessons`,
