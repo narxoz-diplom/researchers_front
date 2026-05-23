@@ -23,6 +23,7 @@ export const API = {
     update: (id: string) => `/courses/${id}`,
     publish: (id: string) => `/courses/${id}/publish`,
     archive: (id: string) => `/courses/${id}/archive`,
+    draft: (id: string) => `/courses/${id}/draft`,
     delete: (id: string) => `/courses/${id}`,
     enrollments: (courseId: string) => `/courses/${courseId}/enrollments`,
     enrollmentRequest: (courseId: string) => `/courses/${courseId}/enrollments/request`,

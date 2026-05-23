@@ -12,6 +12,7 @@ import { ErrorState } from '@/shared/ui/ErrorState'
 import { api, extractApiError } from '@/shared/api/axios'
 import { API } from '@/shared/api/endpoints'
 import { useAuthStore } from '@/features/auth/store/auth.store'
+import { downloadMaterialFile } from '@/lib/cloudinary-download'
 import type { Lesson } from '@/shared/types'
 
 interface CourseProgress {
@@ -185,15 +186,16 @@ export function LessonPlayerPage() {
                       {(Number(m.sizeBytes) / 1024 / 1024).toFixed(2)} {t('common.mb')}
                     </p>
                   </div>
-                  <a
-                    href={m.url}
-                    download
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 shrink-0 text-muted-foreground"
+                    title={t('common.download')}
+                    onClick={() => downloadMaterialFile(m.url, m.title)}
                   >
                     <Download className="h-4 w-4" />
-                  </a>
+                  </Button>
                 </div>
               ))}
             </div>

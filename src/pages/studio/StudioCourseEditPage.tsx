@@ -14,6 +14,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Separator } from '@/components/ui/separator'
 import { PageHeader } from '@/shared/ui/PageHeader'
 import { ErrorState } from '@/shared/ui/ErrorState'
+import { MediaUploader } from '@/shared/ui/MediaUploader'
 import { api } from '@/shared/api/axios'
 import { API } from '@/shared/api/endpoints'
 import type { Course, Lesson } from '@/shared/types'
@@ -22,7 +23,7 @@ interface CourseForm {
   title: string
   description: string
   coverUrl: string
-  priceRub: string
+  priceAmount: string
 }
 
 export function StudioCourseEditPage() {
@@ -43,8 +44,8 @@ export function StudioCourseEditPage() {
     enabled: !!id,
   })
 
-  const { register, handleSubmit, reset, watch } = useForm<CourseForm>({
-    defaultValues: { title: '', description: '', coverUrl: '', priceRub: '' },
+  const { register, handleSubmit, reset, watch, setValue } = useForm<CourseForm>({
+    defaultValues: { title: '', description: '', coverUrl: '', priceAmount: '' },
   })
 
   useEffect(() => {
@@ -53,7 +54,7 @@ export function StudioCourseEditPage() {
         title: course.title,
         description: course.description ?? '',
         coverUrl: course.coverUrl ?? '',
-        priceRub: String((course.priceCents ?? 0) / 100),
+        priceAmount: String((course.priceCents ?? 0) / 100),
       })
     }
   }, [course, reset])
@@ -62,8 +63,8 @@ export function StudioCourseEditPage() {
 
   const { mutate: updateCourse, isPending: saving } = useMutation({
     mutationFn: (data: CourseForm) => {
-      const priceRub = Number.parseFloat(data.priceRub.replace(',', '.'))
-      const priceCents = Number.isFinite(priceRub) ? Math.round(priceRub * 100) : 0
+      const priceAmount = Number.parseFloat(data.priceAmount.replace(',', '.'))
+      const priceCents = Number.isFinite(priceAmount) ? Math.round(priceAmount * 100) : 0
       return api.patch(API.courses.update(id!), {
         title: data.title,
         description: data.description,
@@ -80,8 +81,15 @@ export function StudioCourseEditPage() {
   })
 
   const { mutate: changeStatus } = useMutation({
-    mutationFn: (action: 'publish' | 'archive') =>
-      api.post(action === 'publish' ? API.courses.publish(id!) : API.courses.archive(id!)),
+    mutationFn: (action: 'publish' | 'archive' | 'draft') => {
+      const url =
+        action === 'publish'
+          ? API.courses.publish(id!)
+          : action === 'archive'
+            ? API.courses.archive(id!)
+            : API.courses.draft(id!)
+      return api.post(url)
+    },
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['course', id] })
       toast.success(t('studio.statusUpdated'))
@@ -139,23 +147,32 @@ export function StudioCourseEditPage() {
             <div>
               <Label>{t('common.price')}</Label>
               <Input
-                {...register('priceRub')}
+                {...register('priceAmount')}
                 className="mt-1"
                 type="number"
                 min={0}
-                step="0.01"
+                step="1"
                 placeholder="4990"
               />
             </div>
 
             <div>
-              <Label>{t('common.coverUrl')}</Label>
-              <Input
-                {...register('coverUrl')}
-                className="mt-1"
-                placeholder="https://example.com/cover.jpg"
-                type="url"
-              />
+              <Label>{t('common.cover')}</Label>
+              <input type="hidden" {...register('coverUrl')} />
+              <div className="mt-2">
+                <MediaUploader
+                  resourceType="image"
+                  folder={`courses/${id}/cover`}
+                  accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
+                  maxSizeMb={5}
+                  label={t('common.uploadCover')}
+                  hint={t('common.coverHint')}
+                  onUploaded={(result) => {
+                    setValue('coverUrl', result.secure_url, { shouldDirty: true })
+                    toast.success(t('studio.coverUploaded'))
+                  }}
+                />
+              </div>
               <div className="mt-2 aspect-video overflow-hidden rounded-xl border bg-muted">
                 {coverPreview ? (
                   <img
@@ -178,12 +195,15 @@ export function StudioCourseEditPage() {
               <Label>{t('common.status')}</Label>
               <Select
                 value={course.status}
-                onValueChange={(v) =>
-                  changeStatus(v === 'PUBLISHED' ? 'publish' : 'archive')
-                }
+                onValueChange={(v) => {
+                  if (v === course.status) return
+                  if (v === 'PUBLISHED') changeStatus('publish')
+                  else if (v === 'ARCHIVED') changeStatus('archive')
+                  else if (v === 'DRAFT') changeStatus('draft')
+                }}
               >
-                <SelectTrigger className="mt-1">
-                  <SelectValue />
+                <SelectTrigger className="mt-1 w-full">
+                  <SelectValue>{t(`statuses.${course.status}`)}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="DRAFT">{t('statuses.DRAFT')}</SelectItem>
