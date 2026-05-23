@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, BookOpen, Lock } from 'lucide-react'
 import { format } from 'date-fns'
-import { ru } from 'date-fns/locale'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -17,6 +17,7 @@ import { api } from '@/shared/api/axios'
 import { API } from '@/shared/api/endpoints'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import { formatPriceCents } from '@/lib/format-price'
+import { getDateLocale } from '@/lib/date-locale'
 import type { Course, LessonSummary, MyEnrollment } from '@/shared/types'
 
 interface CourseDetail extends Course {
@@ -26,6 +27,7 @@ interface CourseDetail extends Course {
 }
 
 export function CourseDetailPage() {
+  const { t, i18n } = useTranslation()
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const user = useAuthStore((s) => s.user)
@@ -45,19 +47,19 @@ export function CourseDetailPage() {
       }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['course', id] })
-      toast.success('Заявка отправлена автору')
+      toast.success(t('course.enrollmentSent'))
       setRequestMessage('')
     },
-    onError: () => toast.error('Не удалось отправить заявку'),
+    onError: () => toast.error(t('course.enrollmentFailed')),
   })
 
   const { mutate: purchaseEnrollment, isPending: purchasing } = useMutation({
     mutationFn: () => api.post<MyEnrollment>(API.courses.enrollmentPurchase(id!)),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['course', id] })
-      toast.success('Оплата принята. Ожидайте подтверждения автора')
+      toast.success(t('course.paymentAccepted'))
     },
-    onError: () => toast.error('Сначала подайте заявку на курс'),
+    onError: () => toast.error(t('course.submitRequestFirst')),
   })
 
   if (isLoading) return <CourseDetailSkeleton />
@@ -69,6 +71,7 @@ export function CourseDetailPage() {
   const lessons = course.lessons
   const firstLessonId = lessons[0]?.id
   const enrollment = course.myEnrollment
+  const dateLocale = getDateLocale(i18n.language)
 
   return (
     <div className="pb-12">
@@ -79,7 +82,7 @@ export function CourseDetailPage() {
         onClick={() => navigate('/catalog')}
       >
         <ArrowLeft className="h-4 w-4" />
-        Каталог
+        {t('common.catalog')}
       </Button>
 
       <div className="grid gap-8 lg:grid-cols-5">
@@ -119,21 +122,21 @@ export function CourseDetailPage() {
           <div className="flex items-center gap-3 flex-wrap">
             <Badge variant="secondary" className="gap-1">
               <BookOpen className="h-3 w-3" />
-              {course.lessonsCount} уроков
+              {t('common.lessonsCount', { count: course.lessonsCount })}
             </Badge>
-            <Badge variant="outline">{formatPriceCents(course.priceCents)}</Badge>
+            <Badge variant="outline">{formatPriceCents(course.priceCents, i18n.language)}</Badge>
             <span className="text-xs text-muted-foreground">
-              {format(new Date(course.createdAt), 'd MMMM yyyy', { locale: ru })}
+              {format(new Date(course.createdAt), 'd MMMM yyyy', { locale: dateLocale })}
             </span>
           </div>
 
           {isOwner ? (
             <div className="flex gap-2 flex-wrap">
               <Button onClick={() => navigate(`/studio/courses/${course.id}`)}>
-                Редактировать
+                {t('common.edit')}
               </Button>
               <Button variant="outline" onClick={() => navigate(`/studio/courses/${course.id}/enrollments`)}>
-                Заявки студентов
+                {t('common.studentEnrollments')}
               </Button>
             </div>
           ) : isSubscriber ? (
@@ -155,7 +158,7 @@ export function CourseDetailPage() {
               onClick={() => navigate(`/courses/${course.id}/lessons/${firstLessonId}`)}
               disabled={!firstLessonId}
             >
-              Начать обучение
+              {t('common.startLearning')}
             </Button>
           ) : null}
         </div>
@@ -164,13 +167,13 @@ export function CourseDetailPage() {
       <div className="mt-10">
         <Tabs defaultValue="lessons">
           <TabsList>
-            <TabsTrigger value="lessons">Уроки</TabsTrigger>
-            <TabsTrigger value="overview">Обзор</TabsTrigger>
+            <TabsTrigger value="lessons">{t('common.lessons')}</TabsTrigger>
+            <TabsTrigger value="overview">{t('common.overview')}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="lessons" className="mt-4">
             {!lessons.length ? (
-              <p className="text-sm text-muted-foreground py-8 text-center">В курсе пока нет уроков</p>
+              <p className="text-sm text-muted-foreground py-8 text-center">{t('common.noLessonsInCourse')}</p>
             ) : (
               <div className="flex flex-col gap-1">
                 {lessons.map((lesson, index) => (
@@ -199,7 +202,7 @@ export function CourseDetailPage() {
 
           <TabsContent value="overview" className="mt-4">
             <p className="text-sm text-muted-foreground">
-              {course.description ?? 'Описание не добавлено.'}
+              {course.description ?? t('common.noDescription')}
             </p>
           </TabsContent>
         </Tabs>
@@ -233,10 +236,13 @@ function SubscriberActions({
   requesting: boolean
   purchasing: boolean
 }) {
+  const { t, i18n } = useTranslation()
+  const price = formatPriceCents(course.priceCents, i18n.language)
+
   if (hasAccess) {
     return (
       <Button onClick={onStart} disabled={!firstLessonId}>
-        Начать обучение
+        {t('common.startLearning')}
       </Button>
     )
   }
@@ -245,16 +251,16 @@ function SubscriberActions({
     return (
       <div className="flex flex-col gap-3 max-w-md">
         <Textarea
-          placeholder="Комментарий к заявке (необязательно)"
+          placeholder={t('common.enrollmentComment')}
           value={requestMessage}
           onChange={(e) => onRequestMessageChange(e.target.value)}
           rows={2}
         />
         <Button onClick={onRequest} disabled={requesting}>
-          {requesting ? 'Отправка...' : 'Подать заявку на курс'}
+          {requesting ? t('common.sending') : t('common.requestCourse')}
         </Button>
         <p className="text-xs text-muted-foreground">
-          Стоимость: {formatPriceCents(course.priceCents)}. После заявки оплатите курс, затем автор выдаст доступ.
+          {t('common.cost', { price })}. {t('common.requestCourseHint')}
         </p>
       </div>
     )
@@ -263,13 +269,11 @@ function SubscriberActions({
   if (enrollment.status === 'PENDING') {
     return (
       <div className="flex flex-col gap-3 max-w-md">
-        <Badge variant="outline" className="w-fit">Заявка отправлена</Badge>
+        <Badge variant="outline" className="w-fit">{t('common.requestSent')}</Badge>
         <Button onClick={onPurchase} disabled={purchasing}>
-          {purchasing ? 'Обработка...' : `Оплатить ${formatPriceCents(course.priceCents)}`}
+          {purchasing ? t('common.processing') : t('common.pay', { price })}
         </Button>
-        <p className="text-xs text-muted-foreground">
-          После оплаты автор увидит заявку и сможет выдать доступ к материалам.
-        </p>
+        <p className="text-xs text-muted-foreground">{t('common.afterPaymentHint')}</p>
       </div>
     )
   }
@@ -279,11 +283,9 @@ function SubscriberActions({
       <div className="flex flex-col gap-2 max-w-md">
         <Badge variant="outline" className="w-fit gap-1.5 border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-400">
           <Lock className="h-3.5 w-3.5" />
-          Оплачено — ожидает подтверждения автора
+          {t('common.paidAwaitingAuthor')}
         </Badge>
-        <p className="text-xs text-muted-foreground">
-          Автор курса получил уведомление. Доступ откроется после подтверждения.
-        </p>
+        <p className="text-xs text-muted-foreground">{t('common.authorWillConfirm')}</p>
       </div>
     )
   }

@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import { Upload } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
@@ -30,6 +31,7 @@ export function MediaUploader({
   disabled,
   onUploaded,
 }: Props) {
+  const { t } = useTranslation()
   const inputRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
   const [progress, setProgress] = useState(0)
@@ -38,7 +40,7 @@ export function MediaUploader({
   async function processFile(file: File) {
     const maxBytes = maxSizeMb * 1024 * 1024
     if (file.size > maxBytes) {
-      toast.error(`Файл слишком большой. Максимум ${maxSizeMb} МБ`)
+      toast.error(t('media.fileTooLarge', { max: maxSizeMb }))
       return
     }
 
@@ -56,9 +58,9 @@ export function MediaUploader({
         status === 503 ||
         apiErr?.message?.toLowerCase().includes('cloudinary')
       ) {
-        toast.error('Cloudinary не настроен. Заполните CLOUDINARY_* в .env бэкенда')
+        toast.error(t('media.cloudinaryNotConfigured'))
       } else {
-        toast.error('Не удалось загрузить файл')
+        toast.error(t('media.uploadFailed'))
       }
     } finally {
       setUploading(false)
@@ -105,7 +107,7 @@ export function MediaUploader({
 
       {uploading ? (
         <div className="flex flex-col gap-2 py-2">
-          <p className="text-sm text-muted-foreground">Загрузка… {progress}%</p>
+          <p className="text-sm text-muted-foreground">{t('common.uploading', { progress })}</p>
           <Progress value={progress} className="h-2" />
         </div>
       ) : (
@@ -117,7 +119,7 @@ export function MediaUploader({
             {label}
           </Button>
           {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
-          <p className="text-xs text-muted-foreground">или перетащите файл сюда</p>
+          <p className="text-xs text-muted-foreground">{t('common.orDragFile')}</p>
         </div>
       )}
     </div>

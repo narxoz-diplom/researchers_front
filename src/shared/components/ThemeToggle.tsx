@@ -1,15 +1,17 @@
 import { Moon, Sun } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { useTheme } from '@/app/providers/ThemeProvider'
 
 export function ThemeToggle() {
+  const { t } = useTranslation()
   const { resolvedTheme, setTheme } = useTheme()
 
   return (
     <Button
       variant="ghost"
       size="icon"
-      aria-label="Переключить тему"
+      aria-label={t('common.themeToggle')}
       onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
     >
       {resolvedTheme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}

@@ -1,4 +1,5 @@
 import { BookOpen, Clock } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
@@ -10,6 +11,8 @@ interface Props {
 }
 
 export function CourseCard({ course, onClick }: Props) {
+  const { t } = useTranslation()
+
   return (
     <article
       role="button"
@@ -22,7 +25,6 @@ export function CourseCard({ course, onClick }: Props) {
         'hover:shadow-md hover:scale-[1.01] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50',
       )}
     >
-      {/* Cover */}
       <div className="relative aspect-video overflow-hidden bg-muted">
         {course.coverUrl ? (
           <img
@@ -38,13 +40,11 @@ export function CourseCard({ course, onClick }: Props) {
         <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
       </div>
 
-      {/* Content */}
       <div className="flex flex-1 flex-col gap-3 p-4">
         <h3 className="line-clamp-2 text-sm font-semibold leading-tight text-card-foreground">
           {course.title}
         </h3>
 
-        {/* Author */}
         <div className="flex items-center gap-2">
           <Avatar className="h-6 w-6">
             <AvatarFallback className="text-xs bg-primary/10 text-primary">
@@ -54,15 +54,14 @@ export function CourseCard({ course, onClick }: Props) {
           <span className="text-xs text-muted-foreground truncate">{course.author.fullName}</span>
         </div>
 
-        {/* Meta */}
         <div className="mt-auto flex items-center gap-3">
           <Badge variant="secondary" className="text-xs gap-1">
             <BookOpen className="h-3 w-3" />
-            {course.lessonsCount} уроков
+            {t('common.lessonsCount', { count: course.lessonsCount })}
           </Badge>
           <div className="flex items-center gap-1 text-xs text-muted-foreground">
             <Clock className="h-3 w-3" />
-            <span>Курс</span>
+            <span>{t('course.cardLabel')}</span>
           </div>
         </div>
       </div>

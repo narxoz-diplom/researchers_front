@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link, NavLink, Outlet } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import {
   BookOpen,
   LayoutDashboard,
@@ -13,25 +14,27 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import { ThemeToggle } from './ThemeToggle'
+import { LanguageToggle } from './LanguageToggle'
 import { UserMenu } from './UserMenu'
 import type { Role } from '@/shared/types'
 
 interface NavItem {
   href: string
-  label: string
+  labelKey: 'nav.catalog' | 'nav.studio' | 'nav.users' | 'nav.subscriptions' | 'nav.profile'
   icon: React.ReactNode
   roles: Role[]
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { href: '/catalog', label: 'Каталог', icon: <BookOpen className="h-4 w-4" />, roles: ['SUBSCRIBER', 'AUTHOR', 'ADMIN'] },
-  { href: '/studio', label: 'Studio', icon: <Video className="h-4 w-4" />, roles: ['AUTHOR', 'ADMIN'] },
-  { href: '/admin/users', label: 'Пользователи', icon: <Users className="h-4 w-4" />, roles: ['ADMIN'] },
-  { href: '/admin/subscriptions', label: 'Подписки', icon: <Shield className="h-4 w-4" />, roles: ['ADMIN'] },
-  { href: '/profile', label: 'Профиль', icon: <LayoutDashboard className="h-4 w-4" />, roles: ['SUBSCRIBER', 'AUTHOR', 'ADMIN'] },
+  { href: '/catalog', labelKey: 'nav.catalog', icon: <BookOpen className="h-4 w-4" />, roles: ['SUBSCRIBER', 'AUTHOR', 'ADMIN'] },
+  { href: '/studio', labelKey: 'nav.studio', icon: <Video className="h-4 w-4" />, roles: ['AUTHOR', 'ADMIN'] },
+  { href: '/admin/users', labelKey: 'nav.users', icon: <Users className="h-4 w-4" />, roles: ['ADMIN'] },
+  { href: '/admin/subscriptions', labelKey: 'nav.subscriptions', icon: <Shield className="h-4 w-4" />, roles: ['ADMIN'] },
+  { href: '/profile', labelKey: 'nav.profile', icon: <LayoutDashboard className="h-4 w-4" />, roles: ['SUBSCRIBER', 'AUTHOR', 'ADMIN'] },
 ]
 
 function NavLinks({ className, onNavigate }: { className?: string; onNavigate?: () => void }) {
+  const { t } = useTranslation()
   const role = useAuthStore((s) => s.user?.role)
   if (!role) return null
 
@@ -52,7 +55,7 @@ function NavLinks({ className, onNavigate }: { className?: string; onNavigate?: 
           }
         >
           {item.icon}
-          <span>{item.label}</span>
+          <span>{t(item.labelKey)}</span>
         </NavLink>
       ))}
     </nav>
@@ -64,7 +67,6 @@ export function AppLayout() {
 
   return (
     <div className="flex h-screen bg-background">
-      {/* Desktop sidebar */}
       <aside className="hidden w-56 shrink-0 flex-col border-r bg-card md:flex">
         <div className="flex h-14 items-center border-b px-4">
           <Link to="/catalog" className="flex items-center gap-2 font-semibold text-foreground">
@@ -78,9 +80,7 @@ export function AppLayout() {
       </aside>
 
       <div className="flex flex-1 flex-col overflow-hidden">
-        {/* Top header */}
         <header className="flex h-14 items-center gap-3 border-b bg-card px-4">
-          {/* Mobile menu trigger */}
           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
             <SheetTrigger className={cn(buttonVariants({ variant: 'ghost', size: 'icon' }), 'md:hidden')}>
               <Menu className="h-5 w-5" />
@@ -102,7 +102,6 @@ export function AppLayout() {
             </SheetContent>
           </Sheet>
 
-          {/* Logo (mobile) */}
           <Link
             to="/catalog"
             className="flex items-center gap-2 font-semibold text-foreground md:hidden"
@@ -113,11 +112,11 @@ export function AppLayout() {
 
           <div className="flex-1" />
 
+          <LanguageToggle />
           <ThemeToggle />
           <UserMenu />
         </header>
 
-        {/* Main content */}
         <main className="flex-1 overflow-y-auto">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <Outlet />

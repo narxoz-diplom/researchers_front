@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, CheckCircle, Download, FileText, Lock, Sparkles } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import ReactPlayer from 'react-player'
 import { Button } from '@/components/ui/button'
@@ -23,6 +24,7 @@ interface CourseProgress {
 }
 
 export function LessonPlayerPage() {
+  const { t } = useTranslation()
   const { cid, lessonId } = useParams<{ cid: string; lessonId: string }>()
   const navigate = useNavigate()
   const user = useAuthStore((s) => s.user)
@@ -62,20 +64,20 @@ export function LessonPlayerPage() {
       const wasCompleted = isCompleted
       void qc.invalidateQueries({ queryKey: ['progress', cid] })
       if (wasCompleted) {
-        toast.success('Отметка убрана')
+        toast.success(t('lesson.markRemoved'))
       } else {
         setCelebrate(true)
-        toast.success('Урок пройден!', {
-          description: 'Так держать — двигайтесь к следующему',
+        toast.success(t('lesson.markSuccess'), {
+          description: t('lesson.markSuccessDescription'),
         })
       }
     },
     onError: (err) => {
       const apiErr = extractApiError(err)
       if (apiErr?.message === 'SUBSCRIPTION_REQUIRED') {
-        toast.error('Нужна активная подписка')
+        toast.error(t('lesson.subscriptionRequired'))
       } else {
-        toast.error('Не удалось отметить урок')
+        toast.error(t('lesson.markFailed'))
       }
     },
   })
@@ -88,7 +90,7 @@ export function LessonPlayerPage() {
 
   if (isLoading) return <LessonSkeleton />
   if (isError) return (
-    <ErrorState message="Не удалось загрузить урок. Возможно, требуется подписка." />
+    <ErrorState message={t('lesson.loadFailed')} />
   )
   if (!lesson) return null
 
@@ -102,7 +104,6 @@ export function LessonPlayerPage() {
 
   return (
     <div className="pb-16">
-      {/* Back */}
       <Button
         variant="ghost"
         size="sm"
@@ -110,32 +111,33 @@ export function LessonPlayerPage() {
         onClick={() => navigate(`/courses/${cid}`)}
       >
         <ArrowLeft className="h-4 w-4" />
-        К курсу
+        {t('common.backToCourse')}
       </Button>
 
-      {/* Course progress bar (subscribers only) */}
       {showProgress && progress && (
         <div className="mb-6 flex flex-col gap-2 rounded-xl border bg-card p-4">
           <div className="flex items-center justify-between text-sm">
-            <span className="font-medium">Прогресс курса</span>
+            <span className="font-medium">{t('common.courseProgress')}</span>
             <span className="text-muted-foreground">
-              {progress.completedLessons} из {progress.totalLessons} · {progress.percentage}%
+              {t('common.progressOf', {
+                completed: progress.completedLessons,
+                total: progress.totalLessons,
+                percent: progress.percentage,
+              })}
             </span>
           </div>
           <Progress value={progress.percentage} className="h-2" />
           {courseDone && (
             <div className="mt-1 flex items-center gap-2 text-sm text-emerald-600 dark:text-emerald-400">
               <Sparkles className="h-4 w-4" />
-              Курс пройден полностью!
+              {t('common.courseCompleted')}
             </div>
           )}
         </div>
       )}
 
       <div className="grid gap-8 lg:grid-cols-3">
-        {/* Main content */}
         <div className="lg:col-span-2 flex flex-col gap-6">
-          {/* Video */}
           {mainVideo ? (
             <div className="overflow-hidden rounded-2xl bg-black aspect-video">
               <ReactPlayer
@@ -151,27 +153,24 @@ export function LessonPlayerPage() {
             </div>
           )}
 
-          {/* Title & meta */}
           <div>
             <h1 className="text-2xl font-semibold">{lesson.title}</h1>
             {allLessons && (
               <p className="mt-1 text-sm text-muted-foreground">
-                Урок {currentIndex + 1} из {allLessons.length}
+                {t('common.lessonOf', { current: currentIndex + 1, total: allLessons.length })}
               </p>
             )}
           </div>
 
-          {/* Content */}
           {lesson.content && (
             <div className="prose prose-sm dark:prose-invert max-w-none">
               <p>{lesson.content}</p>
             </div>
           )}
 
-          {/* Materials */}
           {lesson.materials.length > 0 && (
             <div className="flex flex-col gap-2">
-              <h3 className="text-sm font-semibold">Материалы</h3>
+              <h3 className="text-sm font-semibold">{t('common.materials')}</h3>
               {lesson.materials.map((m) => (
                 <div
                   key={m.id}
@@ -183,7 +182,7 @@ export function LessonPlayerPage() {
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">{m.title}</p>
                     <p className="text-xs text-muted-foreground">
-                      {(Number(m.sizeBytes) / 1024 / 1024).toFixed(2)} МБ
+                      {(Number(m.sizeBytes) / 1024 / 1024).toFixed(2)} {t('common.mb')}
                     </p>
                   </div>
                   <a
@@ -200,14 +199,13 @@ export function LessonPlayerPage() {
             </div>
           )}
 
-          {/* Navigation */}
           <div className="flex items-center justify-between gap-4 pt-4 border-t">
             <Button
               variant="outline"
               disabled={!prevLesson}
               onClick={() => prevLesson && navigate(`/courses/${cid}/lessons/${prevLesson.id}`)}
             >
-              ← Предыдущий
+              {t('common.previous')}
             </Button>
 
             {user?.role === 'SUBSCRIBER' && (
@@ -224,16 +222,16 @@ export function LessonPlayerPage() {
                 onClick={() => toggleComplete()}
               >
                 {isPending ? (
-                  'Сохранение...'
+                  t('common.saving')
                 ) : isCompleted ? (
                   <>
                     <CheckCircle className="mr-2 h-4 w-4" />
-                    Пройден
+                    {t('common.completed')}
                   </>
                 ) : (
                   <>
                     <CheckCircle className="mr-2 h-4 w-4" />
-                    Отметить как пройденный
+                    {t('common.markCompleted')}
                   </>
                 )}
               </Button>
@@ -244,15 +242,14 @@ export function LessonPlayerPage() {
               disabled={!nextLesson}
               onClick={() => nextLesson && navigate(`/courses/${cid}/lessons/${nextLesson.id}`)}
             >
-              Следующий →
+              {t('common.next')}
             </Button>
           </div>
         </div>
 
-        {/* Sidebar — lesson list */}
         <aside className="hidden lg:flex flex-col gap-1">
           <h3 className="text-sm font-semibold mb-2 text-muted-foreground uppercase tracking-wide">
-            Уроки курса
+            {t('common.courseLessons')}
           </h3>
           {allLessons?.map((l, idx) => (
             <button

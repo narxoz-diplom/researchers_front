@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Plus, MoreHorizontal, Pencil, Trash2 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -14,6 +15,7 @@ import { API } from '@/shared/api/endpoints'
 import type { Course } from '@/shared/types'
 
 export function StudioCoursesPage() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const qc = useQueryClient()
 
@@ -24,19 +26,19 @@ export function StudioCoursesPage() {
 
   const { mutate: createCourse, isPending: creating } = useMutation({
     mutationFn: () =>
-      api.post<Course>(API.courses.create, { title: 'Новый курс', description: '' }).then((r) => r.data),
+      api.post<Course>(API.courses.create, { title: t('common.newCourse'), description: '' }).then((r) => r.data),
     onSuccess: (course) => {
       void qc.invalidateQueries({ queryKey: ['courses', 'mine'] })
       navigate(`/studio/courses/${course.id}`)
     },
-    onError: () => toast.error('Не удалось создать курс'),
+    onError: () => toast.error(t('studio.createFailed')),
   })
 
   const { mutate: deleteCourse } = useMutation({
     mutationFn: (id: string) => api.delete(API.courses.delete(id)),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['courses', 'mine'] })
-      toast.success('Курс удалён')
+      toast.success(t('studio.deleteSuccess'))
     },
   })
 
@@ -45,12 +47,12 @@ export function StudioCoursesPage() {
   return (
     <div>
       <PageHeader
-        title="Studio"
-        subtitle="Ваши курсы"
+        title={t('nav.studio')}
+        subtitle={t('common.yourCourses')}
         actions={
           <Button onClick={() => createCourse()} disabled={creating}>
             <Plus className="mr-2 h-4 w-4" />
-            Новый курс
+            {t('common.newCourse')}
           </Button>
         }
       />
@@ -63,9 +65,9 @@ export function StudioCoursesPage() {
         </div>
       ) : !courses?.length ? (
         <EmptyState
-          title="Нет курсов"
-          description="Создайте первый курс и начните делиться знаниями"
-          action={{ label: 'Создать курс', onClick: () => createCourse() }}
+          title={t('studio.emptyTitle')}
+          description={t('studio.emptyDescription')}
+          action={{ label: t('common.createCourse'), onClick: () => createCourse() }}
         />
       ) : (
         <div className="flex flex-col gap-2 pb-12">
@@ -74,7 +76,6 @@ export function StudioCoursesPage() {
               key={course.id}
               className="flex items-center gap-4 rounded-xl border bg-card p-4"
             >
-              {/* Cover thumb */}
               <div className="h-12 w-20 shrink-0 overflow-hidden rounded-lg bg-muted">
                 {course.coverUrl && (
                   <img src={course.coverUrl} alt="" className="h-full w-full object-cover" />
@@ -85,7 +86,9 @@ export function StudioCoursesPage() {
                 <p className="font-medium truncate">{course.title}</p>
                 <div className="flex items-center gap-2 mt-0.5">
                   <StatusBadge status={course.status} />
-                  <span className="text-xs text-muted-foreground">{course.lessonsCount} уроков</span>
+                  <span className="text-xs text-muted-foreground">
+                    {t('common.lessonsCount', { count: course.lessonsCount })}
+                  </span>
                 </div>
               </div>
 
@@ -98,14 +101,14 @@ export function StudioCoursesPage() {
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem onClick={() => navigate(`/studio/courses/${course.id}`)}>
                     <Pencil className="mr-2 h-4 w-4" />
-                    Редактировать
+                    {t('common.edit')}
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     className="text-destructive focus:text-destructive"
                     onClick={() => deleteCourse(course.id)}
                   >
                     <Trash2 className="mr-2 h-4 w-4" />
-                    Удалить
+                    {t('common.delete')}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>

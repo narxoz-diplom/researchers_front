@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { Search } from 'lucide-react'
 import { Input } from '@/components/ui/input'
@@ -23,6 +24,7 @@ function CourseCardSkeleton() {
 }
 
 export function CatalogPage() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const [search, setSearch] = useState('')
 
@@ -39,13 +41,13 @@ export function CatalogPage() {
   return (
     <div>
       <PageHeader
-        title="Каталог"
-        subtitle={data ? `${data.meta.total} курсов` : undefined}
+        title={t('catalog.title')}
+        subtitle={data ? t('common.coursesCount', { count: data.meta.total }) : undefined}
         actions={
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Поиск курсов..."
+              placeholder={t('catalog.searchPlaceholder')}
               className="pl-9 w-64"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -68,8 +70,8 @@ export function CatalogPage() {
         <>
           {data.data.length === 0 ? (
             <EmptyState
-              title="Курсов пока нет"
-              description="Здесь появятся курсы, как только авторы начнут их публиковать"
+              title={t('catalog.emptyTitle')}
+              description={t('catalog.emptyDescription')}
             />
           ) : (
             <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">

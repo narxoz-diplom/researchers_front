@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, FileText, Trash2 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -22,6 +23,7 @@ interface LessonForm {
 }
 
 export function StudioLessonEditPage() {
+  const { t } = useTranslation()
   const { id, lessonId } = useParams<{ id: string; lessonId: string }>()
   const navigate = useNavigate()
   const qc = useQueryClient()
@@ -37,12 +39,10 @@ export function StudioLessonEditPage() {
   })
   const formInitializedRef = useRef(false)
 
-  // Allow re-initialization when navigating to another lesson
   useEffect(() => {
     formInitializedRef.current = false
   }, [lessonId])
 
-  // Initialize form once per lesson — do NOT reset on every React Query refetch
   useEffect(() => {
     if (!lesson || lesson.id !== lessonId || formInitializedRef.current) return
     formInitializedRef.current = true
@@ -54,9 +54,9 @@ export function StudioLessonEditPage() {
     onSuccess: (_data, variables) => {
       reset(variables)
       void qc.invalidateQueries({ queryKey: ['lessons', id] })
-      toast.success('Урок сохранён')
+      toast.success(t('studio.lessonSaved'))
     },
-    onError: () => toast.error('Не удалось сохранить урок'),
+    onError: () => toast.error(t('studio.lessonSaveFailed')),
   })
 
   const { mutate: deleteLesson } = useMutation({
@@ -64,7 +64,7 @@ export function StudioLessonEditPage() {
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['lessons', id] })
       navigate(`/studio/courses/${id}`)
-      toast.success('Урок удалён')
+      toast.success(t('studio.lessonDeleted'))
     },
   })
 
@@ -77,7 +77,6 @@ export function StudioLessonEditPage() {
 
   return (
     <div className="pb-16">
-      {/* Breadcrumb */}
       <Button
         variant="ghost"
         size="sm"
@@ -85,35 +84,32 @@ export function StudioLessonEditPage() {
         onClick={() => navigate(`/studio/courses/${id}`)}
       >
         <ArrowLeft className="h-4 w-4" />
-        К курсу
+        {t('common.backToCourse')}
       </Button>
 
       <form onSubmit={handleSubmit((d) => updateLesson(d))} className="flex flex-col gap-6">
-        {/* Title */}
         <div>
           <Input
             {...register('title')}
             className="text-2xl font-semibold border-none shadow-none px-0 h-auto focus-visible:ring-0 bg-transparent"
-            placeholder="Название урока"
+            placeholder={t('common.lessonTitle')}
           />
         </div>
 
-        {/* Content */}
         <div>
-          <Label>Текст урока</Label>
+          <Label>{t('common.lessonContent')}</Label>
           <Textarea
             {...register('content')}
             rows={10}
             className="mt-1 resize-y font-mono text-sm"
-            placeholder="Напишите содержимое урока в Markdown..."
+            placeholder={t('common.lessonContentPlaceholder')}
           />
         </div>
 
         <Separator />
 
-        {/* Videos */}
         <div className="flex flex-col gap-3">
-          <h3 className="text-sm font-semibold">Видео</h3>
+          <h3 className="text-sm font-semibold">{t('common.video')}</h3>
           {lesson.videos.length > 0 && (
             <div className="flex flex-col gap-2">
               {lesson.videos.map((v) => (
@@ -142,7 +138,7 @@ export function StudioLessonEditPage() {
                     onClick={() =>
                       api.delete(API.videos.delete(v.id)).then(() => {
                         invalidateLesson()
-                        toast.success('Видео удалено')
+                        toast.success(t('studio.videoDeleted'))
                       })
                     }
                   >
@@ -157,10 +153,10 @@ export function StudioLessonEditPage() {
             folder={`${mediaFolder}/videos`}
             accept="video/mp4,video/quicktime,video/webm,.mp4,.mov,.webm"
             maxSizeMb={500}
-            label="Загрузить видео"
-            hint="MP4, MOV, WebM — до 500 МБ"
+            label={t('common.uploadVideo')}
+            hint={t('common.videoHint')}
             onUploaded={async (result, file) => {
-              const title = file.name.replace(/\.[^.]+$/, '') || 'Видео'
+              const title = file.name.replace(/\.[^.]+$/, '') || t('studio.defaultVideoTitle')
               await api.post(API.videos.attach(lessonId!), {
                 title,
                 cloudinaryPublicId: result.public_id,
@@ -169,14 +165,13 @@ export function StudioLessonEditPage() {
                 sizeBytes: result.bytes,
               })
               invalidateLesson()
-              toast.success('Видео прикреплено')
+              toast.success(t('studio.videoAttached'))
             }}
           />
         </div>
 
-        {/* Materials */}
         <div className="flex flex-col gap-3">
-          <h3 className="text-sm font-semibold">Материалы</h3>
+          <h3 className="text-sm font-semibold">{t('common.materials')}</h3>
           {lesson.materials.length > 0 && (
             <div className="flex flex-col gap-2">
               {lesson.materials.map((m) => (
@@ -187,7 +182,7 @@ export function StudioLessonEditPage() {
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">{m.title}</p>
                     <p className="text-xs text-muted-foreground">
-                      {(Number(m.sizeBytes) / 1024 / 1024).toFixed(2)} МБ
+                      {(Number(m.sizeBytes) / 1024 / 1024).toFixed(2)} {t('common.mb')}
                     </p>
                   </div>
                   <Button
@@ -197,7 +192,7 @@ export function StudioLessonEditPage() {
                     onClick={() =>
                       api.delete(API.materials.delete(m.id)).then(() => {
                         invalidateLesson()
-                        toast.success('Материал удалён')
+                        toast.success(t('studio.materialDeleted'))
                       })
                     }
                   >
@@ -212,8 +207,8 @@ export function StudioLessonEditPage() {
             folder={`${mediaFolder}/materials`}
             accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
             maxSizeMb={50}
-            label="Прикрепить файл"
-            hint="PDF, DOC, DOCX — до 50 МБ"
+            label={t('common.attachFile')}
+            hint={t('common.materialHint')}
             onUploaded={async (result, file) => {
               await api.post(API.materials.attach(lessonId!), {
                 title: file.name,
@@ -223,22 +218,21 @@ export function StudioLessonEditPage() {
                 sizeBytes: result.bytes,
               })
               invalidateLesson()
-              toast.success('Материал прикреплён')
+              toast.success(t('studio.materialAttached'))
             }}
           />
         </div>
 
-        {/* Actions */}
         <div className="flex items-center gap-3">
           <Button type="submit" disabled={saving}>
-            {saving ? 'Сохранение...' : 'Сохранить'}
+            {saving ? t('common.saving') : t('common.save')}
           </Button>
           <Button
             type="button"
             variant="destructive"
             onClick={() => deleteLesson()}
           >
-            Удалить урок
+            {t('common.deleteLesson')}
           </Button>
         </div>
       </form>

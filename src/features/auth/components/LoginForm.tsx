@@ -1,21 +1,25 @@
+import { useMemo } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { extractApiError } from '@/shared/api/axios'
-import { loginSchema, type LoginSchema } from '../schemas'
+import { createLoginSchema, type LoginSchema } from '../schemas'
 import { useLogin } from '../hooks/useLogin'
 
 export function LoginForm() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const location = useLocation()
   const from = (location.state as { from?: { pathname: string } })?.from?.pathname ?? '/catalog'
 
   const { mutate: login, isPending } = useLogin()
+  const loginSchema = useMemo(() => createLoginSchema(t), [t])
 
   const form = useForm<LoginSchema>({
     resolver: zodResolver(loginSchema),
@@ -25,15 +29,15 @@ export function LoginForm() {
   function onSubmit(values: LoginSchema) {
     login(values, {
       onSuccess: () => {
-        toast.success('Добро пожаловать!')
+        toast.success(t('auth.welcome'))
         void navigate(from, { replace: true })
       },
       onError: (err) => {
         const apiErr = extractApiError(err)
         if (apiErr?.message === 'INVALID_CREDENTIALS') {
-          form.setError('root', { message: 'Неверный email или пароль' })
+          form.setError('root', { message: t('auth.invalidCredentials') })
         } else {
-          form.setError('root', { message: 'Произошла ошибка. Попробуйте снова.' })
+          form.setError('root', { message: t('auth.genericError') })
         }
       },
     })
@@ -42,8 +46,8 @@ export function LoginForm() {
   return (
     <Card className="rounded-2xl shadow-sm border-border">
       <CardHeader className="text-center">
-        <CardTitle className="text-2xl font-semibold">Войти</CardTitle>
-        <CardDescription>Введите данные для входа в аккаунт</CardDescription>
+        <CardTitle className="text-2xl font-semibold">{t('auth.loginTitle')}</CardTitle>
+        <CardDescription>{t('auth.loginDescription')}</CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -53,7 +57,7 @@ export function LoginForm() {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel>{t('common.email')}</FormLabel>
                   <FormControl>
                     <Input type="email" placeholder="you@example.com" {...field} />
                   </FormControl>
@@ -67,7 +71,7 @@ export function LoginForm() {
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Пароль</FormLabel>
+                  <FormLabel>{t('common.password')}</FormLabel>
                   <FormControl>
                     <Input type="password" placeholder="••••••••" {...field} />
                   </FormControl>
@@ -83,13 +87,13 @@ export function LoginForm() {
             )}
 
             <Button type="submit" className="w-full" disabled={isPending}>
-              {isPending ? 'Вход...' : 'Войти'}
+              {isPending ? t('auth.loginSubmitting') : t('auth.loginSubmit')}
             </Button>
 
             <p className="text-center text-sm text-muted-foreground">
-              Нет аккаунта?{' '}
+              {t('auth.noAccount')}{' '}
               <Link to="/auth/register" className="text-primary hover:underline font-medium">
-                Зарегистрироваться
+                {t('auth.registerLink')}
               </Link>
             </p>
           </form>

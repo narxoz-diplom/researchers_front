@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, Check, X } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -14,19 +15,14 @@ import { api } from '@/shared/api/axios'
 import { API } from '@/shared/api/endpoints'
 import type { Course, CourseEnrollment, CourseEnrollmentStatus } from '@/shared/types'
 import { format } from 'date-fns'
-import { ru } from 'date-fns/locale'
-
-const STATUS_LABELS: Record<CourseEnrollmentStatus, string> = {
-  PENDING: 'Заявка',
-  PAID: 'Оплачено',
-  APPROVED: 'Доступ выдан',
-  REJECTED: 'Отклонено',
-}
+import { getDateLocale } from '@/lib/date-locale'
 
 export function StudioEnrollmentsPage() {
+  const { t, i18n } = useTranslation()
   const { id: courseId } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const qc = useQueryClient()
+  const dateLocale = getDateLocale(i18n.language)
 
   const { data: course } = useQuery({
     queryKey: ['course', courseId],
@@ -46,9 +42,9 @@ export function StudioEnrollmentsPage() {
       api.post(API.courses.enrollmentApprove(courseId!, enrollmentId)),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['enrollments', courseId] })
-      toast.success('Доступ к курсу выдан')
+      toast.success(t('studio.accessGranted'))
     },
-    onError: () => toast.error('Не удалось выдать доступ'),
+    onError: () => toast.error(t('studio.accessGrantFailed')),
   })
 
   const { mutate: reject } = useMutation({
@@ -56,9 +52,9 @@ export function StudioEnrollmentsPage() {
       api.post(API.courses.enrollmentReject(courseId!, enrollmentId)),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['enrollments', courseId] })
-      toast.success('Заявка отклонена')
+      toast.success(t('studio.enrollmentRejected'))
     },
-    onError: () => toast.error('Не удалось отклонить заявку'),
+    onError: () => toast.error(t('studio.enrollmentRejectFailed')),
   })
 
   if (isError) return <ErrorState onRetry={() => void refetch()} />
@@ -72,33 +68,33 @@ export function StudioEnrollmentsPage() {
         onClick={() => navigate(`/studio/courses/${courseId}`)}
       >
         <ArrowLeft className="h-4 w-4" />
-        К редактированию курса
+        {t('common.backToCourseEdit')}
       </Button>
 
       <PageHeader
-        title="Заявки на курс"
+        title={t('common.courseEnrollments')}
         subtitle={course?.title}
       />
 
       <p className="text-sm text-muted-foreground mb-6">
-        Выдайте доступ только после оплаты — кнопка «Выдать доступ» активна для статуса «Оплачено».
+        {t('common.enrollmentHint')}
       </p>
 
       {isLoading ? (
         <Skeleton className="h-48 w-full rounded-xl" />
       ) : !enrollments?.length ? (
         <p className="text-sm text-muted-foreground py-12 text-center">
-          Заявок пока нет
+          {t('common.noEnrollments')}
         </p>
       ) : (
         <div className="rounded-xl border overflow-hidden">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Студент</TableHead>
-                <TableHead>Статус</TableHead>
-                <TableHead>Дата</TableHead>
-                <TableHead className="text-right">Действия</TableHead>
+                <TableHead>{t('common.student')}</TableHead>
+                <TableHead>{t('common.status')}</TableHead>
+                <TableHead>{t('common.date')}</TableHead>
+                <TableHead className="text-right">{t('common.actions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -112,10 +108,12 @@ export function StudioEnrollmentsPage() {
                     )}
                   </TableCell>
                   <TableCell>
-                    <Badge variant="secondary">{STATUS_LABELS[row.status]}</Badge>
+                    <Badge variant="secondary">
+                      {t(`enrollmentStatuses.${row.status as CourseEnrollmentStatus}`)}
+                    </Badge>
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
-                    {format(new Date(row.createdAt), 'd MMM yyyy', { locale: ru })}
+                    {format(new Date(row.createdAt), 'd MMM yyyy', { locale: dateLocale })}
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
@@ -126,7 +124,7 @@ export function StudioEnrollmentsPage() {
                           onClick={() => approve(row.id)}
                         >
                           <Check className="h-4 w-4 mr-1" />
-                          Выдать доступ
+                          {t('common.grantAccess')}
                         </Button>
                       )}
                       {(row.status === 'PENDING' || row.status === 'PAID') && (
@@ -136,7 +134,7 @@ export function StudioEnrollmentsPage() {
                           onClick={() => reject(row.id)}
                         >
                           <X className="h-4 w-4 mr-1" />
-                          Отклонить
+                          {t('common.reject')}
                         </Button>
                       )}
                     </div>

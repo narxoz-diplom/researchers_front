@@ -1,6 +1,8 @@
+import { useMemo } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Link, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -8,12 +10,14 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { extractApiError } from '@/shared/api/axios'
-import { registerSchema, type RegisterSchema } from '../schemas'
+import { createRegisterSchema, type RegisterSchema } from '../schemas'
 import { useRegister } from '../hooks/useRegister'
 
 export function RegisterForm() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const { mutate: register, isPending } = useRegister()
+  const registerSchema = useMemo(() => createRegisterSchema(t), [t])
 
   const form = useForm<RegisterSchema>({
     resolver: zodResolver(registerSchema),
@@ -30,16 +34,16 @@ export function RegisterForm() {
       },
       {
         onSuccess: (data) => {
-          toast.success('Аккаунт создан!')
+          toast.success(t('auth.accountCreated'))
           const dest = data.user.role === 'AUTHOR' ? '/studio' : '/catalog'
           void navigate(dest, { replace: true })
         },
         onError: (err) => {
           const apiErr = extractApiError(err)
           if (apiErr?.message === 'EMAIL_TAKEN') {
-            form.setError('email', { message: 'Этот email уже используется' })
+            form.setError('email', { message: t('auth.emailTaken') })
           } else {
-            form.setError('root', { message: 'Произошла ошибка. Попробуйте снова.' })
+            form.setError('root', { message: t('auth.genericError') })
           }
         },
       },
@@ -49,8 +53,8 @@ export function RegisterForm() {
   return (
     <Card className="rounded-2xl shadow-sm border-border">
       <CardHeader className="text-center">
-        <CardTitle className="text-2xl font-semibold">Создать аккаунт</CardTitle>
-        <CardDescription>Заполните форму для регистрации</CardDescription>
+        <CardTitle className="text-2xl font-semibold">{t('auth.registerTitle')}</CardTitle>
+        <CardDescription>{t('auth.registerDescription')}</CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -60,9 +64,9 @@ export function RegisterForm() {
               name="fullName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Полное имя</FormLabel>
+                  <FormLabel>{t('auth.fullName')}</FormLabel>
                   <FormControl>
-                    <Input placeholder="Иван Иванов" {...field} />
+                    <Input placeholder={t('auth.fullNamePlaceholder')} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -74,16 +78,16 @@ export function RegisterForm() {
               name="role"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Роль</FormLabel>
+                  <FormLabel>{t('common.role')}</FormLabel>
                   <Select value={field.value} onValueChange={field.onChange}>
                     <FormControl>
                       <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Выберите роль" />
+                        <SelectValue placeholder={t('auth.selectRole')} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="SUBSCRIBER">Студент (подписчик)</SelectItem>
-                      <SelectItem value="AUTHOR">Автор курсов</SelectItem>
+                      <SelectItem value="SUBSCRIBER">{t('auth.roleSubscriber')}</SelectItem>
+                      <SelectItem value="AUTHOR">{t('auth.roleAuthor')}</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -96,7 +100,7 @@ export function RegisterForm() {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel>{t('common.email')}</FormLabel>
                   <FormControl>
                     <Input type="email" placeholder="you@example.com" {...field} />
                   </FormControl>
@@ -110,9 +114,9 @@ export function RegisterForm() {
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Пароль</FormLabel>
+                  <FormLabel>{t('common.password')}</FormLabel>
                   <FormControl>
-                    <Input type="password" placeholder="Мин. 8 символов" {...field} />
+                    <Input type="password" placeholder={t('auth.passwordPlaceholder')} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -124,7 +128,7 @@ export function RegisterForm() {
               name="confirmPassword"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Подтвердите пароль</FormLabel>
+                  <FormLabel>{t('auth.confirmPassword')}</FormLabel>
                   <FormControl>
                     <Input type="password" placeholder="••••••••" {...field} />
                   </FormControl>
@@ -140,13 +144,13 @@ export function RegisterForm() {
             )}
 
             <Button type="submit" className="w-full" disabled={isPending}>
-              {isPending ? 'Регистрация...' : 'Зарегистрироваться'}
+              {isPending ? t('auth.registerSubmitting') : t('auth.registerSubmit')}
             </Button>
 
             <p className="text-center text-sm text-muted-foreground">
-              Уже есть аккаунт?{' '}
+              {t('auth.hasAccount')}{' '}
               <Link to="/auth/login" className="text-primary hover:underline font-medium">
-                Войти
+                {t('auth.loginLink')}
               </Link>
             </p>
           </form>

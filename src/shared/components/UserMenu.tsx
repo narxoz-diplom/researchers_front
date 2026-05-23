@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { LogOut, User } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
   DropdownMenu,
@@ -13,6 +14,7 @@ import { useAuthStore } from '@/features/auth/store/auth.store'
 import { useLogout } from '@/features/auth/hooks/useLogout'
 
 export function UserMenu() {
+  const { t } = useTranslation()
   const user = useAuthStore((s) => s.user)
   const { mutate: logout } = useLogout()
   const navigate = useNavigate()
@@ -29,7 +31,7 @@ export function UserMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
-        aria-label="Меню профиля"
+        aria-label={t('common.profileMenu')}
         className="relative flex h-9 w-9 items-center justify-center rounded-full outline-none transition hover:ring-2 hover:ring-primary/20 focus-visible:ring-2 focus-visible:ring-primary/50"
       >
         <Avatar className="h-9 w-9">
@@ -53,14 +55,14 @@ export function UserMenu() {
 
         <DropdownMenuItem onClick={() => navigate('/profile')}>
           <User className="mr-2 h-4 w-4" />
-          Профиль
+          {t('nav.profile')}
         </DropdownMenuItem>
 
         <DropdownMenuSeparator />
 
         <DropdownMenuItem variant="destructive" onClick={() => logout()}>
           <LogOut className="mr-2 h-4 w-4" />
-          Выйти
+          {t('common.logout')}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

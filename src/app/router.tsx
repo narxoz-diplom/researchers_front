@@ -5,6 +5,7 @@ import { AuthLayout } from '@/shared/components/AuthLayout'
 import { ProtectedRoute } from '@/shared/components/ProtectedRoute'
 import { LoadingState } from '@/shared/ui/LoadingState'
 
+const LandingPage = lazy(() => import('@/pages/landing/LandingPage').then((m) => ({ default: m.LandingPage })))
 const LoginPage = lazy(() => import('@/pages/auth/LoginPage').then((m) => ({ default: m.LoginPage })))
 const RegisterPage = lazy(() => import('@/pages/auth/RegisterPage').then((m) => ({ default: m.RegisterPage })))
 const CatalogPage = lazy(() => import('@/pages/catalog/CatalogPage').then((m) => ({ default: m.CatalogPage })))
@@ -25,6 +26,7 @@ function Lazy({ children }: { children: React.ReactNode }) {
 }
 
 export const router = createBrowserRouter([
+  { path: '/', element: <Lazy><LandingPage /></Lazy> },
   {
     path: '/auth',
     element: <AuthLayout />,
@@ -35,7 +37,6 @@ export const router = createBrowserRouter([
     ],
   },
   {
-    path: '/',
     element: (
       <ProtectedRoute />
     ),
@@ -43,7 +44,6 @@ export const router = createBrowserRouter([
       {
         element: <AppLayout />,
         children: [
-          { index: true, element: <Navigate to="/catalog" replace /> },
           { path: 'catalog', element: <Lazy><CatalogPage /></Lazy> },
           { path: 'courses/:id', element: <Lazy><CourseDetailPage /></Lazy> },
           { path: 'courses/:cid/lessons/:lessonId', element: <Lazy><LessonPlayerPage /></Lazy> },

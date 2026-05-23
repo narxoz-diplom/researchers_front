@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Controller, useForm } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { format } from 'date-fns'
-import { ru } from 'date-fns/locale'
 import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -24,6 +24,7 @@ import { StatusBadge } from '@/shared/ui/StatusBadge'
 import { api, extractApiError } from '@/shared/api/axios'
 import { API } from '@/shared/api/endpoints'
 import type { Subscription, Meta } from '@/shared/types'
+import { getDateLocale } from '@/lib/date-locale'
 
 type SubscriptionPlan = 'BASIC' | 'PRO'
 
@@ -34,8 +35,10 @@ interface GrantForm {
 }
 
 export function AdminSubscriptionsPage() {
+  const { t, i18n } = useTranslation()
   const [grantOpen, setGrantOpen] = useState(false)
   const qc = useQueryClient()
+  const dateLocale = getDateLocale(i18n.language)
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['admin', 'subscriptions'],
@@ -49,7 +52,7 @@ export function AdminSubscriptionsPage() {
     mutationFn: (id: string) => api.post(API.subscriptions.revoke(id)),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['admin', 'subscriptions'] })
-      toast.success('Подписка отозвана')
+      toast.success(t('admin.subscriptionRevoked'))
     },
   })
 
@@ -64,11 +67,11 @@ export function AdminSubscriptionsPage() {
       void qc.invalidateQueries({ queryKey: ['admin', 'subscriptions'] })
       setGrantOpen(false)
       reset({ userId: '', plan: 'BASIC', durationDays: 30 })
-      toast.success('Подписка выдана')
+      toast.success(t('admin.subscriptionGranted'))
     },
     onError: (err) => {
       const apiErr = extractApiError(err)
-      toast.error(apiErr?.message ?? 'Не удалось выдать подписку')
+      toast.error(apiErr?.message ?? t('admin.subscriptionGrantFailed'))
     },
   })
 
@@ -81,12 +84,12 @@ export function AdminSubscriptionsPage() {
   return (
     <div>
       <PageHeader
-        title="Подписки"
-        subtitle={data ? `Всего: ${data.meta.total}` : undefined}
+        title={t('nav.subscriptions')}
+        subtitle={data ? t('common.total', { count: data.meta.total }) : undefined}
         actions={
           <Button onClick={() => setGrantOpen(true)}>
             <Plus className="mr-2 h-4 w-4" />
-            Выдать подписку
+            {t('common.grantSubscription')}
           </Button>
         }
       />
@@ -95,10 +98,10 @@ export function AdminSubscriptionsPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Пользователь</TableHead>
-              <TableHead>Статус</TableHead>
-              <TableHead>Истекает</TableHead>
-              <TableHead className="text-right">Действия</TableHead>
+              <TableHead>{t('common.user')}</TableHead>
+              <TableHead>{t('common.status')}</TableHead>
+              <TableHead>{t('common.expiresAt')}</TableHead>
+              <TableHead className="text-right">{t('common.actions')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -122,7 +125,7 @@ export function AdminSubscriptionsPage() {
                   <StatusBadge status={sub.status} />
                 </TableCell>
                 <TableCell className="text-sm text-muted-foreground">
-                  {format(new Date(sub.expiresAt), 'd MMM yyyy', { locale: ru })}
+                  {format(new Date(sub.expiresAt), 'd MMM yyyy', { locale: dateLocale })}
                 </TableCell>
                 <TableCell className="text-right">
                   {sub.status === 'ACTIVE' && (
@@ -132,7 +135,7 @@ export function AdminSubscriptionsPage() {
                       className="text-destructive border-destructive/30"
                       onClick={() => revoke(sub.id)}
                     >
-                      Отозвать
+                      {t('common.revoke')}
                     </Button>
                   )}
                 </TableCell>
@@ -142,11 +145,10 @@ export function AdminSubscriptionsPage() {
         </Table>
       </div>
 
-      {/* Grant dialog */}
       <Dialog open={grantOpen} onOpenChange={setGrantOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Выдать подписку</DialogTitle>
+            <DialogTitle>{t('common.grantSubscription')}</DialogTitle>
           </DialogHeader>
           <form
             onSubmit={handleSubmit((d) =>
@@ -155,7 +157,7 @@ export function AdminSubscriptionsPage() {
             className="flex flex-col gap-4"
           >
             <div>
-              <Label>ID пользователя</Label>
+              <Label>{t('common.userId')}</Label>
               <Input
                 {...register('userId', { required: true })}
                 className="mt-1 font-mono"
@@ -163,11 +165,11 @@ export function AdminSubscriptionsPage() {
                 required
               />
               <p className="mt-1 text-xs text-muted-foreground">
-                Скопируйте ID на странице «Пользователи»
+                {t('common.copyIdHint')}
               </p>
             </div>
             <div>
-              <Label>План</Label>
+              <Label>{t('common.plan')}</Label>
               <Controller
                 control={control}
                 name="plan"
@@ -185,7 +187,7 @@ export function AdminSubscriptionsPage() {
               />
             </div>
             <div>
-              <Label>Количество дней</Label>
+              <Label>{t('common.daysCount')}</Label>
               <Input
                 {...register('durationDays', { valueAsNumber: true })}
                 type="number"
@@ -194,15 +196,15 @@ export function AdminSubscriptionsPage() {
                 className="mt-1"
               />
               <p className="mt-1 text-xs text-muted-foreground">
-                От 1 до 365 дней
+                {t('common.daysRange')}
               </p>
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setGrantOpen(false)}>
-                Отмена
+                {t('common.cancel')}
               </Button>
               <Button type="submit" disabled={granting}>
-                {granting ? 'Выдача...' : 'Выдать'}
+                {granting ? t('common.granting') : t('common.grant')}
               </Button>
             </DialogFooter>
           </form>

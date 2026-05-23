@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, ImageOff, Plus } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -25,6 +26,7 @@ interface CourseForm {
 }
 
 export function StudioCourseEditPage() {
+  const { t } = useTranslation()
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const qc = useQueryClient()
@@ -72,9 +74,9 @@ export function StudioCourseEditPage() {
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['course', id] })
       void qc.invalidateQueries({ queryKey: ['courses', 'mine'] })
-      toast.success('Сохранено')
+      toast.success(t('studio.saved'))
     },
-    onError: () => toast.error('Не удалось сохранить курс'),
+    onError: () => toast.error(t('studio.saveFailed')),
   })
 
   const { mutate: changeStatus } = useMutation({
@@ -82,9 +84,9 @@ export function StudioCourseEditPage() {
       api.post(action === 'publish' ? API.courses.publish(id!) : API.courses.archive(id!)),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['course', id] })
-      toast.success('Статус обновлён')
+      toast.success(t('studio.statusUpdated'))
     },
-    onError: () => toast.error('Не удалось изменить статус'),
+    onError: () => toast.error(t('studio.statusFailed')),
   })
 
   const { mutate: createLesson, isPending: creatingLesson } = useMutation({
@@ -93,7 +95,7 @@ export function StudioCourseEditPage() {
         (lessons ?? []).reduce((max, l) => Math.max(max, l.orderNumber), 0) + 1
       return api
         .post<Lesson>(API.lessons.create(id!), {
-          title: 'Новый урок',
+          title: t('common.newLesson'),
           content: '',
           orderNumber: nextOrderNumber,
         })
@@ -103,7 +105,7 @@ export function StudioCourseEditPage() {
       void qc.invalidateQueries({ queryKey: ['lessons', id] })
       navigate(`/studio/courses/${id}/lessons/${lesson.id}`)
     },
-    onError: () => toast.error('Не удалось создать урок'),
+    onError: () => toast.error(t('studio.createLessonFailed')),
   })
 
   if (isLoading) return <Skeleton className="h-96 rounded-2xl mt-8" />
@@ -118,25 +120,24 @@ export function StudioCourseEditPage() {
         onClick={() => navigate('/studio')}
       >
         <ArrowLeft className="h-4 w-4" />
-        Studio
+        {t('nav.studio')}
       </Button>
 
       <div className="grid gap-8 lg:grid-cols-5">
-        {/* Left — metadata form */}
         <div className="lg:col-span-2">
-          <PageHeader title="Курс" />
+          <PageHeader title={t('common.course')} />
           <form onSubmit={handleSubmit((d) => updateCourse(d))} className="flex flex-col gap-4">
             <div>
-              <Label>Название</Label>
+              <Label>{t('common.title')}</Label>
               <Input {...register('title')} className="mt-1" />
             </div>
             <div>
-              <Label>Описание</Label>
+              <Label>{t('common.description')}</Label>
               <Textarea {...register('description')} rows={4} className="mt-1 resize-none" />
             </div>
 
             <div>
-              <Label>Цена (₽)</Label>
+              <Label>{t('common.price')}</Label>
               <Input
                 {...register('priceRub')}
                 className="mt-1"
@@ -148,7 +149,7 @@ export function StudioCourseEditPage() {
             </div>
 
             <div>
-              <Label>Обложка (URL)</Label>
+              <Label>{t('common.coverUrl')}</Label>
               <Input
                 {...register('coverUrl')}
                 className="mt-1"
@@ -159,7 +160,7 @@ export function StudioCourseEditPage() {
                 {coverPreview ? (
                   <img
                     src={coverPreview}
-                    alt="Обложка"
+                    alt={t('common.coverAlt')}
                     className="h-full w-full object-cover"
                     onError={(e) => {
                       ;(e.target as HTMLImageElement).style.display = 'none'
@@ -174,7 +175,7 @@ export function StudioCourseEditPage() {
             </div>
 
             <div>
-              <Label>Статус</Label>
+              <Label>{t('common.status')}</Label>
               <Select
                 value={course.status}
                 onValueChange={(v) =>
@@ -185,36 +186,35 @@ export function StudioCourseEditPage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="DRAFT">Черновик</SelectItem>
-                  <SelectItem value="PUBLISHED">Опубликован</SelectItem>
-                  <SelectItem value="ARCHIVED">Архив</SelectItem>
+                  <SelectItem value="DRAFT">{t('statuses.DRAFT')}</SelectItem>
+                  <SelectItem value="PUBLISHED">{t('statuses.PUBLISHED')}</SelectItem>
+                  <SelectItem value="ARCHIVED">{t('statuses.ARCHIVED')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <Button type="submit" disabled={saving}>
-              {saving ? 'Сохранение...' : 'Сохранить'}
+              {saving ? t('common.saving') : t('common.save')}
             </Button>
           </form>
         </div>
 
         <Separator orientation="vertical" className="hidden lg:block" />
 
-        {/* Right — lessons list */}
         <div className="lg:col-span-2">
           <div className="flex items-center justify-between mb-4 gap-2 flex-wrap">
-            <h2 className="text-lg font-semibold">Уроки</h2>
+            <h2 className="text-lg font-semibold">{t('common.lessons')}</h2>
             <div className="flex gap-2">
               <Button
                 size="sm"
                 variant="outline"
                 onClick={() => navigate(`/studio/courses/${id}/enrollments`)}
               >
-                Заявки студентов
+                {t('common.studentEnrollments')}
               </Button>
             <Button size="sm" onClick={() => createLesson()} disabled={creatingLesson}>
               <Plus className="mr-2 h-4 w-4" />
-              Добавить урок
+              {t('common.addLesson')}
             </Button>
             </div>
           </div>
@@ -224,7 +224,7 @@ export function StudioCourseEditPage() {
               {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-12 rounded-xl" />)}
             </div>
           ) : !lessons?.length ? (
-            <p className="text-sm text-muted-foreground">Уроков пока нет</p>
+            <p className="text-sm text-muted-foreground">{t('common.noLessonsYet')}</p>
           ) : (
             <div className="flex flex-col gap-1">
               {lessons.map((lesson, idx) => (
