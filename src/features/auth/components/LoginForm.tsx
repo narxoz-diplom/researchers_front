@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
@@ -20,6 +20,7 @@ export function LoginForm() {
 
   const { mutate: login, isPending } = useLogin()
   const loginSchema = useMemo(() => createLoginSchema(t), [t])
+  const [needsVerification, setNeedsVerification] = useState(false)
 
   const form = useForm<LoginSchema>({
     resolver: zodResolver(loginSchema),
@@ -27,6 +28,7 @@ export function LoginForm() {
   })
 
   function onSubmit(values: LoginSchema) {
+    setNeedsVerification(false)
     login(values, {
       onSuccess: () => {
         toast.success(t('auth.welcome'))
@@ -36,6 +38,9 @@ export function LoginForm() {
         const apiErr = extractApiError(err)
         if (apiErr?.message === 'INVALID_CREDENTIALS') {
           form.setError('root', { message: t('auth.invalidCredentials') })
+        } else if (apiErr?.message === 'EMAIL_NOT_VERIFIED') {
+          setNeedsVerification(true)
+          form.setError('root', { message: t('auth.emailNotVerified') })
         } else {
           form.setError('root', { message: t('auth.genericError') })
         }
@@ -81,9 +86,19 @@ export function LoginForm() {
             />
 
             {form.formState.errors.root && (
-              <p className="text-sm text-destructive text-center">
-                {form.formState.errors.root.message}
-              </p>
+              <div className="flex flex-col items-center gap-2">
+                <p className="text-sm text-destructive text-center">
+                  {form.formState.errors.root.message}
+                </p>
+                {needsVerification && (
+                  <Link
+                    to={`/auth/check-email?email=${encodeURIComponent(form.getValues('email'))}`}
+                    className="text-sm text-primary hover:underline"
+                  >
+                    {t('auth.resendVerification')}
+                  </Link>
+                )}
+              </div>
             )}
 
             <Button type="submit" className="w-full" disabled={isPending}>

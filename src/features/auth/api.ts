@@ -20,12 +20,29 @@ export interface AuthResponse {
   user: User
 }
 
+export interface RegisterResponse {
+  message: 'CHECK_EMAIL'
+  email: string
+}
+
+export interface MessageResponse {
+  message: string
+}
+
 export const authApi = {
   login: (data: LoginPayload) =>
     api.post<AuthResponse>(API.auth.login, data).then((r) => r.data),
 
   register: (data: RegisterPayload) =>
-    api.post<AuthResponse>(API.auth.register, data).then((r) => r.data),
+    api.post<RegisterResponse>(API.auth.register, data).then((r) => r.data),
+
+  verifyEmail: (token: string) =>
+    api.post<MessageResponse>(API.auth.verifyEmail, { token }).then((r) => r.data),
+
+  resendVerification: (email: string) =>
+    api
+      .post<MessageResponse>(API.auth.resendVerification, { email })
+      .then((r) => r.data),
 
   logout: (refreshToken: string) =>
     api.post(API.auth.logout, { refreshToken }).then((r) => r.data),

@@ -8,6 +8,12 @@ import { LoadingState } from '@/shared/ui/LoadingState'
 const LandingPage = lazy(() => import('@/pages/landing/LandingPage').then((m) => ({ default: m.LandingPage })))
 const LoginPage = lazy(() => import('@/pages/auth/LoginPage').then((m) => ({ default: m.LoginPage })))
 const RegisterPage = lazy(() => import('@/pages/auth/RegisterPage').then((m) => ({ default: m.RegisterPage })))
+const CheckEmailPage = lazy(() =>
+  import('@/pages/auth/EmailVerificationPages').then((m) => ({ default: m.CheckEmailPage })),
+)
+const VerifyEmailPage = lazy(() =>
+  import('@/pages/auth/EmailVerificationPages').then((m) => ({ default: m.VerifyEmailPage })),
+)
 const CatalogPage = lazy(() => import('@/pages/catalog/CatalogPage').then((m) => ({ default: m.CatalogPage })))
 const CourseDetailPage = lazy(() => import('@/pages/courses/CourseDetailPage').then((m) => ({ default: m.CourseDetailPage })))
 const LessonPlayerPage = lazy(() => import('@/pages/courses/LessonPlayerPage').then((m) => ({ default: m.LessonPlayerPage })))
@@ -34,6 +40,8 @@ export const router = createBrowserRouter([
       { index: true, element: <Navigate to="/auth/login" replace /> },
       { path: 'login', element: <Lazy><LoginPage /></Lazy> },
       { path: 'register', element: <Lazy><RegisterPage /></Lazy> },
+      { path: 'check-email', element: <Lazy><CheckEmailPage /></Lazy> },
+      { path: 'verify-email', element: <Lazy><VerifyEmailPage /></Lazy> },
     ],
   },
   {

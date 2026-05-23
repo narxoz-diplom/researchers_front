@@ -34,9 +34,8 @@ export function RegisterForm() {
       },
       {
         onSuccess: (data) => {
-          toast.success(t('auth.accountCreated'))
-          const dest = data.user.role === 'AUTHOR' ? '/studio' : '/catalog'
-          void navigate(dest, { replace: true })
+          toast.success(t('auth.checkEmailSent'))
+          void navigate(`/auth/check-email?email=${encodeURIComponent(data.email)}`, { replace: true })
         },
         onError: (err) => {
           const apiErr = extractApiError(err)

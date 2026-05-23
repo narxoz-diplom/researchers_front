@@ -5,6 +5,8 @@ export const API = {
     refresh: '/auth/refresh',
     logout: '/auth/logout',
     me: '/auth/me',
+    verifyEmail: '/auth/verify-email',
+    resendVerification: '/auth/resend-verification',
   },
   users: {
     me: '/users/me',
