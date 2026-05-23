@@ -1,0 +1,61 @@
+export const API = {
+  auth: {
+    register: '/auth/register',
+    login: '/auth/login',
+    refresh: '/auth/refresh',
+    logout: '/auth/logout',
+    me: '/auth/me',
+  },
+  users: {
+    me: '/users/me',
+    mePassword: '/users/me/password',
+    list: '/users',
+    byId: (id: string) => `/users/${id}`,
+    role: (id: string) => `/users/${id}/role`,
+  },
+  courses: {
+    list: '/courses',
+    mine: '/courses/mine',
+    byId: (id: string) => `/courses/${id}`,
+    create: '/courses',
+    update: (id: string) => `/courses/${id}`,
+    publish: (id: string) => `/courses/${id}/publish`,
+    archive: (id: string) => `/courses/${id}/archive`,
+    delete: (id: string) => `/courses/${id}`,
+  },
+  lessons: {
+    byCourse: (cid: string) => `/courses/${cid}/lessons`,
+    reorder: (cid: string) => `/courses/${cid}/lessons/reorder`,
+    byId: (id: string) => `/lessons/${id}`,
+    create: (cid: string) => `/courses/${cid}/lessons`,
+    update: (id: string) => `/lessons/${id}`,
+    delete: (id: string) => `/lessons/${id}`,
+    complete: (id: string) => `/lessons/${id}/complete`,
+  },
+  videos: {
+    attach: (lid: string) => `/lessons/${lid}/videos`,
+    byId: (id: string) => `/videos/${id}`,
+    update: (id: string) => `/videos/${id}`,
+    delete: (id: string) => `/videos/${id}`,
+  },
+  materials: {
+    attach: (lid: string) => `/lessons/${lid}/materials`,
+    byId: (id: string) => `/materials/${id}`,
+    delete: (id: string) => `/materials/${id}`,
+  },
+  media: {
+    sign: '/media/sign',
+    signAvatar: '/media/sign/avatar',
+  },
+  subscriptions: {
+    me: '/me/subscription',
+    meHistory: '/me/subscriptions',
+    adminList: '/admin/subscriptions',
+    grant: '/admin/subscriptions/grant',
+    revoke: (id: string) => `/admin/subscriptions/${id}/revoke`,
+    extend: (id: string) => `/admin/subscriptions/${id}/extend`,
+  },
+  progress: {
+    my: '/me/progress',
+  },
+} as const
