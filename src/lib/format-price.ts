@@ -1,4 +1,4 @@
-export function formatPriceCents(priceCents: number, language = 'ru'): string {
+export function formatPriceCents(priceCents: number, language = 'kk'): string {
   const locale = language === 'kk' ? 'kk-KZ' : 'ru-RU'
   return new Intl.NumberFormat(locale, {
     style: 'currency',

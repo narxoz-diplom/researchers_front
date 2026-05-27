@@ -3,7 +3,7 @@ import { initReactI18next } from 'react-i18next'
 import ru from './locales/ru.json'
 import kk from './locales/kk.json'
 
-export const SUPPORTED_LANGUAGES = ['ru', 'kk'] as const
+export const SUPPORTED_LANGUAGES = ['kk', 'ru'] as const
 export type AppLanguage = (typeof SUPPORTED_LANGUAGES)[number]
 
 const STORAGE_KEY = 'researchers_lang'
@@ -14,7 +14,8 @@ function detectLanguage(): AppLanguage {
 
   const browser = navigator.language.toLowerCase()
   if (browser.startsWith('kk') || browser.startsWith('kz')) return 'kk'
-  return 'ru'
+  // Kazakh by default for first visit; Russian via LanguageToggle / stored preference
+  return 'kk'
 }
 
 void i18n.use(initReactI18next).init({

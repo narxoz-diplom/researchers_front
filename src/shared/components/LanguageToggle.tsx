@@ -9,8 +9,8 @@ import {
 import type { AppLanguage } from '@/i18n'
 
 const LANGUAGES: { code: AppLanguage; labelKey: 'common.languageRu' | 'common.languageKk' }[] = [
-  { code: 'ru', labelKey: 'common.languageRu' },
   { code: 'kk', labelKey: 'common.languageKk' },
+  { code: 'ru', labelKey: 'common.languageRu' },
 ]
 
 export function LanguageToggle() {
