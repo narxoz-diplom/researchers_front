@@ -1,15 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import {
-  Activity,
-  ArrowRight,
-  BookOpen,
-  FlaskConical,
-  Menu,
-  Microscope,
-  Wrench,
-} from 'lucide-react'
+import { ArrowRight, BookOpen, Menu } from 'lucide-react'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { LanguageToggle } from '@/shared/components/LanguageToggle'
@@ -17,20 +9,9 @@ import { ThemeToggle } from '@/shared/components/ThemeToggle'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import { cn } from '@/lib/utils'
 import { LANDING_IMAGES } from './landing-images'
+import { LandingNavLinks } from './LandingNavLinks'
+import { NAV_ITEMS, scrollToSection } from './landing-nav'
 import { LandingPhoto } from './LandingPhoto'
-import type { SectionId } from './types'
-
-const NAV_ITEMS: { id: SectionId; icon: typeof Microscope }[] = [
-  { id: 'about', icon: Microscope },
-  { id: 'publication', icon: BookOpen },
-  { id: 'methods', icon: FlaskConical },
-  { id: 'tools', icon: Wrench },
-  { id: 'wellness', icon: Activity },
-]
-
-function scrollToSection(id: SectionId) {
-  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-}
 
 export function LandingPage() {
   const { t } = useTranslation()
@@ -39,27 +20,6 @@ export function LandingPage() {
 
   const catalogHref = user ? '/catalog' : '/auth/register'
   const loginHref = '/auth/login'
-
-  function NavLinks({ onNavigate, className }: { onNavigate?: () => void; className?: string }) {
-    return (
-      <nav className={cn('flex flex-col gap-1 lg:flex-row lg:items-center lg:gap-1', className)}>
-        {NAV_ITEMS.map(({ id, icon: Icon }) => (
-          <button
-            key={id}
-            type="button"
-            onClick={() => {
-              scrollToSection(id)
-              onNavigate?.()
-            }}
-            className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-          >
-            <Icon className="h-4 w-4 shrink-0" />
-            {t(`landing.nav.${id}`)}
-          </button>
-        ))}
-      </nav>
-    )
-  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -72,7 +32,7 @@ export function LandingPage() {
             <span>{t('landing.brand')}</span>
           </Link>
 
-          <NavLinks className="hidden lg:flex flex-1 justify-center" />
+          <LandingNavLinks className="hidden lg:flex flex-1 justify-center" />
 
           <div className="ml-auto flex items-center gap-1">
             <LanguageToggle />
@@ -96,7 +56,7 @@ export function LandingPage() {
                 <Menu className="h-5 w-5" />
               </SheetTrigger>
               <SheetContent side="right" className="w-72 pt-12">
-                <NavLinks onNavigate={() => setMobileOpen(false)} className="mb-6" />
+                <LandingNavLinks onNavigate={() => setMobileOpen(false)} className="mb-6" />
                 <div className="flex flex-col gap-2">
                   {!user && (
                     <Link

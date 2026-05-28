@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, ImageOff, Plus } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
@@ -44,7 +44,7 @@ export function StudioCourseEditPage() {
     enabled: !!id,
   })
 
-  const { register, handleSubmit, reset, watch, setValue } = useForm<CourseForm>({
+  const { register, handleSubmit, reset, control, setValue } = useForm<CourseForm>({
     defaultValues: { title: '', description: '', coverUrl: '', priceAmount: '' },
   })
 
@@ -59,7 +59,7 @@ export function StudioCourseEditPage() {
     }
   }, [course, reset])
 
-  const coverPreview = watch('coverUrl')
+  const coverPreview = useWatch({ control, name: 'coverUrl' })
 
   const { mutate: updateCourse, isPending: saving } = useMutation({
     mutationFn: (data: CourseForm) => {

@@ -1,31 +1,28 @@
-import { lazy, Suspense } from 'react'
+import { Suspense } from 'react'
 import { createBrowserRouter, Navigate } from 'react-router-dom'
 import { AppLayout } from '@/shared/components/AppLayout'
 import { AuthLayout } from '@/shared/components/AuthLayout'
 import { ProtectedRoute } from '@/shared/components/ProtectedRoute'
 import { LoadingState } from '@/shared/ui/LoadingState'
-
-const LandingPage = lazy(() => import('@/pages/landing/LandingPage').then((m) => ({ default: m.LandingPage })))
-const LoginPage = lazy(() => import('@/pages/auth/LoginPage').then((m) => ({ default: m.LoginPage })))
-const RegisterPage = lazy(() => import('@/pages/auth/RegisterPage').then((m) => ({ default: m.RegisterPage })))
-const CheckEmailPage = lazy(() =>
-  import('@/pages/auth/EmailVerificationPages').then((m) => ({ default: m.CheckEmailPage })),
-)
-const VerifyEmailPage = lazy(() =>
-  import('@/pages/auth/EmailVerificationPages').then((m) => ({ default: m.VerifyEmailPage })),
-)
-const CatalogPage = lazy(() => import('@/pages/catalog/CatalogPage').then((m) => ({ default: m.CatalogPage })))
-const CourseDetailPage = lazy(() => import('@/pages/courses/CourseDetailPage').then((m) => ({ default: m.CourseDetailPage })))
-const LessonPlayerPage = lazy(() => import('@/pages/courses/LessonPlayerPage').then((m) => ({ default: m.LessonPlayerPage })))
-const StudioCoursesPage = lazy(() => import('@/pages/studio/StudioCoursesPage').then((m) => ({ default: m.StudioCoursesPage })))
-const StudioCourseEditPage = lazy(() => import('@/pages/studio/StudioCourseEditPage').then((m) => ({ default: m.StudioCourseEditPage })))
-const StudioLessonEditPage = lazy(() => import('@/pages/studio/StudioLessonEditPage').then((m) => ({ default: m.StudioLessonEditPage })))
-const StudioEnrollmentsPage = lazy(() => import('@/pages/studio/StudioEnrollmentsPage').then((m) => ({ default: m.StudioEnrollmentsPage })))
-const AdminUsersPage = lazy(() => import('@/pages/admin/AdminUsersPage').then((m) => ({ default: m.AdminUsersPage })))
-const AdminSubscriptionsPage = lazy(() => import('@/pages/admin/AdminSubscriptionsPage').then((m) => ({ default: m.AdminSubscriptionsPage })))
-const ProfilePage = lazy(() => import('@/pages/profile/ProfilePage').then((m) => ({ default: m.ProfilePage })))
-const NotFoundPage = lazy(() => import('@/pages/NotFoundPage').then((m) => ({ default: m.NotFoundPage })))
-const ForbiddenPage = lazy(() => import('@/pages/ForbiddenPage').then((m) => ({ default: m.ForbiddenPage })))
+import {
+  AdminSubscriptionsPage,
+  AdminUsersPage,
+  CatalogPage,
+  CheckEmailPage,
+  CourseDetailPage,
+  ForbiddenPage,
+  LandingPage,
+  LessonPlayerPage,
+  LoginPage,
+  NotFoundPage,
+  ProfilePage,
+  RegisterPage,
+  StudioCourseEditPage,
+  StudioCoursesPage,
+  StudioEnrollmentsPage,
+  StudioLessonEditPage,
+  VerifyEmailPage,
+} from './lazy-pages'
 
 function Lazy({ children }: { children: React.ReactNode }) {
   return <Suspense fallback={<LoadingState />}>{children}</Suspense>
