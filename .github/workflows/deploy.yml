@@ -71,7 +71,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: production
-      url: https://${{ secrets.PROD_DOMAIN }}
+      url: https://${{ vars.PROD_DOMAIN }}
     steps:
       - name: Deploy on VPS
         uses: appleboy/ssh-action@v1.2.0
