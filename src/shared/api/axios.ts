@@ -1,8 +1,9 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios'
 import { authStorage } from './auth-storage'
 import { useAuthStore } from '@/features/auth/store/auth.store'
+import { getApiBaseUrl } from './base-url'
 
-export const api = axios.create({ baseURL: import.meta.env.VITE_API_URL as string })
+export const api = axios.create({ baseURL: getApiBaseUrl() })
 
 api.interceptors.request.use((cfg: InternalAxiosRequestConfig) => {
   const access = useAuthStore.getState().accessToken
@@ -27,7 +28,7 @@ api.interceptors.response.use(undefined, async (err: AxiosError) => {
       const rt = authStorage.getRefresh()
       if (!rt) return null
       const { data } = await axios.post<{ accessToken: string; refreshToken: string }>(
-        `${import.meta.env.VITE_API_URL as string}/auth/refresh`,
+        `${getApiBaseUrl()}/auth/refresh`,
         { refreshToken: rt },
       )
       useAuthStore.getState().setTokens(data.accessToken, data.refreshToken)
