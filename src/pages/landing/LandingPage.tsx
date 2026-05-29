@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { ArrowRight, BookOpen, Menu } from 'lucide-react'
+import { ArrowRight, Menu } from 'lucide-react'
+import { BrandIcon } from '@/shared/components/BrandIcon'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { LanguageToggle } from '@/shared/components/LanguageToggle'
@@ -26,9 +27,7 @@ export function LandingPage() {
       <header className="sticky top-0 z-50 border-b bg-background/80 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-6xl items-center gap-4 px-4 sm:px-6">
           <Link to="/" className="flex items-center gap-2 font-semibold text-foreground shrink-0">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-              <BookOpen className="h-4 w-4 text-primary-foreground" />
-            </div>
+            <BrandIcon className="h-8 w-8" />
             <span>{t('landing.brand')}</span>
           </Link>
 
@@ -193,7 +192,7 @@ export function LandingPage() {
       <footer className="border-t bg-muted/30">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-4 py-8 sm:flex-row sm:px-6">
           <div className="flex items-center gap-2 font-semibold">
-            <BookOpen className="h-4 w-4 text-primary" />
+            <BrandIcon className="h-6 w-6" />
             {t('landing.brand')}
           </div>
           <p className="text-sm text-muted-foreground">

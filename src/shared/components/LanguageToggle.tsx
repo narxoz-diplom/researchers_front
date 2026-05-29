@@ -1,15 +1,14 @@
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import type { AppLanguage } from '@/i18n'
-import { KzFlagIcon, RuFlagIcon } from '@/shared/components/FlagIcons'
 
 const LANGUAGES: {
   code: AppLanguage
   labelKey: 'common.languageRu' | 'common.languageKk'
-  Flag: typeof KzFlagIcon
+  emoji: string
 }[] = [
-  { code: 'kk', labelKey: 'common.languageKk', Flag: KzFlagIcon },
-  { code: 'ru', labelKey: 'common.languageRu', Flag: RuFlagIcon },
+  { code: 'kk', labelKey: 'common.languageKk', emoji: '🇰🇿' },
+  { code: 'ru', labelKey: 'common.languageRu', emoji: '🇷🇺' },
 ]
 
 export function LanguageToggle() {
@@ -23,7 +22,7 @@ export function LanguageToggle() {
       aria-label={t('common.languageToggle')}
       className="inline-flex h-9 overflow-hidden rounded-md border border-border bg-background shadow-sm"
     >
-      {LANGUAGES.map(({ code, labelKey, Flag }) => (
+      {LANGUAGES.map(({ code, labelKey, emoji }) => (
         <button
           key={code}
           type="button"
@@ -31,18 +30,13 @@ export function LanguageToggle() {
           aria-label={t(labelKey)}
           onClick={() => void i18n.changeLanguage(code)}
           className={cn(
-            'flex min-w-11 items-center justify-center px-2.5 transition-colors',
+            'flex min-w-11 items-center justify-center px-2.5 text-lg leading-none transition-colors',
             active === code
               ? 'bg-accent text-accent-foreground'
               : 'hover:bg-muted/70',
           )}
         >
-          <Flag
-            className={cn(
-              'rounded-[2px] border border-black/15 shadow-inner',
-              code === 'kk' ? 'h-5 w-10' : 'h-5 w-[1.875rem]',
-            )}
-          />
+          <span aria-hidden>{emoji}</span>
         </button>
       ))}
     </div>

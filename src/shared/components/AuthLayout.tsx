@@ -1,5 +1,5 @@
-import { BookOpen } from 'lucide-react'
 import { Outlet } from 'react-router-dom'
+import { BrandIcon } from '@/shared/components/BrandIcon'
 import { useTranslation } from 'react-i18next'
 import { ThemeToggle } from './ThemeToggle'
 import { LanguageToggle } from './LanguageToggle'
@@ -11,9 +11,7 @@ export function AuthLayout() {
     <div className="min-h-screen bg-gradient-to-br from-background to-primary/5 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="mb-8 flex items-center justify-center gap-2 text-foreground no-underline">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary">
-            <BookOpen className="h-5 w-5 text-primary-foreground" />
-          </div>
+          <BrandIcon className="h-9 w-9" />
           <span className="text-xl font-semibold">researchers</span>
         </div>
 

@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { BookOpen } from 'lucide-react'
+import { BookMarkIcon } from '@/shared/components/BrandIcon'
 import { Button } from '@/components/ui/button'
 
 interface Props {
@@ -13,7 +13,7 @@ export function EmptyState({ icon, title, description, action }: Props) {
   return (
     <div className="flex flex-col items-center justify-center gap-4 py-20 text-center">
       <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
-        {icon ?? <BookOpen className="h-8 w-8" />}
+        {icon ?? <BookMarkIcon className="h-8 w-8" />}
       </div>
       <div>
         <p className="text-lg font-semibold text-foreground">{title}</p>

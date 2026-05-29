@@ -1,14 +1,8 @@
 import { useState } from 'react'
 import { Link, NavLink, Outlet } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import {
-  BookOpen,
-  LayoutDashboard,
-  Menu,
-  Shield,
-  Users,
-  Video,
-} from 'lucide-react'
+import { LayoutDashboard, Menu, Shield, Users, Video } from 'lucide-react'
+import { BookMarkIcon, BrandIcon } from '@/shared/components/BrandIcon'
 import { buttonVariants } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { cn } from '@/lib/utils'
@@ -26,7 +20,7 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { href: '/catalog', labelKey: 'nav.catalog', icon: <BookOpen className="h-4 w-4" />, roles: ['SUBSCRIBER', 'AUTHOR', 'ADMIN'] },
+  { href: '/catalog', labelKey: 'nav.catalog', icon: <BookMarkIcon className="h-4 w-4" />, roles: ['SUBSCRIBER', 'AUTHOR', 'ADMIN'] },
   { href: '/studio', labelKey: 'nav.studio', icon: <Video className="h-4 w-4" />, roles: ['AUTHOR', 'ADMIN'] },
   { href: '/admin/users', labelKey: 'nav.users', icon: <Users className="h-4 w-4" />, roles: ['ADMIN'] },
   { href: '/admin/subscriptions', labelKey: 'nav.subscriptions', icon: <Shield className="h-4 w-4" />, roles: ['ADMIN'] },
@@ -70,7 +64,7 @@ export function AppLayout() {
       <aside className="hidden w-56 shrink-0 flex-col border-r bg-card md:flex">
         <div className="flex h-14 items-center border-b px-4">
           <Link to="/catalog" className="flex items-center gap-2 font-semibold text-foreground">
-            <BookOpen className="h-5 w-5 text-primary" />
+            <BrandIcon className="h-7 w-7" />
             <span>researchers</span>
           </Link>
         </div>
@@ -92,7 +86,7 @@ export function AppLayout() {
                   className="flex items-center gap-2 font-semibold text-foreground"
                   onClick={() => setMobileOpen(false)}
                 >
-                  <BookOpen className="h-5 w-5 text-primary" />
+                  <BrandIcon className="h-7 w-7" />
                   <span>researchers</span>
                 </Link>
               </div>
@@ -106,7 +100,7 @@ export function AppLayout() {
             to="/catalog"
             className="flex items-center gap-2 font-semibold text-foreground md:hidden"
           >
-            <BookOpen className="h-5 w-5 text-primary" />
+            <BrandIcon className="h-7 w-7" />
             <span>researchers</span>
           </Link>
 

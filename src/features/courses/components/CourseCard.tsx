@@ -1,4 +1,5 @@
-import { BookOpen, Clock } from 'lucide-react'
+import { Clock } from 'lucide-react'
+import { BookMarkIcon, BrandIcon } from '@/shared/components/BrandIcon'
 import { useTranslation } from 'react-i18next'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
@@ -34,7 +35,7 @@ export function CourseCard({ course, onClick }: Props) {
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center">
-            <BookOpen className="h-10 w-10 text-muted-foreground/30" />
+            <BrandIcon className="h-14 w-14 opacity-50" />
           </div>
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
@@ -56,7 +57,7 @@ export function CourseCard({ course, onClick }: Props) {
 
         <div className="mt-auto flex items-center gap-3">
           <Badge variant="secondary" className="text-xs gap-1">
-            <BookOpen className="h-3 w-3" />
+            <BookMarkIcon className="h-3 w-3" />
             {t('common.lessonsCount', { count: course.lessonsCount })}
           </Badge>
           <div className="flex items-center gap-1 text-xs text-muted-foreground">

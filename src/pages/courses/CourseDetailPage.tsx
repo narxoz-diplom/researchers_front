@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, BookOpen, Lock } from 'lucide-react'
+import { ArrowLeft, Lock } from 'lucide-react'
+import { BookMarkIcon, BrandIcon } from '@/shared/components/BrandIcon'
 import { format } from 'date-fns'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
@@ -92,7 +93,7 @@ export function CourseDetailPage() {
               <img src={course.coverUrl} alt={course.title} className="h-full w-full object-cover" />
             ) : (
               <div className="flex h-full w-full items-center justify-center">
-                <BookOpen className="h-12 w-12 text-muted-foreground/30" />
+                <BrandIcon className="h-16 w-16 opacity-50" />
               </div>
             )}
             {isOwner && (
@@ -121,7 +122,7 @@ export function CourseDetailPage() {
 
           <div className="flex items-center gap-3 flex-wrap">
             <Badge variant="secondary" className="gap-1">
-              <BookOpen className="h-3 w-3" />
+              <BookMarkIcon className="h-3 w-3" />
               {t('common.lessonsCount', { count: course.lessonsCount })}
             </Badge>
             <Badge variant="outline">{formatPriceCents(course.priceCents, i18n.language)}</Badge>
