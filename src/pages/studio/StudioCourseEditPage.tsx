@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useForm, useWatch } from 'react-hook-form'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
@@ -60,6 +60,11 @@ export function StudioCourseEditPage() {
   }, [course, reset])
 
   const coverPreview = useWatch({ control, name: 'coverUrl' })
+  const [coverPreviewError, setCoverPreviewError] = useState(false)
+
+  useEffect(() => {
+    setCoverPreviewError(false)
+  }, [coverPreview])
 
   const { mutate: updateCourse, isPending: saving } = useMutation({
     mutationFn: (data: CourseForm) => {
@@ -169,26 +174,31 @@ export function StudioCourseEditPage() {
                   hint={t('common.coverHint')}
                   onUploaded={(result) => {
                     setValue('coverUrl', result.secure_url, { shouldDirty: true })
+                    setCoverPreviewError(false)
                     toast.success(t('studio.coverUploaded'))
                   }}
                 />
               </div>
               <div className="mt-2 aspect-video overflow-hidden rounded-xl border bg-muted">
-                {coverPreview ? (
+                {coverPreview && !coverPreviewError ? (
                   <img
                     src={coverPreview}
                     alt={t('common.coverAlt')}
                     className="h-full w-full object-cover"
-                    onError={(e) => {
-                      ;(e.target as HTMLImageElement).style.display = 'none'
-                    }}
+                    onError={() => setCoverPreviewError(true)}
                   />
                 ) : (
-                  <div className="flex h-full w-full items-center justify-center text-muted-foreground">
+                  <div className="flex h-full w-full flex-col items-center justify-center gap-2 px-4 text-center text-muted-foreground">
                     <ImageOff className="h-8 w-8" />
+                    {coverPreviewError && (
+                      <p className="text-xs">{t('studio.coverPreviewFailed')}</p>
+                    )}
                   </div>
                 )}
               </div>
+              {coverPreview && (
+                <p className="mt-1 text-xs text-muted-foreground">{t('studio.coverSaveHint')}</p>
+              )}
             </div>
 
             <div>
@@ -224,18 +234,24 @@ export function StudioCourseEditPage() {
         <div className="lg:col-span-2">
           <div className="flex items-center justify-between mb-4 gap-2 flex-wrap">
             <h2 className="text-lg font-semibold">{t('common.lessons')}</h2>
-            <div className="flex gap-2">
+            <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
               <Button
                 size="sm"
                 variant="outline"
+                className="w-full sm:w-auto"
                 onClick={() => navigate(`/studio/courses/${id}/enrollments`)}
               >
                 {t('common.studentEnrollments')}
               </Button>
-            <Button size="sm" onClick={() => createLesson()} disabled={creatingLesson}>
-              <Plus className="mr-2 h-4 w-4" />
-              {t('common.addLesson')}
-            </Button>
+              <Button
+                size="sm"
+                className="w-full sm:w-auto"
+                onClick={() => createLesson()}
+                disabled={creatingLesson}
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                {t('common.addLesson')}
+              </Button>
             </div>
           </div>
 

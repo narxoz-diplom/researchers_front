@@ -48,20 +48,29 @@ export function MediaUploader({
     setProgress(0)
 
     try {
-      const sign = await mediaApi.sign({ resourceType, folder })
-      const result = await uploadToCloudinary(file, sign, setProgress)
+      let result: CloudinaryUploadResult
+      try {
+        const sign = await mediaApi.sign({ resourceType, folder })
+        result = await uploadToCloudinary(file, sign, setProgress)
+      } catch (err) {
+        const status = axios.isAxiosError(err) ? err.response?.status : undefined
+        const apiErr = extractApiError(err)
+        const cloudinaryOff =
+          status === 503 ||
+          apiErr?.message?.toLowerCase().includes('cloudinary')
+        if (!cloudinaryOff) {
+          throw err
+        }
+        result = await mediaApi.uploadLocal(
+          file,
+          { resourceType, folder },
+          setProgress,
+        )
+      }
       await onUploaded(result, file)
     } catch (err) {
-      const status = axios.isAxiosError(err) ? err.response?.status : undefined
       const apiErr = extractApiError(err)
-      if (
-        status === 503 ||
-        apiErr?.message?.toLowerCase().includes('cloudinary')
-      ) {
-        toast.error(t('media.cloudinaryNotConfigured'))
-      } else {
-        toast.error(t('media.uploadFailed'))
-      }
+      toast.error(apiErr?.message ?? t('media.uploadFailed'))
     } finally {
       setUploading(false)
       setProgress(0)

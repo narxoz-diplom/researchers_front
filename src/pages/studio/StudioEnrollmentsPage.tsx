@@ -87,7 +87,54 @@ export function StudioEnrollmentsPage() {
           {t('common.noEnrollments')}
         </p>
       ) : (
-        <div className="rounded-xl border overflow-hidden">
+        <>
+          <div className="flex flex-col gap-3 md:hidden">
+            {enrollments.map((row) => (
+              <div key={row.id} className="rounded-xl border bg-card p-4 space-y-3">
+                <div>
+                  <p className="font-medium">{row.user?.fullName}</p>
+                  <p className="text-xs text-muted-foreground">{row.user?.email}</p>
+                  {row.message && (
+                    <p className="mt-2 text-xs text-muted-foreground">{row.message}</p>
+                  )}
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge variant="secondary">
+                    {t(`enrollmentStatuses.${row.status as CourseEnrollmentStatus}`)}
+                  </Badge>
+                  <span className="text-xs text-muted-foreground">
+                    {format(new Date(row.createdAt), 'd MMM yyyy', { locale: dateLocale })}
+                  </span>
+                </div>
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  {row.status === 'PAID' && (
+                    <Button
+                      size="sm"
+                      className="w-full sm:flex-1"
+                      disabled={approving}
+                      onClick={() => approve(row.id)}
+                    >
+                      <Check className="h-4 w-4 mr-1" />
+                      {t('common.grantAccess')}
+                    </Button>
+                  )}
+                  {(row.status === 'PENDING' || row.status === 'PAID') && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="w-full sm:flex-1"
+                      onClick={() => reject(row.id)}
+                    >
+                      <X className="h-4 w-4 mr-1" />
+                      {t('common.reject')}
+                    </Button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="hidden md:block rounded-xl border overflow-hidden">
           <Table>
             <TableHeader>
               <TableRow>
@@ -143,7 +190,8 @@ export function StudioEnrollmentsPage() {
               ))}
             </TableBody>
           </Table>
-        </div>
+          </div>
+        </>
       )}
     </div>
   )

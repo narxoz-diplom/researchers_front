@@ -18,11 +18,11 @@ export function AuthLayout() {
         <Outlet />
 
         <div className="mt-8 text-center">
-          <div className="flex justify-center gap-4 text-xs text-muted-foreground">
+          <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
             <span>{t('auth.footerCourses')}</span>
-            <span>·</span>
+            <span aria-hidden>·</span>
             <span>{t('auth.footerAccess')}</span>
-            <span>·</span>
+            <span aria-hidden>·</span>
             <span>{t('auth.footerProgress')}</span>
           </div>
           <div className="mt-3 flex justify-center gap-1">

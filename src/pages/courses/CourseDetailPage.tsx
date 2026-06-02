@@ -105,7 +105,7 @@ export function CourseDetailPage() {
         </div>
 
         <div className="flex flex-col gap-4 lg:col-span-3">
-          <h1 className="text-3xl font-semibold tracking-tight">{course.title}</h1>
+          <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">{course.title}</h1>
 
           <div className="flex items-center gap-2">
             <Avatar className="h-7 w-7">
@@ -167,9 +167,13 @@ export function CourseDetailPage() {
 
       <div className="mt-10">
         <Tabs defaultValue="lessons">
-          <TabsList>
-            <TabsTrigger value="lessons">{t('common.lessons')}</TabsTrigger>
-            <TabsTrigger value="overview">{t('common.overview')}</TabsTrigger>
+          <TabsList className="w-full sm:w-auto">
+            <TabsTrigger value="lessons" className="flex-1 sm:flex-none">
+              {t('common.lessons')}
+            </TabsTrigger>
+            <TabsTrigger value="overview" className="flex-1 sm:flex-none">
+              {t('common.overview')}
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="lessons" className="mt-4">
@@ -242,7 +246,7 @@ function SubscriberActions({
 
   if (hasAccess) {
     return (
-      <Button onClick={onStart} disabled={!firstLessonId}>
+      <Button className="w-full sm:w-auto" onClick={onStart} disabled={!firstLessonId}>
         {t('common.startLearning')}
       </Button>
     )
@@ -257,7 +261,7 @@ function SubscriberActions({
           onChange={(e) => onRequestMessageChange(e.target.value)}
           rows={2}
         />
-        <Button onClick={onRequest} disabled={requesting}>
+        <Button className="w-full sm:w-auto" onClick={onRequest} disabled={requesting}>
           {requesting ? t('common.sending') : t('common.requestCourse')}
         </Button>
         <p className="text-xs text-muted-foreground">
@@ -271,7 +275,7 @@ function SubscriberActions({
     return (
       <div className="flex flex-col gap-3 max-w-md">
         <Badge variant="outline" className="w-fit">{t('common.requestSent')}</Badge>
-        <Button onClick={onPurchase} disabled={purchasing}>
+        <Button className="w-full sm:w-auto" onClick={onPurchase} disabled={purchasing}>
           {purchasing ? t('common.processing') : t('common.pay', { price })}
         </Button>
         <p className="text-xs text-muted-foreground">{t('common.afterPaymentHint')}</p>

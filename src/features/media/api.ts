@@ -12,6 +12,26 @@ export interface SignUploadPayload {
 export const mediaApi = {
   sign: (payload: SignUploadPayload) =>
     api.post<SignResponse>(API.media.sign, payload).then((r) => r.data),
+
+  uploadLocal: (
+    file: File,
+    payload: SignUploadPayload,
+    onProgress?: (percent: number) => void,
+  ) => {
+    const form = new FormData()
+    form.append('resourceType', payload.resourceType)
+    form.append('folder', payload.folder)
+    form.append('file', file)
+    return api
+      .post<CloudinaryUploadResult>(API.media.upload, form, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        onUploadProgress: (event) => {
+          if (!onProgress || !event.total) return
+          onProgress(Math.round((event.loaded / event.total) * 100))
+        },
+      })
+      .then((r) => r.data)
+  },
 }
 
 export async function uploadToCloudinary(

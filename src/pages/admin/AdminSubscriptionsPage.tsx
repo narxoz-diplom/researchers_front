@@ -94,7 +94,37 @@ export function AdminSubscriptionsPage() {
         }
       />
 
-      <div className="rounded-xl border bg-card overflow-hidden mb-12">
+      <div className="flex flex-col gap-3 pb-12 md:hidden">
+        {isLoading &&
+          Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-24 rounded-xl" />)}
+        {data?.data.map((sub) => (
+          <div key={sub.id} className="rounded-xl border bg-card p-4 space-y-3">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <p className="font-medium truncate">{sub.user?.fullName}</p>
+                <p className="text-xs text-muted-foreground truncate">{sub.user?.email}</p>
+              </div>
+              <StatusBadge status={sub.status} />
+            </div>
+            <p className="text-sm text-muted-foreground">
+              {t('common.expiresAt')}:{' '}
+              {format(new Date(sub.expiresAt), 'd MMM yyyy', { locale: dateLocale })}
+            </p>
+            {sub.status === 'ACTIVE' && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="w-full text-destructive border-destructive/30"
+                onClick={() => revoke(sub.id)}
+              >
+                {t('common.revoke')}
+              </Button>
+            )}
+          </div>
+        ))}
+      </div>
+
+      <div className="hidden md:block rounded-xl border bg-card overflow-hidden mb-12">
         <Table>
           <TableHeader>
             <TableRow>

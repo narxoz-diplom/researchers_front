@@ -82,7 +82,7 @@ export function AdminUsersPage() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder={t('common.search')}
-              className="pl-9 w-56"
+              className="pl-9 w-full sm:w-56"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
@@ -90,12 +90,65 @@ export function AdminUsersPage() {
         }
       />
 
-      <div className="rounded-xl border bg-card overflow-hidden mb-12">
+      <div className="flex flex-col gap-3 pb-12 md:hidden">
+        {isLoading &&
+          Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-28 rounded-xl" />)}
+        {data?.data.map((user) => (
+          <div key={user.id} className="rounded-xl border bg-card p-4 space-y-3">
+            <div className="flex items-center gap-3">
+              <Avatar className="h-10 w-10">
+                <AvatarFallback className="text-xs bg-primary/10 text-primary">
+                  {user.fullName[0]}
+                </AvatarFallback>
+              </Avatar>
+              <div className="min-w-0 flex-1">
+                <p className="font-medium truncate">{user.fullName}</p>
+                <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+              </div>
+              <RoleBadge role={user.role} />
+            </div>
+            <button
+              type="button"
+              onClick={() => void copyId(user.id)}
+              className="flex w-full items-center gap-2 rounded-md bg-muted/40 px-2 py-1.5 font-mono text-xs text-muted-foreground"
+            >
+              <span className="truncate">{user.id}</span>
+              {copiedId === user.id ? (
+                <Check className="h-3.5 w-3.5 shrink-0 text-emerald-500" />
+              ) : (
+                <Copy className="h-3.5 w-3.5 shrink-0" />
+              )}
+            </button>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex-1"
+                onClick={() =>
+                  setRoleDialog({ user, newRole: user.role === 'ADMIN' ? 'SUBSCRIBER' : 'AUTHOR' })
+                }
+              >
+                {t('common.changeRole')}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex-1 text-destructive"
+                onClick={() => deleteUser(user.id)}
+              >
+                {t('common.delete')}
+              </Button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="hidden md:block rounded-xl border bg-card overflow-hidden mb-12">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>{t('common.user')}</TableHead>
-              <TableHead>{t('common.id')}</TableHead>
+              <TableHead className="hidden lg:table-cell">{t('common.id')}</TableHead>
               <TableHead>{t('common.role')}</TableHead>
               <TableHead className="text-right">{t('common.actions')}</TableHead>
             </TableRow>
@@ -124,7 +177,7 @@ export function AdminUsersPage() {
                     </div>
                   </div>
                 </TableCell>
-                <TableCell>
+                <TableCell className="hidden lg:table-cell">
                   <button
                     type="button"
                     onClick={() => void copyId(user.id)}

@@ -60,9 +60,15 @@ export function ProfilePage() {
       />
 
       <Tabs defaultValue="profile" className="pb-12">
-        <TabsList>
-          <TabsTrigger value="profile">{t('common.profile')}</TabsTrigger>
-          {isSubscriber && <TabsTrigger value="subscription">{t('common.subscription')}</TabsTrigger>}
+        <TabsList className="w-full sm:w-auto">
+          <TabsTrigger value="profile" className="flex-1 sm:flex-none">
+            {t('common.profile')}
+          </TabsTrigger>
+          {isSubscriber && (
+            <TabsTrigger value="subscription" className="flex-1 sm:flex-none">
+              {t('common.subscription')}
+            </TabsTrigger>
+          )}
         </TabsList>
 
         <TabsContent value="profile" className="mt-6">
@@ -135,7 +141,7 @@ export function ProfilePage() {
                       <p className="text-sm text-muted-foreground mt-1">{t('common.daysLeft')}</p>
                     </div>
                   )}
-                  <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
                     <div>
                       <p className="text-xs text-muted-foreground">{t('common.from')}</p>
                       <p className="font-medium mt-0.5">

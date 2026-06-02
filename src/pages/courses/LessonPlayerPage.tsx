@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, CheckCircle, Download, FileText, Lock, Sparkles } from 'lucide-react'
+import { ArrowLeft, CheckCircle, Download, FileText, List, Lock, Sparkles } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import ReactPlayer from 'react-player'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
+import { cn } from '@/lib/utils'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ErrorState } from '@/shared/ui/ErrorState'
 import { api, extractApiError } from '@/shared/api/axios'
@@ -31,6 +33,7 @@ export function LessonPlayerPage() {
   const user = useAuthStore((s) => s.user)
   const qc = useQueryClient()
   const [celebrate, setCelebrate] = useState(false)
+  const [lessonsOpen, setLessonsOpen] = useState(false)
 
   const { data: lesson, isLoading, isError } = useQuery({
     queryKey: ['lesson', lessonId],
@@ -137,8 +140,35 @@ export function LessonPlayerPage() {
         </div>
       )}
 
-      <div className="grid gap-8 lg:grid-cols-3">
+      <div className="grid gap-6 lg:gap-8 lg:grid-cols-3">
         <div className="lg:col-span-2 flex flex-col gap-6">
+          {allLessons && allLessons.length > 0 && (
+            <Sheet open={lessonsOpen} onOpenChange={setLessonsOpen}>
+              <SheetTrigger asChild>
+                <Button variant="outline" className="w-full justify-between lg:hidden">
+                  <span className="truncate text-left">
+                    {t('common.lessonOf', { current: currentIndex + 1, total: allLessons.length })}
+                    {' — '}
+                    {lesson.title}
+                  </span>
+                  <List className="h-4 w-4 shrink-0" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="bottom" className="max-h-[min(85dvh,32rem)] overflow-y-auto rounded-t-2xl">
+                <SheetHeader className="pb-2">
+                  <SheetTitle>{t('common.courseLessons')}</SheetTitle>
+                </SheetHeader>
+                <LessonListNav
+                  lessons={allLessons}
+                  courseId={cid!}
+                  currentLessonId={lessonId!}
+                  completedIds={completedIds}
+                  onSelect={() => setLessonsOpen(false)}
+                />
+              </SheetContent>
+            </Sheet>
+          )}
+
           {mainVideo ? (
             <div className="overflow-hidden rounded-2xl bg-black aspect-video">
               <ReactPlayer
@@ -155,7 +185,7 @@ export function LessonPlayerPage() {
           )}
 
           <div>
-            <h1 className="text-2xl font-semibold">{lesson.title}</h1>
+            <h1 className="text-xl font-semibold sm:text-2xl">{lesson.title}</h1>
             {allLessons && (
               <p className="mt-1 text-sm text-muted-foreground">
                 {t('common.lessonOf', { current: currentIndex + 1, total: allLessons.length })}
@@ -201,25 +231,37 @@ export function LessonPlayerPage() {
             </div>
           )}
 
-          <div className="flex items-center justify-between gap-4 pt-4 border-t">
-            <Button
-              variant="outline"
-              disabled={!prevLesson}
-              onClick={() => prevLesson && navigate(`/courses/${cid}/lessons/${prevLesson.id}`)}
-            >
-              {t('common.previous')}
-            </Button>
+          <div className="flex flex-col gap-3 border-t pt-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+            <div className="grid grid-cols-2 gap-2 sm:flex sm:gap-2">
+              <Button
+                variant="outline"
+                className="w-full sm:w-auto"
+                disabled={!prevLesson}
+                onClick={() => prevLesson && navigate(`/courses/${cid}/lessons/${prevLesson.id}`)}
+              >
+                {t('common.previous')}
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full sm:w-auto"
+                disabled={!nextLesson}
+                onClick={() => nextLesson && navigate(`/courses/${cid}/lessons/${nextLesson.id}`)}
+              >
+                {t('common.next')}
+              </Button>
+            </div>
 
             {user?.role === 'SUBSCRIBER' && (
               <Button
                 variant={isCompleted ? 'outline' : 'default'}
-                className={
+                className={cn(
+                  'w-full sm:w-auto',
                   isCompleted
                     ? 'border-emerald-500 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/30'
                     : celebrate
                       ? 'animate-pulse bg-emerald-500 hover:bg-emerald-500 text-white'
-                      : ''
-                }
+                      : '',
+                )}
                 disabled={isPending}
                 onClick={() => toggleComplete()}
               >
@@ -238,41 +280,65 @@ export function LessonPlayerPage() {
                 )}
               </Button>
             )}
-
-            <Button
-              variant="outline"
-              disabled={!nextLesson}
-              onClick={() => nextLesson && navigate(`/courses/${cid}/lessons/${nextLesson.id}`)}
-            >
-              {t('common.next')}
-            </Button>
           </div>
         </div>
 
-        <aside className="hidden lg:flex flex-col gap-1">
-          <h3 className="text-sm font-semibold mb-2 text-muted-foreground uppercase tracking-wide">
-            {t('common.courseLessons')}
-          </h3>
-          {allLessons?.map((l, idx) => (
-            <button
-              key={l.id}
-              onClick={() => navigate(`/courses/${cid}/lessons/${l.id}`)}
-              className={`flex items-center gap-3 rounded-xl p-2.5 text-left text-sm transition-colors
-                ${l.id === lessonId ? 'bg-primary/10 text-primary font-medium' : 'hover:bg-muted text-foreground'}
-              `}
-            >
-              {l.id === lessonId && (
-                <span className="absolute left-0 h-full w-0.5 bg-primary rounded-full" />
-              )}
-              <span className="shrink-0 text-xs text-muted-foreground w-5 text-right">{idx + 1}</span>
-              <span className="truncate">{l.title}</span>
-              {completedIds.has(l.id) && (
-                <CheckCircle className="shrink-0 ml-auto h-4 w-4 text-emerald-500" />
-              )}
-            </button>
-          ))}
+        <aside className="hidden lg:flex flex-col">
+          <LessonListNav
+            lessons={allLessons ?? []}
+            courseId={cid!}
+            currentLessonId={lessonId!}
+            completedIds={completedIds}
+          />
         </aside>
       </div>
+    </div>
+  )
+}
+
+function LessonListNav({
+  lessons,
+  courseId,
+  currentLessonId,
+  completedIds,
+  onSelect,
+}: {
+  lessons: Lesson[]
+  courseId: string
+  currentLessonId: string
+  completedIds: Set<string>
+  onSelect?: () => void
+}) {
+  const { t } = useTranslation()
+  const navigate = useNavigate()
+
+  return (
+    <div className="flex flex-col gap-1">
+      <h3 className="mb-2 hidden text-sm font-semibold uppercase tracking-wide text-muted-foreground lg:block">
+        {t('common.courseLessons')}
+      </h3>
+      {lessons.map((l, idx) => (
+        <button
+          key={l.id}
+          type="button"
+          onClick={() => {
+            navigate(`/courses/${courseId}/lessons/${l.id}`)
+            onSelect?.()
+          }}
+          className={cn(
+            'relative flex items-center gap-3 rounded-xl p-2.5 text-left text-sm transition-colors',
+            l.id === currentLessonId
+              ? 'bg-primary/10 font-medium text-primary'
+              : 'text-foreground hover:bg-muted',
+          )}
+        >
+          <span className="w-5 shrink-0 text-right text-xs text-muted-foreground">{idx + 1}</span>
+          <span className="min-w-0 flex-1 truncate">{l.title}</span>
+          {completedIds.has(l.id) && (
+            <CheckCircle className="ml-auto h-4 w-4 shrink-0 text-emerald-500" />
+          )}
+        </button>
+      ))}
     </div>
   )
 }

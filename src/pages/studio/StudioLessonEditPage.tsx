@@ -223,13 +223,14 @@ export function StudioLessonEditPage() {
           />
         </div>
 
-        <div className="flex items-center gap-3">
-          <Button type="submit" disabled={saving}>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <Button type="submit" disabled={saving} className="w-full sm:w-auto">
             {saving ? t('common.saving') : t('common.save')}
           </Button>
           <Button
             type="button"
             variant="destructive"
+            className="w-full sm:w-auto"
             onClick={() => deleteLesson()}
           >
             {t('common.deleteLesson')}

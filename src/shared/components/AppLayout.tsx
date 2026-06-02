@@ -60,7 +60,7 @@ export function AppLayout() {
   const [mobileOpen, setMobileOpen] = useState(false)
 
   return (
-    <div className="flex h-screen bg-background">
+    <div className="flex min-h-dvh h-dvh bg-background">
       <aside className="hidden w-56 shrink-0 flex-col border-r bg-card md:flex">
         <div className="flex h-14 items-center border-b px-4">
           <Link to="/catalog" className="flex items-center gap-2 font-semibold text-foreground">
@@ -74,7 +74,7 @@ export function AppLayout() {
       </aside>
 
       <div className="flex flex-1 flex-col overflow-hidden">
-        <header className="flex h-14 items-center gap-3 border-b bg-card px-4">
+        <header className="flex h-14 shrink-0 items-center gap-2 border-b bg-card px-3 sm:gap-3 sm:px-4">
           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
             <SheetTrigger className={cn(buttonVariants({ variant: 'ghost', size: 'icon' }), 'md:hidden')}>
               <Menu className="h-5 w-5" />
@@ -101,14 +101,16 @@ export function AppLayout() {
             className="flex items-center gap-2 font-semibold text-foreground md:hidden"
           >
             <BrandIcon className="h-7 w-7" />
-            <span>researchers</span>
+            <span className="truncate">researchers</span>
           </Link>
 
-          <div className="flex-1" />
+          <div className="flex-1 min-w-0" />
 
-          <LanguageToggle />
-          <ThemeToggle />
-          <UserMenu />
+          <div className="flex shrink-0 items-center gap-0.5 sm:gap-1">
+            <LanguageToggle />
+            <ThemeToggle />
+            <UserMenu />
+          </div>
         </header>
 
         <main className="flex-1 overflow-y-auto">

@@ -56,6 +56,7 @@ export const API = {
   media: {
     sign: '/media/sign',
     signAvatar: '/media/sign/avatar',
+    upload: '/media/upload',
   },
   subscriptions: {
     me: '/me/subscription',
