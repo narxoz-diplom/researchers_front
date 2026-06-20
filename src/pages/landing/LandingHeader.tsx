@@ -8,7 +8,9 @@ import { buttonVariants } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 import { LanguageToggle } from '@/shared/components/LanguageToggle'
 import { ThemeToggle } from '@/shared/components/ThemeToggle'
+import { UserMenu } from '@/shared/components/UserMenu'
 import { useAuthStore } from '@/features/auth/store/auth.store'
+import { getAccountHomeLabelKey, getAccountHomePath } from '@/shared/utils/account-home'
 import { cn } from '@/lib/utils'
 import { LandingNavLinks } from './LandingNavLinks'
 import { scrollToSection } from './landing-nav'
@@ -30,6 +32,8 @@ export function LandingHeader({
   const { t } = useTranslation()
   const user = useAuthStore((s) => s.user)
   const [mobileOpen, setMobileOpen] = useState(false)
+  const accountHref = getAccountHomePath(user?.role)
+  const accountLabelKey = getAccountHomeLabelKey(user?.role)
 
   return (
     <header className="sticky top-0 z-50 border-b border-border/60 bg-background/90 backdrop-blur-xl supports-[backdrop-filter]:bg-background/75">
@@ -52,14 +56,30 @@ export function LandingHeader({
               <ThemeToggle className="h-8 w-8 rounded-lg" />
             </div>
 
+            {user && (
+              <div className="sm:hidden">
+                <UserMenu />
+              </div>
+            )}
+
             <div className="hidden items-center gap-2 sm:flex">
-              {!user && (
+              {!user ? (
                 <Link
                   to={loginHref}
                   className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'h-9 px-4')}
                 >
                   {t('landing.login')}
                 </Link>
+              ) : (
+                <>
+                  <Link
+                    to={accountHref}
+                    className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'h-9 px-4')}
+                  >
+                    {t(accountLabelKey)}
+                  </Link>
+                  <UserMenu />
+                </>
               )}
               <Link
                 to={catalogHref}
@@ -110,7 +130,7 @@ export function LandingHeader({
                 </div>
 
                 <div className="mt-auto flex flex-col gap-2 border-t bg-muted/20 p-6">
-                  {!user && (
+                  {!user ? (
                     <Link
                       to={loginHref}
                       onClick={() => setMobileOpen(false)}
@@ -118,11 +138,28 @@ export function LandingHeader({
                     >
                       {t('landing.login')}
                     </Link>
+                  ) : (
+                    <>
+                      <Link
+                        to={accountHref}
+                        onClick={() => setMobileOpen(false)}
+                        className={buttonVariants({ className: 'w-full' })}
+                      >
+                        {t(accountLabelKey)}
+                      </Link>
+                      <Link
+                        to="/profile"
+                        onClick={() => setMobileOpen(false)}
+                        className={buttonVariants({ variant: 'outline', className: 'w-full' })}
+                      >
+                        {t('nav.profile')}
+                      </Link>
+                    </>
                   )}
                   <Link
                     to={catalogHref}
                     onClick={() => setMobileOpen(false)}
-                    className={buttonVariants({ className: 'w-full' })}
+                    className={buttonVariants({ variant: user ? 'outline' : 'default', className: 'w-full' })}
                   >
                     {t('landing.goToCatalog')}
                   </Link>
