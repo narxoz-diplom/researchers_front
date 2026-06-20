@@ -1,4 +1,5 @@
-import { useNavigate, useParams } from 'react-router-dom'
+import { useState } from 'react'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, Lock } from 'lucide-react'
 import { BookMarkIcon, BrandIcon } from '@/shared/components/BrandIcon'
@@ -10,6 +11,7 @@ import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Textarea } from '@/components/ui/textarea'
 import { ErrorState } from '@/shared/ui/ErrorState'
 import { StatusBadge } from '@/shared/ui/StatusBadge'
 import { api } from '@/shared/api/axios'
@@ -17,6 +19,7 @@ import { API } from '@/shared/api/endpoints'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import { formatPriceCents } from '@/lib/format-price'
 import { getDateLocale } from '@/lib/date-locale'
+import { TextWithLinks } from '@/shared/ui/TextWithLinks'
 import type { Course, LessonSummary, MyEnrollment } from '@/shared/types'
 
 interface CourseDetail extends Course {
@@ -31,6 +34,7 @@ export function CourseDetailPage() {
   const navigate = useNavigate()
   const user = useAuthStore((s) => s.user)
   const qc = useQueryClient()
+  const [requestMessage, setRequestMessage] = useState('')
 
   const { data: course, isLoading, isError, refetch } = useQuery({
     queryKey: ['course', id],
@@ -38,14 +42,26 @@ export function CourseDetailPage() {
     enabled: !!id,
   })
 
+  const { mutate: requestEnrollment, isPending: requesting } = useMutation({
+    mutationFn: () =>
+      api.post<MyEnrollment>(API.courses.enrollmentRequest(id!), {
+        message: requestMessage.trim() || undefined,
+      }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['course', id] })
+      toast.success(t('course.enrollmentSent'))
+      setRequestMessage('')
+    },
+    onError: () => toast.error(t('course.enrollmentFailed')),
+  })
+
   const { mutate: purchaseEnrollment, isPending: purchasing } = useMutation({
     mutationFn: () => api.post<MyEnrollment>(API.courses.enrollmentPurchase(id!)),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['course', id] })
-      void qc.invalidateQueries({ queryKey: ['library', 'mine'] })
       toast.success(t('course.paymentAccepted'))
     },
-    onError: () => toast.error(t('course.purchaseFailed')),
+    onError: () => toast.error(t('course.submitRequestFirst')),
   })
 
   if (isLoading) return <CourseDetailSkeleton />
@@ -56,6 +72,7 @@ export function CourseDetailPage() {
   const isSubscriber = user?.role === 'SUBSCRIBER'
   const lessons = course.lessons
   const firstLessonId = lessons[0]?.id
+  const enrollment = course.myEnrollment
   const dateLocale = getDateLocale(i18n.language)
 
   return (
@@ -64,10 +81,10 @@ export function CourseDetailPage() {
         variant="ghost"
         size="sm"
         className="mt-4 mb-6 gap-1 text-muted-foreground"
-        onClick={() => navigate(user?.role === 'SUBSCRIBER' ? '/my-learning' : '/catalog')}
+        onClick={() => navigate('/catalog')}
       >
         <ArrowLeft className="h-4 w-4" />
-        {t(user?.role === 'SUBSCRIBER' ? 'nav.myLearning' : 'common.catalog')}
+        {t('common.catalog')}
       </Button>
 
       <div className="grid gap-8 lg:grid-cols-5">
@@ -101,7 +118,11 @@ export function CourseDetailPage() {
           </div>
 
           {course.description && (
-            <p className="text-sm text-muted-foreground leading-relaxed">{course.description}</p>
+            <TextWithLinks
+              as="p"
+              className="text-sm text-muted-foreground leading-relaxed"
+              text={course.description}
+            />
           )}
 
           <div className="flex items-center gap-3 flex-wrap">
@@ -127,12 +148,28 @@ export function CourseDetailPage() {
           ) : isSubscriber ? (
             <SubscriberActions
               course={course}
+              enrollment={enrollment}
               hasAccess={course.hasAccess}
               firstLessonId={firstLessonId}
+              requestMessage={requestMessage}
+              onRequestMessageChange={setRequestMessage}
+              onRequest={() => requestEnrollment()}
               onPurchase={() => purchaseEnrollment()}
               onStart={() => navigate(`/courses/${course.id}/lessons/${firstLessonId}`)}
+              requesting={requesting}
               purchasing={purchasing}
             />
+          ) : !user ? (
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <Button asChild className="w-full sm:w-auto">
+                <Link to="/auth/login" state={{ from: { pathname: `/courses/${course.id}` } }}>
+                  {t('landing.login')}
+                </Link>
+              </Button>
+              <Button asChild variant="outline" className="w-full sm:w-auto">
+                <Link to="/auth/register">{t('landing.start')}</Link>
+              </Button>
+            </div>
           ) : course.hasAccess ? (
             <Button
               onClick={() => navigate(`/courses/${course.id}/lessons/${firstLessonId}`)}
@@ -160,41 +197,37 @@ export function CourseDetailPage() {
               <p className="text-sm text-muted-foreground py-8 text-center">{t('common.noLessonsInCourse')}</p>
             ) : (
               <div className="flex flex-col gap-1">
-                {lessons.map((lesson, index) => {
-                  const isPreviewLesson = !course.hasAccess && index === 0
-                  const isLocked = lesson.locked ?? (!course.hasAccess && index > 0)
-
-                  return (
+                {lessons.map((lesson, index) => (
                   <button
                     key={lesson.id}
                     type="button"
                     onClick={() => {
-                      if (isLocked) return
+                      if (!course.hasAccess) return
                       navigate(`/courses/${course.id}/lessons/${lesson.id}`)
                     }}
-                    disabled={isLocked}
+                    disabled={!course.hasAccess}
                     className="flex items-center gap-4 rounded-xl p-3 text-left transition-colors enabled:hover:bg-muted disabled:cursor-not-allowed disabled:opacity-70"
                   >
                     <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground">
                       {index + 1}
                     </span>
                     <span className="flex-1 text-sm font-medium">{lesson.title}</span>
-                    {isPreviewLesson && (
-                      <span className="text-xs font-medium text-primary">{t('course.preview')}</span>
-                    )}
-                    {isLocked && (
+                    {!course.hasAccess && (
                       <Lock className="h-4 w-4 text-muted-foreground" />
                     )}
                   </button>
-                  )
-                })}
+                ))}
               </div>
             )}
           </TabsContent>
 
           <TabsContent value="overview" className="mt-4">
             <p className="text-sm text-muted-foreground">
-              {course.description ?? t('common.noDescription')}
+              <TextWithLinks
+                as="p"
+                className="text-sm leading-relaxed text-muted-foreground"
+                text={course.description ?? t('common.noDescription')}
+              />
             </p>
           </TabsContent>
         </Tabs>
@@ -205,17 +238,27 @@ export function CourseDetailPage() {
 
 function SubscriberActions({
   course,
+  enrollment,
   hasAccess,
   firstLessonId,
+  requestMessage,
+  onRequestMessageChange,
+  onRequest,
   onPurchase,
   onStart,
+  requesting,
   purchasing,
 }: {
   course: CourseDetail
+  enrollment?: MyEnrollment | null
   hasAccess: boolean
   firstLessonId?: string
+  requestMessage: string
+  onRequestMessageChange: (v: string) => void
+  onRequest: () => void
   onPurchase: () => void
   onStart: () => void
+  requesting: boolean
   purchasing: boolean
 }) {
   const { t, i18n } = useTranslation()
@@ -229,14 +272,50 @@ function SubscriberActions({
     )
   }
 
-  return (
-    <div className="flex flex-col gap-3 max-w-md">
-      <Button className="w-full sm:w-auto" onClick={onPurchase} disabled={purchasing}>
-        {purchasing ? t('common.processing') : t('common.pay', { price })}
-      </Button>
-      <p className="text-xs text-muted-foreground">{t('common.instantAccessHint')}</p>
-    </div>
-  )
+  if (!enrollment || enrollment.status === 'REJECTED') {
+    return (
+      <div className="flex flex-col gap-3 max-w-md">
+        <Textarea
+          placeholder={t('common.enrollmentComment')}
+          value={requestMessage}
+          onChange={(e) => onRequestMessageChange(e.target.value)}
+          rows={2}
+        />
+        <Button className="w-full sm:w-auto" onClick={onRequest} disabled={requesting}>
+          {requesting ? t('common.sending') : t('common.requestCourse')}
+        </Button>
+        <p className="text-xs text-muted-foreground">
+          {t('common.cost', { price })}. {t('common.requestCourseHint')}
+        </p>
+      </div>
+    )
+  }
+
+  if (enrollment.status === 'PENDING') {
+    return (
+      <div className="flex flex-col gap-3 max-w-md">
+        <Badge variant="outline" className="w-fit">{t('common.requestSent')}</Badge>
+        <Button className="w-full sm:w-auto" onClick={onPurchase} disabled={purchasing}>
+          {purchasing ? t('common.processing') : t('common.pay', { price })}
+        </Button>
+        <p className="text-xs text-muted-foreground">{t('common.afterPaymentHint')}</p>
+      </div>
+    )
+  }
+
+  if (enrollment.status === 'PAID') {
+    return (
+      <div className="flex flex-col gap-2 max-w-md">
+        <Badge variant="outline" className="w-fit gap-1.5 border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-400">
+          <Lock className="h-3.5 w-3.5" />
+          {t('common.paidAwaitingAuthor')}
+        </Badge>
+        <p className="text-xs text-muted-foreground">{t('common.authorWillConfirm')}</p>
+      </div>
+    )
+  }
+
+  return null
 }
 
 function CourseDetailSkeleton() {

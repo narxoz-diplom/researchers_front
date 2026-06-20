@@ -13,16 +13,22 @@ import { LandingPhoto } from './LandingPhoto'
 import { LandingHeader } from './LandingHeader'
 import { AboutSection } from './components/AboutSection'
 import { CourseMarketplaceSection } from './components/CourseMarketplaceSection'
-import { LANDING_SECTION_ANCHOR } from './landing-layout'
+import type { CourseSectionCategory } from '@/features/courses/course-categories'
+import {
+  useLandingSectionMap,
+  useLandingSections,
+} from '@/features/landing-sections/hooks/useLandingSections'
+import { TextWithLinks } from '@/shared/ui/TextWithLinks'
 
 export function LandingPage() {
   const { t } = useTranslation()
   const user = useAuthStore((s) => s.user)
   const [courseSearch, setCourseSearch] = useState('')
-  const [categoryId, setCategoryId] = useState<string | null>(null)
 
   const catalogHref = '/catalog'
   const loginHref = '/auth/login'
+  const { data: landingSections } = useLandingSections()
+  const sectionMap = useLandingSectionMap(landingSections)
 
   return (
     <div className="min-h-screen bg-background">
@@ -51,15 +57,16 @@ export function LandingPage() {
             <p className="mt-4 text-base leading-relaxed text-muted-foreground sm:text-lg">
               {t('landing.heroDescription')}
             </p>
-            <div className="mx-auto mt-10 flex w-full max-w-sm flex-col items-stretch gap-3 sm:max-w-none sm:flex-row sm:justify-center lg:mx-0 lg:justify-start">
-              <Link to={catalogHref} className={cn(buttonVariants({ size: 'lg' }), 'gap-2')}>
+            <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row lg:justify-start">
+              <Link to={catalogHref} className={cn(buttonVariants({ size: 'lg' }), 'w-full sm:w-auto gap-2')}>
                 {t('landing.ctaPrimary')}
                 <ArrowRight className="h-4 w-4" />
               </Link>
               <Button
                 size="lg"
                 variant="outline"
-                onClick={() => scrollToSection('courses')}
+                className="w-full sm:w-auto"
+                onClick={() => scrollToSection('about')}
               >
                 {t('landing.ctaSecondary')}
               </Button>
@@ -70,28 +77,30 @@ export function LandingPage() {
             src={LANDING_IMAGES.hero}
             alt={t('landing.images.hero')}
             priority
-            className="mx-auto w-full max-w-lg shadow-lg ring-1 ring-black/5 dark:ring-white/10 lg:max-w-none"
+            className="shadow-lg ring-1 ring-black/5 dark:ring-white/10"
           />
         </div>
       </section>
 
-      <main className="mx-auto max-w-6xl px-4 pb-20 pt-16 sm:px-6 sm:pt-20">
-        <div className="flex flex-col gap-16 sm:gap-20">
-          <CourseMarketplaceSection
-            search={courseSearch}
-            onSearchChange={setCourseSearch}
-            categoryId={categoryId}
-            onCategoryChange={setCategoryId}
-          />
+      <main className="mx-auto max-w-6xl px-4 pb-20 sm:px-6">
+        <div className="flex flex-col gap-16 sm:gap-24">
           <AboutSection />
+          <CourseMarketplaceSection catalogHref={catalogHref} search={courseSearch} />
 
-          {NAV_ITEMS.filter(({ id }) => id !== 'about').map(({ id, icon: Icon }, index) => (
+          {NAV_ITEMS.filter(({ id }) => id !== 'about').map(({ id, icon: Icon }, index) => {
+            const apiSection = sectionMap.get(id as CourseSectionCategory)
+            const description =
+              apiSection?.description ?? t(`landing.sections.${id}.description`)
+            const points =
+              apiSection?.points ??
+              (t(`landing.sections.${id}.points`, { returnObjects: true }) as string[])
+
+            return (
             <section
               key={id}
               id={id}
               className={cn(
-                LANDING_SECTION_ANCHOR,
-                'grid gap-8 lg:grid-cols-2 lg:items-center lg:gap-12',
+                'scroll-mt-24 grid gap-8 lg:grid-cols-2 lg:items-start lg:gap-12',
                 index % 2 === 1 && 'lg:[&>*:first-child]:order-2',
               )}
             >
@@ -101,32 +110,37 @@ export function LandingPage() {
                 icon={Icon}
               />
 
-              <div className="flex flex-col gap-4 text-center lg:text-left">
+              <div className="flex flex-col gap-4">
                 <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
                   {t(`landing.sections.${id}.title`)}
                 </h2>
-                <p className="text-base leading-relaxed text-muted-foreground">
-                  {t(`landing.sections.${id}.description`)}
-                </p>
-                <ul className="mx-auto flex max-w-md flex-col gap-2 lg:mx-0 lg:max-w-none">
-                  {(t(`landing.sections.${id}.points`, { returnObjects: true }) as string[]).map(
-                    (point) => (
-                      <li
-                        key={point}
-                        className="flex items-start gap-2 text-left text-sm text-foreground"
-                      >
-                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
-                        {point}
-                      </li>
-                    ),
-                  )}
-                </ul>
+                  <TextWithLinks
+                    as="p"
+                    className="text-base leading-relaxed text-muted-foreground"
+                    text={description}
+                  />
+                  <ul className="flex flex-col gap-2">
+                    {points.map((point) => (
+                        <li key={point} className="flex items-start gap-2 text-sm text-foreground">
+                          <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
+                          <TextWithLinks text={point} />
+                        </li>
+                      ))}
+                  </ul>
+                  <Link
+                    to={`${catalogHref}?category=${id}`}
+                    className={cn(buttonVariants({ variant: 'outline' }), 'mt-2 w-fit gap-2')}
+                  >
+                    {t('landing.sections.viewCategoryCourses')}
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
               </div>
             </section>
-          ))}
+            )
+          })}
         </div>
 
-        <section className="relative mt-16 overflow-hidden rounded-2xl border shadow-sm sm:mt-20">
+        <section className="relative mt-24 overflow-hidden rounded-2xl border shadow-sm">
           <img
             src={LANDING_IMAGES.finalCta}
             alt=""
@@ -138,19 +152,13 @@ export function LandingPage() {
           <div className="relative p-8 text-center sm:p-12">
             <h2 className="text-2xl font-semibold sm:text-3xl">{t('landing.finalCta.title')}</h2>
             <p className="mx-auto mt-3 max-w-xl text-muted-foreground">{t('landing.finalCta.description')}</p>
-            <div className="mx-auto mt-8 flex w-full max-w-sm flex-col gap-3 sm:max-w-none sm:flex-row sm:justify-center">
-              <Link
-                to={catalogHref}
-                className={cn(buttonVariants({ size: 'lg' }), 'gap-2 sm:w-auto')}
-              >
+            <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+              <Link to={catalogHref} className={cn(buttonVariants({ size: 'lg' }), 'gap-2')}>
                 {t('landing.finalCta.button')}
                 <ArrowRight className="h-4 w-4" />
               </Link>
               {!user && (
-                <Link
-                  to="/auth/register"
-                  className={buttonVariants({ size: 'lg', variant: 'outline', className: 'sm:w-auto' })}
-                >
+                <Link to="/auth/register" className={buttonVariants({ size: 'lg', variant: 'outline' })}>
                   {t('landing.finalCta.register')}
                 </Link>
               )}

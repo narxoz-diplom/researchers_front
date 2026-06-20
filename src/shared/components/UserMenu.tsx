@@ -12,7 +12,6 @@ import {
 import { RoleBadge } from '@/shared/ui/RoleBadge'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import { useLogout } from '@/features/auth/hooks/useLogout'
-import { getAccountHomeLabelKey, getAccountHomePath } from '@/shared/utils/account-home'
 
 export function UserMenu() {
   const { t } = useTranslation()
@@ -53,11 +52,6 @@ export function UserMenu() {
         </div>
 
         <DropdownMenuSeparator />
-
-        <DropdownMenuItem onClick={() => navigate(getAccountHomePath(user.role))}>
-          <User className="mr-2 h-4 w-4" />
-          {t(getAccountHomeLabelKey(user.role))}
-        </DropdownMenuItem>
 
         <DropdownMenuItem onClick={() => navigate('/profile')}>
           <User className="mr-2 h-4 w-4" />

@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
+import { getCategoryLabel } from '@/features/courses/course-categories'
 import type { Course } from '@/shared/types'
 
 interface Props {
@@ -38,6 +39,11 @@ export function CourseCard({ course, onClick }: Props) {
             <BrandIcon className="h-14 w-14 opacity-50" />
           </div>
         )}
+        <div className="absolute left-3 top-3">
+          <Badge variant="secondary" className="bg-background/90 text-xs backdrop-blur-sm">
+            {getCategoryLabel(course.category, t)}
+          </Badge>
+        </div>
         <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
       </div>
 

@@ -13,6 +13,7 @@ import { StatusBadge } from '@/shared/ui/StatusBadge'
 import { api } from '@/shared/api/axios'
 import { API } from '@/shared/api/endpoints'
 import type { Course } from '@/shared/types'
+import { getCategoryLabel } from '@/features/courses/course-categories'
 
 export function StudioCoursesPage() {
   const { t } = useTranslation()
@@ -26,7 +27,11 @@ export function StudioCoursesPage() {
 
   const { mutate: createCourse, isPending: creating } = useMutation({
     mutationFn: () =>
-      api.post<Course>(API.courses.create, { title: t('common.newCourse'), description: '' }).then((r) => r.data),
+      api.post<Course>(API.courses.create, {
+        title: t('common.newCourse'),
+        description: '',
+        category: 'publication',
+      }).then((r) => r.data),
     onSuccess: (course) => {
       void qc.invalidateQueries({ queryKey: ['courses', 'mine'] })
       navigate(`/studio/courses/${course.id}`)
@@ -84,8 +89,11 @@ export function StudioCoursesPage() {
 
               <div className="flex-1 min-w-0">
                 <p className="font-medium truncate">{course.title}</p>
-                <div className="flex items-center gap-2 mt-0.5">
+                <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                   <StatusBadge status={course.status} />
+                  <span className="text-xs text-muted-foreground">
+                    {getCategoryLabel(course.category, t)}
+                  </span>
                   <span className="text-xs text-muted-foreground">
                     {t('common.lessonsCount', { count: course.lessonsCount })}
                   </span>

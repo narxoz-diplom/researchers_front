@@ -17,7 +17,7 @@ export function LandingNavLinks({
 
   if (variant === 'pills') {
     return (
-      <div className={cn('flex items-center gap-0.5', className)}>
+      <nav className={cn('flex items-center gap-1', className)}>
         {ALL_NAV_ITEMS.map(({ id }) => (
           <button
             key={id}
@@ -26,12 +26,12 @@ export function LandingNavLinks({
               scrollToSection(id)
               onNavigate?.()
             }}
-            className="whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-background hover:text-foreground xl:px-3.5 xl:text-[13px]"
+            className="whitespace-nowrap rounded-full px-3.5 py-1.5 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           >
             {t(`landing.nav.${id}`)}
           </button>
         ))}
-      </div>
+      </nav>
     )
   }
 

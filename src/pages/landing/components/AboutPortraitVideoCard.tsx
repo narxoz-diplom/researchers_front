@@ -19,8 +19,7 @@ interface Props {
 export function AboutPortraitVideoCard({ video, index = 0, onOpen }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const [hovering, setHovering] = useState(false)
-  const rotationClass =
-    index === 0 ? 'sm:-rotate-2' : index === 2 ? 'sm:rotate-2' : undefined
+  const rotation = index === 0 ? -2 : index === 2 ? 2 : 0
 
   function handleEnter() {
     if (!video?.videoUrl) return
@@ -46,6 +45,7 @@ export function AboutPortraitVideoCard({ video, index = 0, onOpen }: Props) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-40px' }}
       transition={{ duration: 0.5, delay: index * 0.1, ease: 'easeOut' }}
+      style={{ rotate: rotation }}
       onClick={video?.videoUrl ? onOpen : undefined}
       onMouseEnter={handleEnter}
       onMouseLeave={handleLeave}
@@ -54,9 +54,7 @@ export function AboutPortraitVideoCard({ video, index = 0, onOpen }: Props) {
       disabled={!video?.videoUrl}
       className={cn(
         'group relative mx-auto w-full max-w-[220px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50',
-        rotationClass,
         video?.videoUrl && 'cursor-pointer',
-        !video?.videoUrl && 'cursor-default opacity-90',
       )}
     >
       <div

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
-import { useForm, useWatch } from 'react-hook-form'
+import { Link, useNavigate, useParams } from 'react-router-dom'
+import { useForm, useWatch, Controller } from 'react-hook-form'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, ImageOff, Plus } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
@@ -15,24 +15,28 @@ import { Separator } from '@/components/ui/separator'
 import { PageHeader } from '@/shared/ui/PageHeader'
 import { ErrorState } from '@/shared/ui/ErrorState'
 import { MediaUploader } from '@/shared/ui/MediaUploader'
-import { api } from '@/shared/api/axios'
+import { api, extractApiError } from '@/shared/api/axios'
 import { API } from '@/shared/api/endpoints'
-import { useCategories } from '@/features/categories/hooks/useCategories'
+import {
+  COURSE_SECTION_CATEGORIES,
+  isCourseSectionCategory,
+  type CourseSectionCategory,
+} from '@/features/courses/course-categories'
+
 import type { Course, Lesson } from '@/shared/types'
-import { formatPriceCents } from '@/lib/format-price'
 
 interface CourseForm {
   title: string
   description: string
   coverUrl: string
   priceAmount: string
-  categoryId: string
+  category: CourseSectionCategory
   ratingAvg: string
   ratingCount: string
 }
 
 export function StudioCourseEditPage() {
-  const { t, i18n } = useTranslation()
+  const { t } = useTranslation()
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const qc = useQueryClient()
@@ -49,15 +53,13 @@ export function StudioCourseEditPage() {
     enabled: !!id,
   })
 
-  const { data: categories } = useCategories()
-
   const { register, handleSubmit, reset, control, setValue } = useForm<CourseForm>({
     defaultValues: {
       title: '',
       description: '',
       coverUrl: '',
       priceAmount: '',
-      categoryId: '',
+      category: 'publication',
       ratingAvg: '',
       ratingCount: '',
     },
@@ -70,7 +72,7 @@ export function StudioCourseEditPage() {
         description: course.description ?? '',
         coverUrl: course.coverUrl ?? '',
         priceAmount: String((course.priceCents ?? 0) / 100),
-        categoryId: course.categoryId ?? '',
+        category: isCourseSectionCategory(course.category) ? course.category : 'publication',
         ratingAvg: String(course.ratingAvg ?? 0),
         ratingCount: String(course.ratingCount ?? 0),
       })
@@ -78,16 +80,7 @@ export function StudioCourseEditPage() {
   }, [course, reset])
 
   const coverPreview = useWatch({ control, name: 'coverUrl' })
-  const selectedCategoryId = useWatch({ control, name: 'categoryId' })
-  const priceAmount = useWatch({ control, name: 'priceAmount' })
   const [coverPreviewError, setCoverPreviewError] = useState(false)
-
-  const parsedPriceAmount = Number.parseFloat(String(priceAmount ?? '').replace(',', '.'))
-  const lessonCount = lessons?.length ?? 0
-  const pricePerLessonCents =
-    lessonCount > 0 && Number.isFinite(parsedPriceAmount)
-      ? Math.floor(Math.round(parsedPriceAmount * 100) / lessonCount)
-      : null
 
   useEffect(() => {
     setCoverPreviewError(false)
@@ -102,14 +95,13 @@ export function StudioCourseEditPage() {
         description: data.description,
         coverUrl: data.coverUrl.trim() || null,
         priceCents,
-        categoryId: data.categoryId || null,
+        category: data.category,
         ratingAvg: Number.parseFloat(data.ratingAvg.replace(',', '.')) || 0,
         ratingCount: Number.parseInt(data.ratingCount, 10) || 0,
       })
     },
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['course', id] })
-      void qc.invalidateQueries({ queryKey: ['lessons', id] })
       void qc.invalidateQueries({ queryKey: ['courses', 'mine'] })
       toast.success(t('studio.saved'))
     },
@@ -130,7 +122,14 @@ export function StudioCourseEditPage() {
       void qc.invalidateQueries({ queryKey: ['course', id] })
       toast.success(t('studio.statusUpdated'))
     },
-    onError: () => toast.error(t('studio.statusFailed')),
+    onError: (err) => {
+      const code = extractApiError(err)?.message
+      if (code === 'COURSE_CATEGORY_REQUIRED') {
+        toast.error(t('studio.categoryRequired'))
+        return
+      }
+      toast.error(t('studio.statusFailed'))
+    },
   })
 
   const { mutate: createLesson, isPending: creatingLesson } = useMutation({
@@ -178,6 +177,7 @@ export function StudioCourseEditPage() {
             <div>
               <Label>{t('common.description')}</Label>
               <Textarea {...register('description')} rows={4} className="mt-1 resize-none" />
+              <p className="mt-1 text-xs text-muted-foreground">{t('studio.descriptionLinkHint')}</p>
             </div>
 
             <div>
@@ -190,39 +190,35 @@ export function StudioCourseEditPage() {
                 step="1"
                 placeholder="4990"
               />
-              {pricePerLessonCents != null && (
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {t('studio.pricePerLesson', {
-                    price: formatPriceCents(pricePerLessonCents, i18n.language),
-                    count: lessonCount,
-                  })}
-                </p>
-              )}
             </div>
 
             <div>
               <Label>{t('common.category')}</Label>
-              <Select
-                value={selectedCategoryId || undefined}
-                onValueChange={(value) =>
-                  setValue('categoryId', value ?? '', { shouldDirty: true })
-                }
-              >
-                <SelectTrigger className="mt-1 w-full">
-                  <SelectValue placeholder={t('studio.categoryPlaceholder')}>
-                    {categories?.find((c) => c.id === selectedCategoryId)?.name ??
-                      course.category ??
-                      t('studio.categoryPlaceholder')}
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  {categories?.map((category) => (
-                    <SelectItem key={category.id} value={category.id}>
-                      {category.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Controller
+                name="category"
+                control={control}
+                rules={{ required: true }}
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger className="mt-1 w-full">
+                      <SelectValue placeholder={t('studio.categoryPlaceholder')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {COURSE_SECTION_CATEGORIES.map((cat) => (
+                        <SelectItem key={cat} value={cat}>
+                          {t(`landing.nav.${cat}`)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              <p className="mt-1 text-xs text-muted-foreground">
+                {t('studio.categoryHelp')}{' '}
+                <Link to="/studio/sections" className="text-primary underline underline-offset-2">
+                  {t('studio.sections.editLink')}
+                </Link>
+              </p>
             </div>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">

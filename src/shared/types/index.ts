@@ -58,7 +58,6 @@ export interface Course {
   coverUrl?: string
   priceCents: number
   category?: string
-  categoryId?: string
   ratingAvg?: number
   ratingCount?: number
   status: CourseStatus
@@ -82,7 +81,6 @@ export interface LessonSummary {
   id: string
   title: string
   orderNumber: number
-  locked?: boolean
 }
 
 export interface LessonVideo {

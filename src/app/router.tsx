@@ -2,29 +2,28 @@ import { Suspense } from 'react'
 import { createBrowserRouter, Navigate } from 'react-router-dom'
 import { AppLayout } from '@/shared/components/AppLayout'
 import { AuthLayout } from '@/shared/components/AuthLayout'
+import { AdaptiveBrowseLayout } from '@/shared/components/AdaptiveBrowseLayout'
 import { ProtectedRoute } from '@/shared/components/ProtectedRoute'
 import { LoadingState } from '@/shared/ui/LoadingState'
 import {
   AdminSubscriptionsPage,
   AdminUsersPage,
   AdminFoundersPage,
-  AdminCategoriesPage,
   CatalogPage,
   CheckEmailPage,
   CourseDetailPage,
   ForbiddenPage,
   LandingPage,
-  CoursePreviewPage,
-  CheckoutPage,
   LessonPlayerPage,
   LoginPage,
-  MyLearningPage,
   NotFoundPage,
   ProfilePage,
   RegisterPage,
   StudioCourseEditPage,
   StudioCoursesPage,
   StudioEnrollmentsPage,
+  StudioLandingSectionsPage,
+  StudioLandingSectionEditPage,
   StudioLessonEditPage,
   VerifyEmailPage,
 } from './lazy-pages'
@@ -35,9 +34,6 @@ function Lazy({ children }: { children: React.ReactNode }) {
 
 export const router = createBrowserRouter([
   { path: '/', element: <Lazy><LandingPage /></Lazy> },
-  { path: '/catalog', element: <Lazy><CatalogPage /></Lazy> },
-  { path: '/courses/:id/preview', element: <Lazy><CoursePreviewPage /></Lazy> },
-  { path: '/checkout', element: <Lazy><CheckoutPage /></Lazy> },
   {
     path: '/auth',
     element: <AuthLayout />,
@@ -50,6 +46,13 @@ export const router = createBrowserRouter([
     ],
   },
   {
+    element: <AdaptiveBrowseLayout />,
+    children: [
+      { path: 'catalog', element: <Lazy><CatalogPage /></Lazy> },
+      { path: 'courses/:id', element: <Lazy><CourseDetailPage /></Lazy> },
+    ],
+  },
+  {
     element: (
       <ProtectedRoute />
     ),
@@ -57,8 +60,6 @@ export const router = createBrowserRouter([
       {
         element: <AppLayout />,
         children: [
-          { path: 'my-learning', element: <Lazy><MyLearningPage /></Lazy> },
-          { path: 'courses/:id', element: <Lazy><CourseDetailPage /></Lazy> },
           { path: 'courses/:cid/lessons/:lessonId', element: <Lazy><LessonPlayerPage /></Lazy> },
           { path: 'profile', element: <Lazy><ProfilePage /></Lazy> },
 
@@ -69,6 +70,8 @@ export const router = createBrowserRouter([
               { path: 'studio/courses/:id', element: <Lazy><StudioCourseEditPage /></Lazy> },
               { path: 'studio/courses/:id/enrollments', element: <Lazy><StudioEnrollmentsPage /></Lazy> },
               { path: 'studio/courses/:id/lessons/:lessonId', element: <Lazy><StudioLessonEditPage /></Lazy> },
+              { path: 'studio/sections', element: <Lazy><StudioLandingSectionsPage /></Lazy> },
+              { path: 'studio/sections/:slug', element: <Lazy><StudioLandingSectionEditPage /></Lazy> },
             ],
           },
 
@@ -78,7 +81,6 @@ export const router = createBrowserRouter([
               { path: 'admin/users', element: <Lazy><AdminUsersPage /></Lazy> },
               { path: 'admin/subscriptions', element: <Lazy><AdminSubscriptionsPage /></Lazy> },
               { path: 'admin/founders', element: <Lazy><AdminFoundersPage /></Lazy> },
-              { path: 'admin/categories', element: <Lazy><AdminCategoriesPage /></Lazy> },
             ],
           },
         ],

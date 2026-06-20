@@ -3,12 +3,6 @@ import { lazy } from 'react'
 export const LandingPage = lazy(() =>
   import('@/pages/landing/LandingPage').then((m) => ({ default: m.LandingPage })),
 )
-export const CoursePreviewPage = lazy(() =>
-  import('@/pages/landing/CoursePreviewPage').then((m) => ({ default: m.CoursePreviewPage })),
-)
-export const CheckoutPage = lazy(() =>
-  import('@/pages/landing/CheckoutPage').then((m) => ({ default: m.CheckoutPage })),
-)
 export const LoginPage = lazy(() =>
   import('@/pages/auth/LoginPage').then((m) => ({ default: m.LoginPage })),
 )
@@ -42,6 +36,16 @@ export const StudioLessonEditPage = lazy(() =>
 export const StudioEnrollmentsPage = lazy(() =>
   import('@/pages/studio/StudioEnrollmentsPage').then((m) => ({ default: m.StudioEnrollmentsPage })),
 )
+export const StudioLandingSectionsPage = lazy(() =>
+  import('@/pages/studio/StudioLandingSectionsPage').then((m) => ({
+    default: m.StudioLandingSectionsPage,
+  })),
+)
+export const StudioLandingSectionEditPage = lazy(() =>
+  import('@/pages/studio/StudioLandingSectionEditPage').then((m) => ({
+    default: m.StudioLandingSectionEditPage,
+  })),
+)
 export const AdminUsersPage = lazy(() =>
   import('@/pages/admin/AdminUsersPage').then((m) => ({ default: m.AdminUsersPage })),
 )
@@ -51,14 +55,8 @@ export const AdminSubscriptionsPage = lazy(() =>
 export const AdminFoundersPage = lazy(() =>
   import('@/pages/admin/AdminFoundersPage').then((m) => ({ default: m.AdminFoundersPage })),
 )
-export const AdminCategoriesPage = lazy(() =>
-  import('@/pages/admin/AdminCategoriesPage').then((m) => ({ default: m.AdminCategoriesPage })),
-)
 export const ProfilePage = lazy(() =>
   import('@/pages/profile/ProfilePage').then((m) => ({ default: m.ProfilePage })),
-)
-export const MyLearningPage = lazy(() =>
-  import('@/pages/my-learning/MyLearningPage').then((m) => ({ default: m.MyLearningPage })),
 )
 export const NotFoundPage = lazy(() =>
   import('@/pages/NotFoundPage').then((m) => ({ default: m.NotFoundPage })),

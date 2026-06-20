@@ -25,7 +25,6 @@ export const API = {
     archive: (id: string) => `/courses/${id}/archive`,
     draft: (id: string) => `/courses/${id}/draft`,
     delete: (id: string) => `/courses/${id}`,
-    preview: (id: string) => `/courses/${id}/preview`,
     enrollments: (courseId: string) => `/courses/${courseId}/enrollments`,
     enrollmentRequest: (courseId: string) => `/courses/${courseId}/enrollments/request`,
     enrollmentPurchase: (courseId: string) => `/courses/${courseId}/enrollments/purchase`,
@@ -66,12 +65,9 @@ export const API = {
     update: (id: string) => `/founders/${id}`,
     delete: (id: string) => `/founders/${id}`,
   },
-  categories: {
-    list: '/categories',
-    all: '/categories/all',
-    create: '/categories',
-    update: (id: string) => `/categories/${id}`,
-    delete: (id: string) => `/categories/${id}`,
+  landingSections: {
+    list: '/landing-sections',
+    update: (slug: string) => `/landing-sections/${slug}`,
   },
   subscriptions: {
     me: '/me/subscription',
@@ -83,9 +79,5 @@ export const API = {
   },
   progress: {
     my: '/me/progress',
-  },
-  purchases: {
-    checkout: '/purchases/checkout',
-    library: '/purchases/me/library',
   },
 } as const

@@ -56,10 +56,12 @@ export function NavbarSearch({
     if (variant === 'landing') {
       setValue(course.title)
       onSubmit?.(course.title)
-      navigate(`/courses/${course.id}/preview`)
+      if (user) {
+        navigate(`/courses/${course.id}`)
+      }
       return
     }
-    navigate(user?.role === 'SUBSCRIBER' ? `/courses/${course.id}` : `/courses/${course.id}/preview`)
+    navigate(`/courses/${course.id}`)
   }
 
   function handleSubmit() {
@@ -68,6 +70,10 @@ export function NavbarSearch({
     setOpen(false)
     if (variant === 'landing') {
       onSubmit?.(q)
+      if (user) {
+        navigate(`/catalog?search=${encodeURIComponent(q)}`)
+      }
+      return
     }
     navigate(`/catalog?search=${encodeURIComponent(q)}`)
   }

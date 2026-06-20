@@ -4,8 +4,6 @@ import { useTranslation } from 'react-i18next'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useFounders } from '@/features/founders/hooks/useFounders'
 import type { Founder } from '@/features/founders/types'
-import { cn } from '@/lib/utils'
-import { LANDING_SECTION_ANCHOR, LANDING_SECTION_HEADER } from '../landing-layout'
 import { AboutPortraitVideoCard } from './AboutPortraitVideoCard'
 import { AboutVideoModal } from './AboutVideoModal'
 
@@ -50,7 +48,7 @@ export function AboutSection() {
   }, [founders, fallbackParts])
 
   return (
-    <section id="about" className={cn(LANDING_SECTION_ANCHOR, 'overflow-x-clip')}>
+    <section id="about" className="scroll-mt-24">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -58,9 +56,13 @@ export function AboutSection() {
         transition={{ duration: 0.5 }}
         className="mb-12 text-center"
       >
-        <p className={LANDING_SECTION_HEADER.badge}>{t('landing.about.badge')}</p>
-        <h2 className={LANDING_SECTION_HEADER.title}>{t('landing.about.title')}</h2>
-        <p className={cn(LANDING_SECTION_HEADER.description, 'mx-auto')}>
+        <p className="mb-2 text-sm font-medium uppercase tracking-wider text-primary">
+          {t('landing.about.badge')}
+        </p>
+        <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">
+          {t('landing.about.title')}
+        </h2>
+        <p className="mx-auto mt-3 max-w-2xl text-muted-foreground">
           {t('landing.about.description')}
         </p>
       </motion.div>
@@ -68,7 +70,7 @@ export function AboutSection() {
       {isLoading && <AboutSkeleton />}
 
       {!isLoading && (
-        <div className="grid gap-10 px-2 py-4 sm:grid-cols-3 sm:gap-6 lg:gap-10">
+        <div className="grid gap-12 sm:grid-cols-3 sm:gap-6 lg:gap-10">
           {columns.map((column, index) => {
             const isFounder = column.kind === 'founder'
             const founder = isFounder ? column.founder : undefined
@@ -107,7 +109,7 @@ export function AboutSection() {
                   {subtitle && <p className="text-sm font-medium text-primary">{subtitle}</p>}
                   <p className="text-sm leading-relaxed text-muted-foreground">{description}</p>
                   {points.length > 0 && (
-                    <ul className="mx-auto flex max-w-xs flex-col gap-1.5 text-left">
+                    <ul className="flex flex-col gap-1.5 text-left">
                       {points.map((point) => (
                         <li key={point} className="flex items-start gap-2 text-sm text-foreground">
                           <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />

@@ -16,6 +16,7 @@ export function LoginForm() {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const location = useLocation()
+  const from = (location.state as { from?: { pathname: string } })?.from?.pathname ?? '/catalog'
 
   const { mutate: login, isPending } = useLogin()
   const loginSchema = useMemo(() => createLoginSchema(t), [t])
@@ -29,14 +30,9 @@ export function LoginForm() {
   function onSubmit(values: LoginSchema) {
     setNeedsVerification(false)
     login(values, {
-      onSuccess: (data) => {
+      onSuccess: () => {
         toast.success(t('auth.welcome'))
-        const fromState = (location.state as { from?: { pathname: string } })?.from?.pathname
-        let target = fromState ?? '/catalog'
-        if (data.user.role === 'SUBSCRIBER' && (target === '/catalog' || !fromState)) {
-          target = '/my-learning'
-        }
-        void navigate(target, { replace: true })
+        void navigate(from, { replace: true })
       },
       onError: (err) => {
         const apiErr = extractApiError(err)
