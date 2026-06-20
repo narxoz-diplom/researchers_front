@@ -5,7 +5,7 @@ import { ArrowLeft, CheckCircle, Download, FileText, List, Lock, Sparkles } from
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import ReactPlayer from 'react-player'
-import { Button } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 import { cn } from '@/lib/utils'
@@ -144,15 +144,18 @@ export function LessonPlayerPage() {
         <div className="lg:col-span-2 flex flex-col gap-6">
           {allLessons && allLessons.length > 0 && (
             <Sheet open={lessonsOpen} onOpenChange={setLessonsOpen}>
-              <SheetTrigger asChild>
-                <Button variant="outline" className="w-full justify-between lg:hidden">
-                  <span className="truncate text-left">
-                    {t('common.lessonOf', { current: currentIndex + 1, total: allLessons.length })}
-                    {' — '}
-                    {lesson.title}
-                  </span>
-                  <List className="h-4 w-4 shrink-0" />
-                </Button>
+              <SheetTrigger
+                className={cn(
+                  buttonVariants({ variant: 'outline' }),
+                  'h-auto w-full justify-between py-2.5 lg:hidden',
+                )}
+              >
+                <span className="truncate text-left">
+                  {t('common.lessonOf', { current: currentIndex + 1, total: allLessons.length })}
+                  {' — '}
+                  {lesson.title}
+                </span>
+                <List className="h-4 w-4 shrink-0" />
               </SheetTrigger>
               <SheetContent side="bottom" className="max-h-[min(85dvh,32rem)] overflow-y-auto rounded-t-2xl">
                 <SheetHeader className="pb-2">

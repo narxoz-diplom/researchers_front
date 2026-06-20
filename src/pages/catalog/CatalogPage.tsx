@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { Search } from 'lucide-react'
@@ -26,17 +26,32 @@ function CourseCardSkeleton() {
 export function CatalogPage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const [search, setSearch] = useState('')
+  const [searchParams, setSearchParams] = useSearchParams()
+  const [search, setSearch] = useState(() => searchParams.get('search') ?? '')
+
+  useEffect(() => {
+    const fromUrl = searchParams.get('search') ?? ''
+    setSearch(fromUrl)
+  }, [searchParams])
 
   const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ['courses', { query: search || undefined }],
+    queryKey: ['courses', { search: search || undefined }],
     queryFn: () =>
       api
         .get<{ data: Course[]; meta: Meta }>(API.courses.list, {
-          params: { query: search || undefined, pageSize: 50 },
+          params: { search: search || undefined, pageSize: 50 },
         })
         .then((r) => r.data),
   })
+
+  function handleSearchChange(value: string) {
+    setSearch(value)
+    if (value.trim()) {
+      setSearchParams({ search: value.trim() }, { replace: true })
+    } else {
+      setSearchParams({}, { replace: true })
+    }
+  }
 
   return (
     <div>
@@ -50,7 +65,7 @@ export function CatalogPage() {
               placeholder={t('catalog.searchPlaceholder')}
               className="pl-9 w-full sm:w-64"
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => handleSearchChange(e.target.value)}
             />
           </div>
         }

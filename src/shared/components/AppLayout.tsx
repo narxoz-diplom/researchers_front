@@ -1,20 +1,22 @@
 import { useState } from 'react'
-import { Link, NavLink, Outlet } from 'react-router-dom'
+import { NavLink, Outlet } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { LayoutDashboard, Menu, Shield, Users, Video } from 'lucide-react'
-import { BookMarkIcon, BrandIcon } from '@/shared/components/BrandIcon'
+import { LayoutDashboard, Menu, Shield, UserCircle, Users, Video } from 'lucide-react'
+import { BookMarkIcon } from '@/shared/components/BrandIcon'
+import { BrandWordmark } from '@/shared/components/BrandWordmark'
 import { buttonVariants } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import { ThemeToggle } from './ThemeToggle'
 import { LanguageToggle } from './LanguageToggle'
+import { NavbarSearch } from './NavbarSearch'
 import { UserMenu } from './UserMenu'
 import type { Role } from '@/shared/types'
 
 interface NavItem {
   href: string
-  labelKey: 'nav.catalog' | 'nav.studio' | 'nav.users' | 'nav.subscriptions' | 'nav.profile'
+  labelKey: 'nav.catalog' | 'nav.studio' | 'nav.users' | 'nav.subscriptions' | 'nav.founders' | 'nav.profile'
   icon: React.ReactNode
   roles: Role[]
 }
@@ -24,6 +26,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: '/studio', labelKey: 'nav.studio', icon: <Video className="h-4 w-4" />, roles: ['AUTHOR', 'ADMIN'] },
   { href: '/admin/users', labelKey: 'nav.users', icon: <Users className="h-4 w-4" />, roles: ['ADMIN'] },
   { href: '/admin/subscriptions', labelKey: 'nav.subscriptions', icon: <Shield className="h-4 w-4" />, roles: ['ADMIN'] },
+  { href: '/admin/founders', labelKey: 'nav.founders', icon: <UserCircle className="h-4 w-4" />, roles: ['ADMIN'] },
   { href: '/profile', labelKey: 'nav.profile', icon: <LayoutDashboard className="h-4 w-4" />, roles: ['SUBSCRIBER', 'AUTHOR', 'ADMIN'] },
 ]
 
@@ -63,10 +66,7 @@ export function AppLayout() {
     <div className="flex min-h-dvh h-dvh bg-background">
       <aside className="hidden w-56 shrink-0 flex-col border-r bg-card md:flex">
         <div className="flex h-14 items-center border-b px-4">
-          <Link to="/catalog" className="flex items-center gap-2 font-semibold text-foreground">
-            <BrandIcon className="h-7 w-7" />
-            <span>researchers</span>
-          </Link>
+          <BrandWordmark to="/" iconClassName="h-7 w-7" textClassName="text-sm" />
         </div>
         <div className="flex-1 overflow-y-auto p-3">
           <NavLinks />
@@ -74,21 +74,19 @@ export function AppLayout() {
       </aside>
 
       <div className="flex flex-1 flex-col overflow-hidden">
-        <header className="flex h-14 shrink-0 items-center gap-2 border-b bg-card px-3 sm:gap-3 sm:px-4">
+        <header className="flex h-[4.25rem] shrink-0 items-center gap-3 border-b border-border/60 bg-card/80 px-3 backdrop-blur-xl sm:gap-4 sm:px-5">
           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
             <SheetTrigger className={cn(buttonVariants({ variant: 'ghost', size: 'icon' }), 'md:hidden')}>
               <Menu className="h-5 w-5" />
             </SheetTrigger>
             <SheetContent side="left" className="w-56 p-0">
               <div className="flex h-14 items-center border-b px-4">
-                <Link
-                  to="/catalog"
-                  className="flex items-center gap-2 font-semibold text-foreground"
+                <BrandWordmark
+                  to="/"
+                  iconClassName="h-7 w-7"
+                  textClassName="text-sm"
                   onClick={() => setMobileOpen(false)}
-                >
-                  <BrandIcon className="h-7 w-7" />
-                  <span>researchers</span>
-                </Link>
+                />
               </div>
               <div className="p-3">
                 <NavLinks onNavigate={() => setMobileOpen(false)} />
@@ -96,19 +94,17 @@ export function AppLayout() {
             </SheetContent>
           </Sheet>
 
-          <Link
-            to="/catalog"
-            className="flex items-center gap-2 font-semibold text-foreground md:hidden"
-          >
-            <BrandIcon className="h-7 w-7" />
-            <span className="truncate">researchers</span>
-          </Link>
+          <BrandWordmark to="/" iconClassName="h-7 w-7" textClassName="text-sm md:hidden" />
 
-          <div className="flex-1 min-w-0" />
+          <div className="flex min-w-0 flex-1 items-center justify-center px-1 sm:px-4">
+            <NavbarSearch className="w-full max-w-lg" />
+          </div>
 
-          <div className="flex shrink-0 items-center gap-0.5 sm:gap-1">
-            <LanguageToggle />
-            <ThemeToggle />
+          <div className="flex shrink-0 items-center gap-2">
+            <div className="flex items-center rounded-xl border border-border/60 bg-muted/30 p-0.5 shadow-sm">
+              <LanguageToggle className="h-8 border-0 bg-transparent shadow-none" />
+              <ThemeToggle className="h-8 w-8 rounded-lg" />
+            </div>
             <UserMenu />
           </div>
         </header>

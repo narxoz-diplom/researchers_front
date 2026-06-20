@@ -57,6 +57,9 @@ export interface Course {
   description: string
   coverUrl?: string
   priceCents: number
+  category?: string
+  ratingAvg?: number
+  ratingCount?: number
   status: CourseStatus
   author: { id: string; fullName: string; avatarUrl?: string }
   lessonsCount: number

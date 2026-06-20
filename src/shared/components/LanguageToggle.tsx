@@ -11,7 +11,7 @@ const LANGUAGES: {
   { code: 'ru', labelKey: 'common.languageRu', emoji: '🇷🇺' },
 ]
 
-export function LanguageToggle() {
+export function LanguageToggle({ className }: { className?: string }) {
   const { t, i18n } = useTranslation()
   const resolved = i18n.resolvedLanguage ?? i18n.language
   const active: AppLanguage = resolved.startsWith('kk') ? 'kk' : 'ru'
@@ -20,7 +20,10 @@ export function LanguageToggle() {
     <div
       role="group"
       aria-label={t('common.languageToggle')}
-      className="inline-flex h-9 overflow-hidden rounded-md border border-border bg-background shadow-sm"
+      className={cn(
+        'inline-flex h-9 overflow-hidden rounded-md border border-border bg-background shadow-sm',
+        className,
+      )}
     >
       {LANGUAGES.map(({ code, labelKey, emoji }) => (
         <button

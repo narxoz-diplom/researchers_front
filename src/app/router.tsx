@@ -7,6 +7,7 @@ import { LoadingState } from '@/shared/ui/LoadingState'
 import {
   AdminSubscriptionsPage,
   AdminUsersPage,
+  AdminFoundersPage,
   CatalogPage,
   CheckEmailPage,
   CourseDetailPage,
@@ -69,6 +70,7 @@ export const router = createBrowserRouter([
             children: [
               { path: 'admin/users', element: <Lazy><AdminUsersPage /></Lazy> },
               { path: 'admin/subscriptions', element: <Lazy><AdminSubscriptionsPage /></Lazy> },
+              { path: 'admin/founders', element: <Lazy><AdminFoundersPage /></Lazy> },
             ],
           },
         ],

@@ -1,84 +1,35 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { ArrowRight, Menu } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 import { BrandIcon } from '@/shared/components/BrandIcon'
 import { Button, buttonVariants } from '@/components/ui/button'
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
-import { LanguageToggle } from '@/shared/components/LanguageToggle'
-import { ThemeToggle } from '@/shared/components/ThemeToggle'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import { cn } from '@/lib/utils'
 import { LANDING_IMAGES } from './landing-images'
-import { LandingNavLinks } from './LandingNavLinks'
 import { NAV_ITEMS, scrollToSection } from './landing-nav'
+import type { ImageSectionId } from './types'
 import { LandingPhoto } from './LandingPhoto'
+import { LandingHeader } from './LandingHeader'
+import { AboutSection } from './components/AboutSection'
+import { CourseMarketplaceSection } from './components/CourseMarketplaceSection'
 
 export function LandingPage() {
   const { t } = useTranslation()
   const user = useAuthStore((s) => s.user)
-  const [mobileOpen, setMobileOpen] = useState(false)
+  const [courseSearch, setCourseSearch] = useState('')
 
   const catalogHref = user ? '/catalog' : '/auth/register'
   const loginHref = '/auth/login'
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-50 border-b bg-background/80 backdrop-blur-md">
-        <div className="mx-auto flex h-16 max-w-6xl items-center gap-4 px-4 sm:px-6">
-          <Link to="/" className="flex items-center gap-2 font-semibold text-foreground shrink-0">
-            <BrandIcon className="h-8 w-8" />
-            <span>{t('landing.brand')}</span>
-          </Link>
-
-          <LandingNavLinks className="hidden lg:flex flex-1 justify-center" />
-
-          <div className="ml-auto flex items-center gap-1">
-            <LanguageToggle />
-            <ThemeToggle />
-
-            {!user && (
-              <Link
-                to={loginHref}
-                className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'hidden sm:inline-flex')}
-              >
-                {t('landing.login')}
-              </Link>
-            )}
-
-            <Link to={catalogHref} className={cn(buttonVariants({ size: 'sm' }), 'hidden sm:inline-flex')}>
-              {user ? t('landing.goToCatalog') : t('landing.start')}
-            </Link>
-
-            <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-              <SheetTrigger className={cn(buttonVariants({ variant: 'ghost', size: 'icon' }), 'lg:hidden')}>
-                <Menu className="h-5 w-5" />
-              </SheetTrigger>
-              <SheetContent side="right" className="w-72 pt-12">
-                <LandingNavLinks onNavigate={() => setMobileOpen(false)} className="mb-6" />
-                <div className="flex flex-col gap-2">
-                  {!user && (
-                    <Link
-                      to={loginHref}
-                      onClick={() => setMobileOpen(false)}
-                      className={buttonVariants({ variant: 'outline' })}
-                    >
-                      {t('landing.login')}
-                    </Link>
-                  )}
-                  <Link
-                    to={catalogHref}
-                    onClick={() => setMobileOpen(false)}
-                    className={buttonVariants()}
-                  >
-                    {user ? t('landing.goToCatalog') : t('landing.start')}
-                  </Link>
-                </div>
-              </SheetContent>
-            </Sheet>
-          </div>
-        </div>
-      </header>
+      <LandingHeader
+        courseSearch={courseSearch}
+        onCourseSearchChange={setCourseSearch}
+        catalogHref={catalogHref}
+        loginHref={loginHref}
+      />
 
       <section className="relative overflow-hidden border-b">
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-primary/10 via-background to-primary/5" />
@@ -125,7 +76,10 @@ export function LandingPage() {
 
       <main className="mx-auto max-w-6xl px-4 pb-20 sm:px-6">
         <div className="flex flex-col gap-16 sm:gap-24">
-          {NAV_ITEMS.map(({ id, icon: Icon }, index) => (
+          <AboutSection />
+          <CourseMarketplaceSection catalogHref={catalogHref} search={courseSearch} />
+
+          {NAV_ITEMS.filter(({ id }) => id !== 'about').map(({ id, icon: Icon }, index) => (
             <section
               key={id}
               id={id}
@@ -135,7 +89,7 @@ export function LandingPage() {
               )}
             >
               <LandingPhoto
-                src={LANDING_IMAGES.sections[id]}
+                src={LANDING_IMAGES.sections[id as ImageSectionId]}
                 alt={t(`landing.images.${id}`)}
                 icon={Icon}
               />

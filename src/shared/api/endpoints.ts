@@ -58,6 +58,13 @@ export const API = {
     signAvatar: '/media/sign/avatar',
     upload: '/media/upload',
   },
+  founders: {
+    list: '/founders',
+    all: '/founders/all',
+    create: '/founders',
+    update: (id: string) => `/founders/${id}`,
+    delete: (id: string) => `/founders/${id}`,
+  },
   subscriptions: {
     me: '/me/subscription',
     meHistory: '/me/subscriptions',

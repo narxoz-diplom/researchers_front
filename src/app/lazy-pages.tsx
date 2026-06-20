@@ -42,6 +42,9 @@ export const AdminUsersPage = lazy(() =>
 export const AdminSubscriptionsPage = lazy(() =>
   import('@/pages/admin/AdminSubscriptionsPage').then((m) => ({ default: m.AdminSubscriptionsPage })),
 )
+export const AdminFoundersPage = lazy(() =>
+  import('@/pages/admin/AdminFoundersPage').then((m) => ({ default: m.AdminFoundersPage })),
+)
 export const ProfilePage = lazy(() =>
   import('@/pages/profile/ProfilePage').then((m) => ({ default: m.ProfilePage })),
 )

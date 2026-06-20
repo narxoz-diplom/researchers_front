@@ -46,7 +46,7 @@ export function AdminUsersPage() {
     queryKey: ['admin', 'users', search],
     queryFn: () =>
       api
-        .get<{ data: User[]; meta: Meta }>(API.users.list, { params: { query: search || undefined } })
+        .get<{ data: User[]; meta: Meta }>(API.users.list, { params: { search: search || undefined } })
         .then((r) => r.data),
   })
 

@@ -24,6 +24,9 @@ interface CourseForm {
   description: string
   coverUrl: string
   priceAmount: string
+  category: string
+  ratingAvg: string
+  ratingCount: string
 }
 
 export function StudioCourseEditPage() {
@@ -45,7 +48,15 @@ export function StudioCourseEditPage() {
   })
 
   const { register, handleSubmit, reset, control, setValue } = useForm<CourseForm>({
-    defaultValues: { title: '', description: '', coverUrl: '', priceAmount: '' },
+    defaultValues: {
+      title: '',
+      description: '',
+      coverUrl: '',
+      priceAmount: '',
+      category: '',
+      ratingAvg: '',
+      ratingCount: '',
+    },
   })
 
   useEffect(() => {
@@ -55,6 +66,9 @@ export function StudioCourseEditPage() {
         description: course.description ?? '',
         coverUrl: course.coverUrl ?? '',
         priceAmount: String((course.priceCents ?? 0) / 100),
+        category: course.category ?? '',
+        ratingAvg: String(course.ratingAvg ?? 0),
+        ratingCount: String(course.ratingCount ?? 0),
       })
     }
   }, [course, reset])
@@ -75,6 +89,9 @@ export function StudioCourseEditPage() {
         description: data.description,
         coverUrl: data.coverUrl.trim() || null,
         priceCents,
+        category: data.category.trim() || undefined,
+        ratingAvg: Number.parseFloat(data.ratingAvg.replace(',', '.')) || 0,
+        ratingCount: Number.parseInt(data.ratingCount, 10) || 0,
       })
     },
     onSuccess: () => {
@@ -159,6 +176,35 @@ export function StudioCourseEditPage() {
                 step="1"
                 placeholder="4990"
               />
+            </div>
+
+            <div>
+              <Label>{t('common.category')}</Label>
+              <Input {...register('category')} className="mt-1" placeholder={t('studio.categoryPlaceholder')} />
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div>
+                <Label>{t('common.rating')}</Label>
+                <Input
+                  {...register('ratingAvg')}
+                  className="mt-1"
+                  type="number"
+                  min={0}
+                  max={5}
+                  step="0.1"
+                />
+              </div>
+              <div>
+                <Label>{t('common.ratingCount')}</Label>
+                <Input
+                  {...register('ratingCount')}
+                  className="mt-1"
+                  type="number"
+                  min={0}
+                  step="1"
+                />
+              </div>
             </div>
 
             <div>

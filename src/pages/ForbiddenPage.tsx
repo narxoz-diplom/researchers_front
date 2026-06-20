@@ -1,10 +1,12 @@
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
+import { useAuthStore } from '@/features/auth/store/auth.store'
 
 export function ForbiddenPage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const user = useAuthStore((s) => s.user)
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6 text-center">
@@ -13,7 +15,9 @@ export function ForbiddenPage() {
         <h1 className="text-2xl font-semibold">{t('errors.forbiddenTitle')}</h1>
         <p className="text-muted-foreground max-w-sm">{t('errors.forbiddenDescription')}</p>
       </div>
-      <Button onClick={() => navigate('/catalog')}>{t('common.backToCatalog')}</Button>
+      <Button onClick={() => navigate(user ? '/catalog' : '/')}>
+        {t(user ? 'common.backToCatalog' : 'common.backToHome')}
+      </Button>
     </div>
   )
 }
