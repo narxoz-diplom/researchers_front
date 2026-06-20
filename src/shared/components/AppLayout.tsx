@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { LayoutDashboard, Menu, Shield, UserCircle, Users, Video } from 'lucide-react'
+import { LayoutDashboard, Menu, Shield, Tags, UserCircle, Users, Video, GraduationCap } from 'lucide-react'
 import { BookMarkIcon } from '@/shared/components/BrandIcon'
 import { BrandWordmark } from '@/shared/components/BrandWordmark'
 import { buttonVariants } from '@/components/ui/button'
@@ -16,17 +16,19 @@ import type { Role } from '@/shared/types'
 
 interface NavItem {
   href: string
-  labelKey: 'nav.catalog' | 'nav.studio' | 'nav.users' | 'nav.subscriptions' | 'nav.founders' | 'nav.profile'
+  labelKey: 'nav.myLearning' | 'nav.catalog' | 'nav.studio' | 'nav.users' | 'nav.subscriptions' | 'nav.founders' | 'nav.categories' | 'nav.profile'
   icon: React.ReactNode
   roles: Role[]
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { href: '/catalog', labelKey: 'nav.catalog', icon: <BookMarkIcon className="h-4 w-4" />, roles: ['SUBSCRIBER', 'AUTHOR', 'ADMIN'] },
+  { href: '/my-learning', labelKey: 'nav.myLearning', icon: <GraduationCap className="h-4 w-4" />, roles: ['SUBSCRIBER'] },
+  { href: '/catalog', labelKey: 'nav.catalog', icon: <BookMarkIcon className="h-4 w-4" />, roles: ['AUTHOR', 'ADMIN'] },
   { href: '/studio', labelKey: 'nav.studio', icon: <Video className="h-4 w-4" />, roles: ['AUTHOR', 'ADMIN'] },
   { href: '/admin/users', labelKey: 'nav.users', icon: <Users className="h-4 w-4" />, roles: ['ADMIN'] },
   { href: '/admin/subscriptions', labelKey: 'nav.subscriptions', icon: <Shield className="h-4 w-4" />, roles: ['ADMIN'] },
   { href: '/admin/founders', labelKey: 'nav.founders', icon: <UserCircle className="h-4 w-4" />, roles: ['ADMIN'] },
+  { href: '/admin/categories', labelKey: 'nav.categories', icon: <Tags className="h-4 w-4" />, roles: ['ADMIN'] },
   { href: '/profile', labelKey: 'nav.profile', icon: <LayoutDashboard className="h-4 w-4" />, roles: ['SUBSCRIBER', 'AUTHOR', 'ADMIN'] },
 ]
 

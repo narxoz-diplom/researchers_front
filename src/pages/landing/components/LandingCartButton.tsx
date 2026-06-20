@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
-import { useCartStore } from '@/features/cart/store/cart.store'
+import { useCartStore, cartItemKey } from '@/features/cart/store/cart.store'
 import { formatPriceCents } from '@/lib/format-price'
 import { cn } from '@/lib/utils'
 
@@ -14,7 +14,7 @@ interface Props {
   className?: string
 }
 
-export function LandingCartButton({ catalogHref, className }: Props) {
+export function LandingCartButton({ className }: Props) {
   const { t, i18n } = useTranslation()
   const items = useCartStore((s) => s.items)
   const bumpToken = useCartStore((s) => s.bumpToken)
@@ -67,15 +67,22 @@ export function LandingCartButton({ catalogHref, className }: Props) {
           <div className="flex flex-1 flex-col gap-3 overflow-y-auto py-4">
             {items.map((item) => (
               <div
-                key={item.id}
+                key={cartItemKey(item.type, item.id)}
                 className="flex gap-3 rounded-xl border bg-card p-3"
               >
                 <div className="h-16 w-24 shrink-0 overflow-hidden rounded-lg bg-muted">
                   {item.coverUrl ? (
                     <img src={item.coverUrl} alt="" className="h-full w-full object-cover" />
-                  ) : null}
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center text-[10px] text-muted-foreground">
+                      {t(`landing.cart.itemType.${item.type}`)}
+                    </div>
+                  )}
                 </div>
                 <div className="min-w-0 flex-1">
+                  <p className="text-[10px] font-medium uppercase tracking-wide text-primary">
+                    {t(`landing.cart.itemType.${item.type}`)}
+                  </p>
                   <p className="truncate text-sm font-medium">{item.title}</p>
                   <p className="text-xs text-muted-foreground">{item.category}</p>
                   <p className="mt-1 text-sm font-semibold text-primary">
@@ -86,7 +93,7 @@ export function LandingCartButton({ catalogHref, className }: Props) {
                   variant="ghost"
                   size="icon"
                   className="shrink-0 text-destructive"
-                  onClick={() => removeItem(item.id)}
+                  onClick={() => removeItem(item.type, item.id)}
                   aria-label={t('landing.cart.remove')}
                 >
                   <Trash2 className="h-4 w-4" />
@@ -104,7 +111,7 @@ export function LandingCartButton({ catalogHref, className }: Props) {
             </span>
           </div>
           <Link
-            to={catalogHref}
+            to="/checkout"
             onClick={() => setOpen(false)}
             className={cn(buttonVariants(), 'w-full')}
           >

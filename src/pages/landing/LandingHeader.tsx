@@ -42,7 +42,7 @@ export function LandingHeader({
             value={courseSearch}
             onChange={onCourseSearchChange}
             onSubmit={() => scrollToSection('courses')}
-            className="mx-auto hidden min-w-0 flex-1 md:flex lg:max-w-md xl:max-w-lg"
+            className="mx-auto hidden min-w-0 flex-1 md:flex lg:max-w-sm xl:max-w-md"
           />
 
           <div className="ml-auto flex items-center gap-2 sm:gap-3">
@@ -65,7 +65,7 @@ export function LandingHeader({
                 to={catalogHref}
                 className={cn(buttonVariants({ size: 'sm' }), 'h-9 px-4 shadow-sm')}
               >
-                {user ? t('landing.goToCatalog') : t('landing.start')}
+                {t('landing.goToCatalog')}
               </Link>
             </div>
 
@@ -124,7 +124,7 @@ export function LandingHeader({
                     onClick={() => setMobileOpen(false)}
                     className={buttonVariants({ className: 'w-full' })}
                   >
-                    {user ? t('landing.goToCatalog') : t('landing.start')}
+                    {t('landing.goToCatalog')}
                   </Link>
                 </div>
               </SheetContent>
@@ -134,9 +134,11 @@ export function LandingHeader({
 
         <nav
           aria-label={t('landing.menuSections')}
-          className="hidden items-center justify-center gap-1 overflow-x-auto border-t border-border/50 py-2.5 lg:flex [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          className="hidden border-t border-border/50 bg-muted/20 lg:block"
         >
-          <LandingNavLinks variant="pills" />
+          <div className="flex items-center justify-center gap-0.5 overflow-x-auto px-1 py-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <LandingNavLinks variant="pills" />
+          </div>
         </nav>
       </div>
     </header>

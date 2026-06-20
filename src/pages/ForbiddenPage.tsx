@@ -3,6 +3,13 @@ import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 
+function homePathForUser(role?: string) {
+  if (role === 'SUBSCRIBER') return '/my-learning'
+  if (role === 'AUTHOR') return '/studio'
+  if (role === 'ADMIN') return '/admin/users'
+  return '/catalog'
+}
+
 export function ForbiddenPage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
@@ -15,8 +22,8 @@ export function ForbiddenPage() {
         <h1 className="text-2xl font-semibold">{t('errors.forbiddenTitle')}</h1>
         <p className="text-muted-foreground max-w-sm">{t('errors.forbiddenDescription')}</p>
       </div>
-      <Button onClick={() => navigate(user ? '/catalog' : '/')}>
-        {t(user ? 'common.backToCatalog' : 'common.backToHome')}
+      <Button onClick={() => navigate(user ? homePathForUser(user.role) : '/')}>
+        {t(user ? (user.role === 'SUBSCRIBER' ? 'nav.myLearning' : 'common.backToCatalog') : 'common.backToHome')}
       </Button>
     </div>
   )

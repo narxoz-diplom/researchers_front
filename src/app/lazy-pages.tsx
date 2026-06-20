@@ -3,6 +3,12 @@ import { lazy } from 'react'
 export const LandingPage = lazy(() =>
   import('@/pages/landing/LandingPage').then((m) => ({ default: m.LandingPage })),
 )
+export const CoursePreviewPage = lazy(() =>
+  import('@/pages/landing/CoursePreviewPage').then((m) => ({ default: m.CoursePreviewPage })),
+)
+export const CheckoutPage = lazy(() =>
+  import('@/pages/landing/CheckoutPage').then((m) => ({ default: m.CheckoutPage })),
+)
 export const LoginPage = lazy(() =>
   import('@/pages/auth/LoginPage').then((m) => ({ default: m.LoginPage })),
 )
@@ -45,8 +51,14 @@ export const AdminSubscriptionsPage = lazy(() =>
 export const AdminFoundersPage = lazy(() =>
   import('@/pages/admin/AdminFoundersPage').then((m) => ({ default: m.AdminFoundersPage })),
 )
+export const AdminCategoriesPage = lazy(() =>
+  import('@/pages/admin/AdminCategoriesPage').then((m) => ({ default: m.AdminCategoriesPage })),
+)
 export const ProfilePage = lazy(() =>
   import('@/pages/profile/ProfilePage').then((m) => ({ default: m.ProfilePage })),
+)
+export const MyLearningPage = lazy(() =>
+  import('@/pages/my-learning/MyLearningPage').then((m) => ({ default: m.MyLearningPage })),
 )
 export const NotFoundPage = lazy(() =>
   import('@/pages/NotFoundPage').then((m) => ({ default: m.NotFoundPage })),

@@ -17,20 +17,22 @@ import { ErrorState } from '@/shared/ui/ErrorState'
 import { MediaUploader } from '@/shared/ui/MediaUploader'
 import { api } from '@/shared/api/axios'
 import { API } from '@/shared/api/endpoints'
+import { useCategories } from '@/features/categories/hooks/useCategories'
 import type { Course, Lesson } from '@/shared/types'
+import { formatPriceCents } from '@/lib/format-price'
 
 interface CourseForm {
   title: string
   description: string
   coverUrl: string
   priceAmount: string
-  category: string
+  categoryId: string
   ratingAvg: string
   ratingCount: string
 }
 
 export function StudioCourseEditPage() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const qc = useQueryClient()
@@ -47,13 +49,15 @@ export function StudioCourseEditPage() {
     enabled: !!id,
   })
 
+  const { data: categories } = useCategories()
+
   const { register, handleSubmit, reset, control, setValue } = useForm<CourseForm>({
     defaultValues: {
       title: '',
       description: '',
       coverUrl: '',
       priceAmount: '',
-      category: '',
+      categoryId: '',
       ratingAvg: '',
       ratingCount: '',
     },
@@ -66,7 +70,7 @@ export function StudioCourseEditPage() {
         description: course.description ?? '',
         coverUrl: course.coverUrl ?? '',
         priceAmount: String((course.priceCents ?? 0) / 100),
-        category: course.category ?? '',
+        categoryId: course.categoryId ?? '',
         ratingAvg: String(course.ratingAvg ?? 0),
         ratingCount: String(course.ratingCount ?? 0),
       })
@@ -74,7 +78,16 @@ export function StudioCourseEditPage() {
   }, [course, reset])
 
   const coverPreview = useWatch({ control, name: 'coverUrl' })
+  const selectedCategoryId = useWatch({ control, name: 'categoryId' })
+  const priceAmount = useWatch({ control, name: 'priceAmount' })
   const [coverPreviewError, setCoverPreviewError] = useState(false)
+
+  const parsedPriceAmount = Number.parseFloat(String(priceAmount ?? '').replace(',', '.'))
+  const lessonCount = lessons?.length ?? 0
+  const pricePerLessonCents =
+    lessonCount > 0 && Number.isFinite(parsedPriceAmount)
+      ? Math.floor(Math.round(parsedPriceAmount * 100) / lessonCount)
+      : null
 
   useEffect(() => {
     setCoverPreviewError(false)
@@ -89,13 +102,14 @@ export function StudioCourseEditPage() {
         description: data.description,
         coverUrl: data.coverUrl.trim() || null,
         priceCents,
-        category: data.category.trim() || undefined,
+        categoryId: data.categoryId || null,
         ratingAvg: Number.parseFloat(data.ratingAvg.replace(',', '.')) || 0,
         ratingCount: Number.parseInt(data.ratingCount, 10) || 0,
       })
     },
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['course', id] })
+      void qc.invalidateQueries({ queryKey: ['lessons', id] })
       void qc.invalidateQueries({ queryKey: ['courses', 'mine'] })
       toast.success(t('studio.saved'))
     },
@@ -176,11 +190,39 @@ export function StudioCourseEditPage() {
                 step="1"
                 placeholder="4990"
               />
+              {pricePerLessonCents != null && (
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {t('studio.pricePerLesson', {
+                    price: formatPriceCents(pricePerLessonCents, i18n.language),
+                    count: lessonCount,
+                  })}
+                </p>
+              )}
             </div>
 
             <div>
               <Label>{t('common.category')}</Label>
-              <Input {...register('category')} className="mt-1" placeholder={t('studio.categoryPlaceholder')} />
+              <Select
+                value={selectedCategoryId || undefined}
+                onValueChange={(value) =>
+                  setValue('categoryId', value ?? '', { shouldDirty: true })
+                }
+              >
+                <SelectTrigger className="mt-1 w-full">
+                  <SelectValue placeholder={t('studio.categoryPlaceholder')}>
+                    {categories?.find((c) => c.id === selectedCategoryId)?.name ??
+                      course.category ??
+                      t('studio.categoryPlaceholder')}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {categories?.map((category) => (
+                    <SelectItem key={category.id} value={category.id}>
+                      {category.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
