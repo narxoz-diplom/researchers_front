@@ -5,7 +5,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, Plus, Trash2 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
-import { Button } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
@@ -13,6 +13,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { PageHeader } from '@/shared/ui/PageHeader'
 import { ErrorState } from '@/shared/ui/ErrorState'
 import { TextWithLinks } from '@/shared/ui/TextWithLinks'
+import { cn } from '@/lib/utils'
 import { api } from '@/shared/api/axios'
 import { API } from '@/shared/api/endpoints'
 import {
@@ -88,17 +89,16 @@ export function StudioLandingSectionEditPage() {
 
   return (
     <div className="pb-16">
-      <Button
-        variant="ghost"
-        size="sm"
-        className="mt-4 mb-4 gap-1 text-muted-foreground"
-        asChild
+      <Link
+        to="/studio/sections"
+        className={cn(
+          buttonVariants({ variant: 'ghost', size: 'sm' }),
+          'mt-4 mb-4 inline-flex gap-1 text-muted-foreground',
+        )}
       >
-        <Link to="/studio/sections">
-          <ArrowLeft className="h-4 w-4" />
-          {t('studio.sections.title')}
-        </Link>
-      </Button>
+        <ArrowLeft className="h-4 w-4" />
+        {t('studio.sections.title')}
+      </Link>
 
       <PageHeader title={t(`landing.nav.${validSlug}`)} subtitle={t('studio.sections.editSubtitle')} />
 

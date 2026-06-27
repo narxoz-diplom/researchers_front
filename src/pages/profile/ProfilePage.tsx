@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { differenceInDays, format } from 'date-fns'
 import { LogOut } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { useSearchParams } from 'react-router-dom'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -16,14 +17,21 @@ import type { Subscription } from '@/shared/types'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import { useLogout } from '@/features/auth/hooks/useLogout'
 import { getDateLocale } from '@/lib/date-locale'
+import { AuthorAiSettingsForm } from '@/features/ai/components/AuthorAiSettingsForm'
 
 export function ProfilePage() {
   const { t, i18n } = useTranslation()
+  const [searchParams] = useSearchParams()
   const user = useAuthStore((s) => s.user)
   const { mutate: logout, isPending: loggingOut } = useLogout()
   const dateLocale = getDateLocale(i18n.language)
 
   const isSubscriber = user?.role === 'SUBSCRIBER'
+  const isAuthor = user?.role === 'AUTHOR' || user?.role === 'ADMIN'
+
+  const tabParam = searchParams.get('tab')
+  const defaultTab =
+    tabParam === 'ai' && isAuthor ? 'ai' : tabParam === 'subscription' && isSubscriber ? 'subscription' : 'profile'
 
   const { data: subscription, isLoading: subLoading } = useQuery({
     queryKey: ['subscription'],
@@ -59,7 +67,7 @@ export function ProfilePage() {
         }
       />
 
-      <Tabs defaultValue="profile" className="pb-12">
+      <Tabs defaultValue={defaultTab} key={defaultTab} className="pb-12">
         <TabsList className="w-full sm:w-auto">
           <TabsTrigger value="profile" className="flex-1 sm:flex-none">
             {t('common.profile')}
@@ -67,6 +75,11 @@ export function ProfilePage() {
           {isSubscriber && (
             <TabsTrigger value="subscription" className="flex-1 sm:flex-none">
               {t('common.subscription')}
+            </TabsTrigger>
+          )}
+          {isAuthor && (
+            <TabsTrigger value="ai" className="flex-1 sm:flex-none">
+              {t('ai.settings.tab')}
             </TabsTrigger>
           )}
         </TabsList>
@@ -164,6 +177,12 @@ export function ProfilePage() {
                 </CardContent>
               </Card>
             )}
+          </TabsContent>
+        )}
+
+        {isAuthor && (
+          <TabsContent value="ai" className="mt-6">
+            <AuthorAiSettingsForm />
           </TabsContent>
         )}
       </Tabs>

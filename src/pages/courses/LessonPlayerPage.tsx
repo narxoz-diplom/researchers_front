@@ -14,8 +14,10 @@ import { ErrorState } from '@/shared/ui/ErrorState'
 import { api, extractApiError } from '@/shared/api/axios'
 import { API } from '@/shared/api/endpoints'
 import { useAuthStore } from '@/features/auth/store/auth.store'
-import { downloadMaterialFile } from '@/lib/cloudinary-download'
+import { downloadMaterialById } from '@/lib/cloudinary-download'
 import type { Lesson } from '@/shared/types'
+import { LessonChatPanel } from '@/features/ai/components/LessonChatPanel'
+import { CourseCompletionCelebration } from '@/shared/ui/CourseCompletionCelebration'
 
 interface CourseProgress {
   courseId: string
@@ -33,7 +35,9 @@ export function LessonPlayerPage() {
   const user = useAuthStore((s) => s.user)
   const qc = useQueryClient()
   const [celebrate, setCelebrate] = useState(false)
+  const [courseCelebrationOpen, setCourseCelebrationOpen] = useState(false)
   const [lessonsOpen, setLessonsOpen] = useState(false)
+  const [chatOpen, setChatOpen] = useState(false)
 
   const { data: lesson, isLoading, isError } = useQuery({
     queryKey: ['lesson', lessonId],
@@ -66,14 +70,25 @@ export function LessonPlayerPage() {
         : api.post(API.lessons.complete(lessonId!)),
     onSuccess: () => {
       const wasCompleted = isCompleted
+      const completesCourse =
+        !wasCompleted &&
+        progress &&
+        progress.totalLessons > 0 &&
+        progress.completedLessons + 1 >= progress.totalLessons
+
       void qc.invalidateQueries({ queryKey: ['progress', cid] })
       if (wasCompleted) {
         toast.success(t('lesson.markRemoved'))
       } else {
         setCelebrate(true)
         toast.success(t('lesson.markSuccess'), {
-          description: t('lesson.markSuccessDescription'),
+          description: completesCourse
+            ? t('lesson.courseComplete.toastDescription')
+            : t('lesson.markSuccessDescription'),
         })
+        if (completesCourse) {
+          setCourseCelebrationOpen(true)
+        }
       }
     },
     onError: (err) => {
@@ -104,10 +119,17 @@ export function LessonPlayerPage() {
 
   const mainVideo = lesson.videos[0]
   const showProgress = user?.role === 'SUBSCRIBER' && progress
+  const showChat = user?.role === 'SUBSCRIBER'
   const courseDone = progress && progress.completedLessons >= progress.totalLessons && progress.totalLessons > 0
 
   return (
     <div className="pb-16">
+      <CourseCompletionCelebration
+        open={courseCelebrationOpen}
+        onClose={() => setCourseCelebrationOpen(false)}
+        totalLessons={progress?.totalLessons ?? 0}
+      />
+
       <Button
         variant="ghost"
         size="sm"
@@ -188,12 +210,46 @@ export function LessonPlayerPage() {
           )}
 
           <div>
-            <h1 className="text-xl font-semibold sm:text-2xl">{lesson.title}</h1>
-            {allLessons && (
-              <p className="mt-1 text-sm text-muted-foreground">
-                {t('common.lessonOf', { current: currentIndex + 1, total: allLessons.length })}
-              </p>
-            )}
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <h1 className="text-xl font-semibold sm:text-2xl">{lesson.title}</h1>
+                {allLessons && (
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {t('common.lessonOf', { current: currentIndex + 1, total: allLessons.length })}
+                  </p>
+                )}
+              </div>
+              {showChat && (
+                <Sheet open={chatOpen} onOpenChange={setChatOpen}>
+                  <SheetTrigger
+                    className={cn(
+                      buttonVariants({ variant: 'outline', size: 'sm' }),
+                      'shrink-0 gap-1.5 border-primary/25 bg-primary/5 text-primary hover:bg-primary/10 lg:hidden',
+                    )}
+                  >
+                    <Sparkles className="h-4 w-4" />
+                    {t('ai.chat.open')}
+                  </SheetTrigger>
+                  <SheetContent
+                    side="right"
+                    showCloseButton
+                    className={cn(
+                      'flex h-[100dvh] max-h-[100dvh] w-full max-w-none flex-col gap-0 rounded-none border-0 p-0',
+                      'inset-0 !w-full !max-w-none data-[side=right]:inset-0 data-[side=right]:left-0 data-[side=right]:!w-full data-[side=right]:!max-w-none',
+                      'sm:inset-y-0 sm:left-auto sm:right-0 sm:max-w-md sm:border-l',
+                      '[&_[data-slot=sheet-close]]:z-10 [&_[data-slot=sheet-close]]:top-[max(0.75rem,env(safe-area-inset-top))]',
+                    )}
+                  >
+                    <LessonChatPanel
+                      lessonId={lessonId!}
+                      className="min-h-0 flex-1"
+                      showHeader
+                      overlayMode
+                    />
+                  </SheetContent>
+                </Sheet>
+              )}
+            </div>
           </div>
 
           {lesson.content && (
@@ -225,7 +281,11 @@ export function LessonPlayerPage() {
                     size="icon"
                     className="h-7 w-7 shrink-0 text-muted-foreground"
                     title={t('common.download')}
-                    onClick={() => downloadMaterialFile(m.url, m.title)}
+                    onClick={() => {
+                      void downloadMaterialById(m.id, m.title).catch((err) => {
+                        toast.error(extractApiError(err)?.message ?? t('common.downloadFailed'))
+                      })
+                    }}
                   >
                     <Download className="h-4 w-4" />
                   </Button>
@@ -286,13 +346,18 @@ export function LessonPlayerPage() {
           </div>
         </div>
 
-        <aside className="hidden lg:flex flex-col">
+        <aside className="hidden lg:flex flex-col gap-6">
           <LessonListNav
             lessons={allLessons ?? []}
             courseId={cid!}
             currentLessonId={lessonId!}
             completedIds={completedIds}
           />
+          {showChat && (
+            <div className="sticky top-20 flex h-[calc(100dvh-6rem)] min-h-[32rem] flex-col overflow-hidden rounded-2xl border bg-card shadow-sm ring-1 ring-border/50">
+              <LessonChatPanel lessonId={lessonId!} className="min-h-0 flex-1" />
+            </div>
+          )}
         </aside>
       </div>
     </div>

@@ -64,3 +64,6 @@ export const NotFoundPage = lazy(() =>
 export const ForbiddenPage = lazy(() =>
   import('@/pages/ForbiddenPage').then((m) => ({ default: m.ForbiddenPage })),
 )
+export const DesignSystemPage = lazy(() =>
+  import('@/pages/dev/DesignSystemPage').then((m) => ({ default: m.DesignSystemPage })),
+)

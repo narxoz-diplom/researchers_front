@@ -67,6 +67,8 @@ export interface Course {
   updatedAt: string
 }
 
+export type LessonVectorIndexStatus = 'PENDING' | 'INDEXING' | 'READY' | 'FAILED'
+
 export interface Lesson {
   id: string
   title: string
@@ -75,6 +77,11 @@ export interface Lesson {
   courseId: string
   videos: LessonVideo[]
   materials: LessonMaterial[]
+  vectorIndexStatus?: LessonVectorIndexStatus
+  vectorIndexJobId?: string | null
+  vectorIndexedAt?: string | null
+  vectorIndexErrorId?: string | null
+  vectorIndexErrorCode?: string | null
 }
 
 export interface LessonSummary {

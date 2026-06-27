@@ -15,7 +15,8 @@ import { ErrorState } from '@/shared/ui/ErrorState'
 import { MediaUploader } from '@/shared/ui/MediaUploader'
 import { api } from '@/shared/api/axios'
 import { API } from '@/shared/api/endpoints'
-import type { Lesson } from '@/shared/types'
+import type { Lesson, LessonVectorIndexStatus } from '@/shared/types'
+import { LessonGeneratePanel } from '@/features/ai/components/LessonGeneratePanel'
 
 interface LessonForm {
   title: string
@@ -28,13 +29,26 @@ export function StudioLessonEditPage() {
   const navigate = useNavigate()
   const qc = useQueryClient()
 
+  const indexStatusRef = useRef<LessonVectorIndexStatus | undefined>(undefined)
+
   const { data: lesson, isLoading, isError } = useQuery({
     queryKey: ['lesson', lessonId],
     queryFn: () => api.get<Lesson>(API.lessons.byId(lessonId!)).then((r) => r.data),
     enabled: !!lessonId,
+    refetchInterval: (query) =>
+      query.state.data?.vectorIndexStatus === 'INDEXING' ? 5000 : false,
   })
 
-  const { register, handleSubmit, reset } = useForm<LessonForm>({
+  useEffect(() => {
+    const status = lesson?.vectorIndexStatus
+    const prev = indexStatusRef.current
+    if (prev === 'INDEXING' && status === 'FAILED') {
+      toast.error(t('ai.index.failedToast', { jobId: lesson?.vectorIndexJobId ?? '—' }))
+    }
+    indexStatusRef.current = status
+  }, [lesson?.vectorIndexStatus, lesson?.vectorIndexJobId, t])
+
+  const { register, handleSubmit, reset, setValue } = useForm<LessonForm>({
     defaultValues: { title: '', content: '' },
   })
   const formInitializedRef = useRef(false)
@@ -54,6 +68,7 @@ export function StudioLessonEditPage() {
     onSuccess: (_data, variables) => {
       reset(variables)
       void qc.invalidateQueries({ queryKey: ['lessons', id] })
+      void qc.invalidateQueries({ queryKey: ['lesson', lessonId] })
       toast.success(t('studio.lessonSaved'))
     },
     onError: () => toast.error(t('studio.lessonSaveFailed')),
@@ -88,6 +103,23 @@ export function StudioLessonEditPage() {
       </Button>
 
       <form onSubmit={handleSubmit((d) => updateLesson(d))} className="flex flex-col gap-6">
+        {lesson.vectorIndexStatus === 'INDEXING' ? (
+          <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-900 dark:text-amber-100">
+            {t('ai.index.indexing')}
+          </div>
+        ) : null}
+        {lesson.vectorIndexStatus === 'FAILED' ? (
+          <div className="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+            <p className="font-medium">{t('ai.index.failedTitle')}</p>
+            <p className="mt-1">
+              {t('ai.index.failedHint', {
+                jobId: lesson.vectorIndexJobId ?? '—',
+                errorId: lesson.vectorIndexErrorId ?? '—',
+              })}
+            </p>
+          </div>
+        ) : null}
+
         <div>
           <Input
             {...register('title')}
@@ -97,7 +129,22 @@ export function StudioLessonEditPage() {
         </div>
 
         <div>
-          <Label>{t('common.lessonContent')}</Label>
+          <div className="mb-1 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <Label>{t('common.lessonContent')}</Label>
+            <LessonGeneratePanel
+              lessonId={lessonId!}
+              defaultBrief={lesson.title}
+              vectorIndexStatus={lesson.vectorIndexStatus}
+              vectorIndexJobId={lesson.vectorIndexJobId}
+              onInsert={({ content, title }) => {
+                setValue('content', content, { shouldDirty: true })
+                if (title?.trim()) {
+                  setValue('title', title.trim(), { shouldDirty: true })
+                }
+                toast.success(t('ai.generate.inserted'))
+              }}
+            />
+          </div>
           <Textarea
             {...register('content')}
             rows={10}

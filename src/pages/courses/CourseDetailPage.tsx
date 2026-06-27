@@ -6,7 +6,7 @@ import { BookMarkIcon, BrandIcon } from '@/shared/components/BrandIcon'
 import { format } from 'date-fns'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
-import { Button } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -20,6 +20,7 @@ import { useAuthStore } from '@/features/auth/store/auth.store'
 import { formatPriceCents } from '@/lib/format-price'
 import { getDateLocale } from '@/lib/date-locale'
 import { TextWithLinks } from '@/shared/ui/TextWithLinks'
+import { cn } from '@/lib/utils'
 import type { Course, LessonSummary, MyEnrollment } from '@/shared/types'
 
 interface CourseDetail extends Course {
@@ -161,14 +162,19 @@ export function CourseDetailPage() {
             />
           ) : !user ? (
             <div className="flex flex-col gap-3 sm:flex-row">
-              <Button asChild className="w-full sm:w-auto">
-                <Link to="/auth/login" state={{ from: { pathname: `/courses/${course.id}` } }}>
-                  {t('landing.login')}
-                </Link>
-              </Button>
-              <Button asChild variant="outline" className="w-full sm:w-auto">
-                <Link to="/auth/register">{t('landing.start')}</Link>
-              </Button>
+              <Link
+                to="/auth/login"
+                state={{ from: { pathname: `/courses/${course.id}` } }}
+                className={cn(buttonVariants(), 'w-full sm:w-auto')}
+              >
+                {t('landing.login')}
+              </Link>
+              <Link
+                to="/auth/register"
+                className={cn(buttonVariants({ variant: 'outline' }), 'w-full sm:w-auto')}
+              >
+                {t('landing.start')}
+              </Link>
             </div>
           ) : course.hasAccess ? (
             <Button

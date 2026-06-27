@@ -26,6 +26,7 @@ import {
   StudioLandingSectionEditPage,
   StudioLessonEditPage,
   VerifyEmailPage,
+  DesignSystemPage,
 } from './lazy-pages'
 
 function Lazy({ children }: { children: React.ReactNode }) {
@@ -88,5 +89,8 @@ export const router = createBrowserRouter([
     ],
   },
   { path: '/403', element: <Lazy><ForbiddenPage /></Lazy> },
+  ...(import.meta.env.DEV
+    ? [{ path: '/_/design', element: <Lazy><DesignSystemPage /></Lazy> }]
+    : []),
   { path: '*', element: <Lazy><NotFoundPage /></Lazy> },
 ])

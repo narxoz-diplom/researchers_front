@@ -51,6 +51,7 @@ export const API = {
   materials: {
     attach: (lid: string) => `/lessons/${lid}/materials`,
     byId: (id: string) => `/materials/${id}`,
+    download: (id: string) => `/materials/${id}/download`,
     delete: (id: string) => `/materials/${id}`,
   },
   media: {
