@@ -51,10 +51,6 @@ export function LessonChatPanel({
   } = useLessonChat(lessonId)
 
   useEffect(() => {
-    setDraft('')
-  }, [lessonId])
-
-  useEffect(() => {
     if (!isError || !error) return
     showAiErrorToast(error, t, 'ai.chat.sendFailed')
     resetError()

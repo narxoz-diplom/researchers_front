@@ -55,6 +55,9 @@ export const AdminSubscriptionsPage = lazy(() =>
 export const AdminFoundersPage = lazy(() =>
   import('@/pages/admin/AdminFoundersPage').then((m) => ({ default: m.AdminFoundersPage })),
 )
+export const AdminPlatformAiPage = lazy(() =>
+  import('@/pages/admin/AdminPlatformAiPage').then((m) => ({ default: m.AdminPlatformAiPage })),
+)
 export const ProfilePage = lazy(() =>
   import('@/pages/profile/ProfilePage').then((m) => ({ default: m.ProfilePage })),
 )

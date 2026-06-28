@@ -81,4 +81,7 @@ export const API = {
   progress: {
     my: '/me/progress',
   },
+  admin: {
+    subscriberChatAi: '/admin/ai-settings/subscriber-chat',
+  },
 } as const

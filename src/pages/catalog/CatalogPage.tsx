@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
@@ -33,15 +32,10 @@ export function CatalogPage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
-  const [search, setSearch] = useState(() => searchParams.get('search') ?? '')
+  const search = searchParams.get('search') ?? ''
 
   const categoryParam = searchParams.get('category')
   const activeCategory = isCourseSectionCategory(categoryParam) ? categoryParam : undefined
-
-  useEffect(() => {
-    const fromUrl = searchParams.get('search') ?? ''
-    setSearch(fromUrl)
-  }, [searchParams])
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['courses', { search: search || undefined, category: activeCategory }],
@@ -69,7 +63,6 @@ export function CatalogPage() {
   }
 
   function handleSearchChange(value: string) {
-    setSearch(value)
     updateParams({ search: value })
   }
 

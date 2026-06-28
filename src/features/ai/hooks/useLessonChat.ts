@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { extractApiError } from '@/shared/api/axios'
 import { aiApi } from '../api'
@@ -17,12 +17,6 @@ export function useLessonChat(lessonId: string) {
   const [messages, setMessages] = useState<LessonChatMessage[]>([])
   const [remainingMessages, setRemainingMessages] = useState<number | null>(null)
   const [limitReached, setLimitReached] = useState(false)
-
-  useEffect(() => {
-    setMessages([])
-    setRemainingMessages(null)
-    setLimitReached(false)
-  }, [lessonId])
 
   const mutation = useMutation({
     mutationFn: (message: string) => aiApi.chatOnLesson(lessonId, { message }),

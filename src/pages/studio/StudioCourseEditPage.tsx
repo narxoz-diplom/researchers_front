@@ -25,6 +25,29 @@ import {
 
 import type { Course, Lesson } from '@/shared/types'
 
+function CourseCoverPreview({ url }: { url: string }) {
+  const { t } = useTranslation()
+  const [error, setError] = useState(false)
+
+  if (error) {
+    return (
+      <div className="flex h-full w-full flex-col items-center justify-center gap-2 px-4 text-center text-muted-foreground">
+        <ImageOff className="h-8 w-8" />
+        <p className="text-xs">{t('studio.coverPreviewFailed')}</p>
+      </div>
+    )
+  }
+
+  return (
+    <img
+      src={url}
+      alt={t('common.coverAlt')}
+      className="h-full w-full object-cover"
+      onError={() => setError(true)}
+    />
+  )
+}
+
 interface CourseForm {
   title: string
   description: string
@@ -80,11 +103,6 @@ export function StudioCourseEditPage() {
   }, [course, reset])
 
   const coverPreview = useWatch({ control, name: 'coverUrl' })
-  const [coverPreviewError, setCoverPreviewError] = useState(false)
-
-  useEffect(() => {
-    setCoverPreviewError(false)
-  }, [coverPreview])
 
   const { mutate: updateCourse, isPending: saving } = useMutation({
     mutationFn: (data: CourseForm) => {
@@ -258,25 +276,16 @@ export function StudioCourseEditPage() {
                   hint={t('common.coverHint')}
                   onUploaded={(result) => {
                     setValue('coverUrl', result.secure_url, { shouldDirty: true })
-                    setCoverPreviewError(false)
                     toast.success(t('studio.coverUploaded'))
                   }}
                 />
               </div>
               <div className="mt-2 aspect-video overflow-hidden rounded-xl border bg-muted">
-                {coverPreview && !coverPreviewError ? (
-                  <img
-                    src={coverPreview}
-                    alt={t('common.coverAlt')}
-                    className="h-full w-full object-cover"
-                    onError={() => setCoverPreviewError(true)}
-                  />
+                {coverPreview ? (
+                  <CourseCoverPreview key={coverPreview} url={coverPreview} />
                 ) : (
                   <div className="flex h-full w-full flex-col items-center justify-center gap-2 px-4 text-center text-muted-foreground">
                     <ImageOff className="h-8 w-8" />
-                    {coverPreviewError && (
-                      <p className="text-xs">{t('studio.coverPreviewFailed')}</p>
-                    )}
                   </div>
                 )}
               </div>

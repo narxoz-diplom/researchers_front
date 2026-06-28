@@ -241,6 +241,7 @@ export function LessonPlayerPage() {
                     )}
                   >
                     <LessonChatPanel
+                      key={lessonId}
                       lessonId={lessonId!}
                       className="min-h-0 flex-1"
                       showHeader
@@ -355,7 +356,7 @@ export function LessonPlayerPage() {
           />
           {showChat && (
             <div className="sticky top-20 flex h-[calc(100dvh-6rem)] min-h-[32rem] flex-col overflow-hidden rounded-2xl border bg-card shadow-sm ring-1 ring-border/50">
-              <LessonChatPanel lessonId={lessonId!} className="min-h-0 flex-1" />
+              <LessonChatPanel key={lessonId} lessonId={lessonId!} className="min-h-0 flex-1" />
             </div>
           )}
         </aside>

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -88,7 +88,6 @@ export function LessonGeneratePanel({
   const [consumedJobId, setConsumedJobId] = useState<string | null>(() =>
     getConsumedGenerationJobId(lessonId),
   )
-  const prevOpenRef = useRef(false)
 
   const { data: latestJob } = useLatestLessonGenerationJob(lessonId)
   const { data: settings, isLoading: settingsLoading } = useAuthorAiSettings(open)
@@ -140,18 +139,7 @@ export function LessonGeneratePanel({
 
   const isProcessingRemote = latestJob?.status === 'processing'
 
-  useEffect(() => {
-    if (!open || !hasRecoverableDraft || !latestJob) return
-    applyJobToWizard(latestJob)
-  }, [open, hasRecoverableDraft, latestJob, applyJobToWizard])
-
-  useEffect(() => {
-    const justOpened = open && !prevOpenRef.current
-    prevOpenRef.current = open
-    if (!justOpened) return
-
-    if (hasRecoverableDraft) return
-
+  function resetWizardForm() {
     form.reset({
       language: defaultLanguage(i18n.language),
       brief: defaultBrief ?? '',
@@ -163,9 +151,16 @@ export function LessonGeneratePanel({
     setPreview(null)
     setOutlineDraft(null)
     setWizardStep('form')
-  }, [open, defaultBrief, i18n.language, modelsData, form, hasRecoverableDraft])
+  }
 
   function handleOpenChange(next: boolean) {
+    if (next) {
+      if (hasRecoverableDraft && latestJob) {
+        applyJobToWizard(latestJob)
+      } else {
+        resetWizardForm()
+      }
+    }
     setOpen(next)
     if (!next) {
       form.clearErrors()

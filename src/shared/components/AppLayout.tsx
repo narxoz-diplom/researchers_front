@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { LayoutDashboard, Layers, Menu, Shield, UserCircle, Users, Video } from 'lucide-react'
+import { LayoutDashboard, Layers, Menu, Shield, Sparkles, UserCircle, Users, Video } from 'lucide-react'
 import { BookMarkIcon } from '@/shared/components/BrandIcon'
 import { BrandWordmark } from '@/shared/components/BrandWordmark'
 import { buttonVariants } from '@/components/ui/button'
@@ -16,7 +16,7 @@ import type { Role } from '@/shared/types'
 
 interface NavItem {
   href: string
-  labelKey: 'nav.catalog' | 'nav.studio' | 'nav.sections' | 'nav.users' | 'nav.subscriptions' | 'nav.founders' | 'nav.profile'
+  labelKey: 'nav.catalog' | 'nav.studio' | 'nav.sections' | 'nav.users' | 'nav.subscriptions' | 'nav.founders' | 'nav.adminAi' | 'nav.profile'
   icon: React.ReactNode
   roles: Role[]
 }
@@ -28,6 +28,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: '/admin/users', labelKey: 'nav.users', icon: <Users className="h-4 w-4" />, roles: ['ADMIN'] },
   { href: '/admin/subscriptions', labelKey: 'nav.subscriptions', icon: <Shield className="h-4 w-4" />, roles: ['ADMIN'] },
   { href: '/admin/founders', labelKey: 'nav.founders', icon: <UserCircle className="h-4 w-4" />, roles: ['ADMIN'] },
+  { href: '/admin/ai', labelKey: 'nav.adminAi', icon: <Sparkles className="h-4 w-4" />, roles: ['ADMIN'] },
   { href: '/profile', labelKey: 'nav.profile', icon: <LayoutDashboard className="h-4 w-4" />, roles: ['SUBSCRIBER', 'AUTHOR', 'ADMIN'] },
 ]
 
