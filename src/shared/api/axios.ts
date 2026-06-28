@@ -1,4 +1,5 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios'
+import type { AuthResponse } from '@/features/auth/api'
 import { authStorage } from './auth-storage'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import { getApiBaseUrl } from './base-url'
@@ -27,10 +28,11 @@ api.interceptors.response.use(undefined, async (err: AxiosError) => {
     try {
       const rt = authStorage.getRefresh()
       if (!rt) return null
-      const { data } = await axios.post<{ accessToken: string; refreshToken: string }>(
+      const { data } = await axios.post<AuthResponse>(
         `${getApiBaseUrl()}/auth/refresh`,
         { refreshToken: rt },
       )
+      useAuthStore.getState().setUser(data.user)
       useAuthStore.getState().setTokens(data.accessToken, data.refreshToken)
       authStorage.setRefresh(data.refreshToken)
       return data.accessToken
