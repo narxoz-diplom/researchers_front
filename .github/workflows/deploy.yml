@@ -75,6 +75,11 @@ jobs:
       name: production
       url: https://${{ vars.PROD_DOMAIN }}
     steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository_owner }}/researchers_back
+          ref: main
+
       - name: Validate production environment secrets
         env:
           VPS_HOST: ${{ secrets.VPS_HOST }}
@@ -90,6 +95,18 @@ jobs:
             fi
           done
           if [ "${missing}" -ne 0 ]; then exit 1; fi
+
+      - name: Sync infra files to VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: 22
+          source: "docker-compose.prod.yml,deploy/"
+          target: "/home/${{ secrets.VPS_USER }}/researchers"
+          overwrite: true
+          strip_components: 0
 
       - name: Deploy on VPS
         uses: appleboy/ssh-action@v1.2.0
