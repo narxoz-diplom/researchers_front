@@ -81,24 +81,30 @@ export function StudioCoursesPage() {
               key={course.id}
               className="flex items-center gap-4 rounded-xl border bg-card p-4"
             >
-              <div className="h-12 w-20 shrink-0 overflow-hidden rounded-lg bg-muted">
-                {course.coverUrl && (
-                  <img src={course.coverUrl} alt="" className="h-full w-full object-cover" />
-                )}
-              </div>
-
-              <div className="flex-1 min-w-0">
-                <p className="font-medium truncate">{course.title}</p>
-                <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                  <StatusBadge status={course.status} />
-                  <span className="text-xs text-muted-foreground">
-                    {getCategoryLabel(course.category, t)}
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    {t('common.lessonsCount', { count: course.lessonsCount })}
-                  </span>
+              <button
+                type="button"
+                onClick={() => navigate(`/studio/courses/${course.id}`)}
+                className="flex min-w-0 flex-1 items-center gap-4 rounded-lg text-left transition-colors hover:bg-muted/50 -m-1 p-1"
+              >
+                <div className="h-12 w-20 shrink-0 overflow-hidden rounded-lg bg-muted">
+                  {course.coverUrl && (
+                    <img src={course.coverUrl} alt="" className="h-full w-full object-cover" />
+                  )}
                 </div>
-              </div>
+
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium truncate">{course.title}</p>
+                  <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                    <StatusBadge status={course.status} />
+                    <span className="text-xs text-muted-foreground">
+                      {getCategoryLabel(course.category, t)}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {t('common.lessonsCount', { count: course.lessonsCount })}
+                    </span>
+                  </div>
+                </div>
+              </button>
 
               <DropdownMenu>
                 <DropdownMenuTrigger>

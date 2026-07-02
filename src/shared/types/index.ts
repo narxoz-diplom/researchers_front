@@ -8,6 +8,8 @@ export type SubscriptionStatus = 'ACTIVE' | 'EXPIRED' | 'REVOKED'
 
 export type CourseEnrollmentStatus = 'PENDING' | 'PAID' | 'APPROVED' | 'REJECTED'
 
+export type VideoSource = 'CLOUDINARY' | 'YOUTUBE'
+
 export interface MyEnrollment {
   id: string
   status: CourseEnrollmentStatus
@@ -73,6 +75,7 @@ export interface Lesson {
   id: string
   title: string
   orderNumber: number
+  isPublished: boolean
   content?: string
   courseId: string
   videos: LessonVideo[]
@@ -88,16 +91,19 @@ export interface LessonSummary {
   id: string
   title: string
   orderNumber: number
+  isPublished: boolean
 }
 
 export interface LessonVideo {
   id: string
   title: string
+  source: VideoSource
   cloudinaryPublicId?: string
+  youtubeVideoId?: string
   url: string
   durationSeconds: number
   orderNumber: number
-  sizeBytes: string
+  sizeBytes?: string
 }
 
 export interface LessonMaterial {

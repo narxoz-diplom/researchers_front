@@ -6,6 +6,7 @@ import { ArrowLeft, ImageOff, Plus } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
@@ -23,7 +24,7 @@ import {
   type CourseSectionCategory,
 } from '@/features/courses/course-categories'
 
-import type { Course, Lesson } from '@/shared/types'
+import type { Course, Lesson, LessonSummary } from '@/shared/types'
 
 function CourseCoverPreview({ url }: { url: string }) {
   const { t } = useTranslation()
@@ -72,7 +73,7 @@ export function StudioCourseEditPage() {
 
   const { data: lessons, isLoading: lessonsLoading } = useQuery({
     queryKey: ['lessons', id],
-    queryFn: () => api.get<Lesson[]>(API.lessons.byCourse(id!)).then((r) => r.data),
+    queryFn: () => api.get<LessonSummary[]>(API.lessons.byCourse(id!)).then((r) => r.data),
     enabled: !!id,
   })
 
@@ -122,6 +123,7 @@ export function StudioCourseEditPage() {
       void qc.invalidateQueries({ queryKey: ['course', id] })
       void qc.invalidateQueries({ queryKey: ['courses', 'mine'] })
       toast.success(t('studio.saved'))
+      navigate('/studio')
     },
     onError: () => toast.error(t('studio.saveFailed')),
   })
@@ -365,7 +367,10 @@ export function StudioCourseEditPage() {
                   <span className="text-xs text-muted-foreground w-5 text-right shrink-0">
                     {idx + 1}
                   </span>
-                  <span className="text-sm font-medium truncate">{lesson.title}</span>
+                  <span className="text-sm font-medium truncate flex-1">{lesson.title}</span>
+                  <Badge variant={lesson.isPublished ? 'default' : 'secondary'} className="shrink-0 text-xs">
+                    {lesson.isPublished ? t('studio.lessonPublished') : t('studio.lessonDraft')}
+                  </Badge>
                 </button>
               ))}
             </div>

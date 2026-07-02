@@ -1,8 +1,8 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, FileText, Trash2 } from 'lucide-react'
+import { ArrowLeft, FileText, Link2, Trash2 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -11,6 +11,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Separator } from '@/components/ui/separator'
+import { Badge } from '@/components/ui/badge'
 import { ErrorState } from '@/shared/ui/ErrorState'
 import { MediaUploader } from '@/shared/ui/MediaUploader'
 import { api } from '@/shared/api/axios'
@@ -21,6 +22,7 @@ import { LessonGeneratePanel } from '@/features/ai/components/LessonGeneratePane
 interface LessonForm {
   title: string
   content: string
+  isPublished: boolean
 }
 
 export function StudioLessonEditPage() {
@@ -28,6 +30,9 @@ export function StudioLessonEditPage() {
   const { id, lessonId } = useParams<{ id: string; lessonId: string }>()
   const navigate = useNavigate()
   const qc = useQueryClient()
+  const [youtubeUrl, setYoutubeUrl] = useState('')
+  const [youtubeTitle, setYoutubeTitle] = useState('')
+  const [attachingYoutube, setAttachingYoutube] = useState(false)
 
   const indexStatusRef = useRef<LessonVectorIndexStatus | undefined>(undefined)
 
@@ -48,9 +53,10 @@ export function StudioLessonEditPage() {
     indexStatusRef.current = status
   }, [lesson?.vectorIndexStatus, lesson?.vectorIndexJobId, t])
 
-  const { register, handleSubmit, reset, setValue } = useForm<LessonForm>({
-    defaultValues: { title: '', content: '' },
+  const { register, handleSubmit, reset, watch, setValue } = useForm<LessonForm>({
+    defaultValues: { title: '', content: '', isPublished: false },
   })
+  const isPublished = watch('isPublished')
   const formInitializedRef = useRef(false)
 
   useEffect(() => {
@@ -60,16 +66,16 @@ export function StudioLessonEditPage() {
   useEffect(() => {
     if (!lesson || lesson.id !== lessonId || formInitializedRef.current) return
     formInitializedRef.current = true
-    reset({ title: lesson.title, content: lesson.content ?? '' })
+    reset({ title: lesson.title, content: lesson.content ?? '', isPublished: lesson.isPublished })
   }, [lesson, lessonId, reset])
 
   const { mutate: updateLesson, isPending: saving } = useMutation({
     mutationFn: (data: LessonForm) => api.patch(API.lessons.update(lessonId!), data),
-    onSuccess: (_data, variables) => {
-      reset(variables)
+    onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['lessons', id] })
       void qc.invalidateQueries({ queryKey: ['lesson', lessonId] })
       toast.success(t('studio.lessonSaved'))
+      navigate(`/studio/courses/${id}`)
     },
     onError: () => toast.error(t('studio.lessonSaveFailed')),
   })
@@ -120,12 +126,25 @@ export function StudioLessonEditPage() {
           </div>
         ) : null}
 
-        <div>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <Input
             {...register('title')}
-            className="text-2xl font-semibold border-none shadow-none px-0 h-auto focus-visible:ring-0 bg-transparent"
+            className="text-2xl font-semibold border-none shadow-none px-0 h-auto focus-visible:ring-0 bg-transparent flex-1"
             placeholder={t('common.lessonTitle')}
           />
+          <div className="flex items-center gap-3 shrink-0">
+            <Badge variant={isPublished ? 'default' : 'secondary'}>
+              {isPublished ? t('studio.lessonPublished') : t('studio.lessonDraft')}
+            </Badge>
+            <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
+              <input
+                type="checkbox"
+                className="h-4 w-4 rounded border-input"
+                {...register('isPublished')}
+              />
+              {t('studio.lessonAvailable')}
+            </label>
+          </div>
         </div>
 
         <div>
@@ -161,22 +180,38 @@ export function StudioLessonEditPage() {
             <div className="flex flex-col gap-2">
               {lesson.videos.map((v) => (
                 <div key={v.id} className="flex items-center gap-3 rounded-xl border bg-card p-3">
-                  <div className="h-12 w-20 shrink-0 overflow-hidden rounded-lg bg-black">
-                    <video
-                      src={v.url}
-                      className="h-full w-full object-cover"
-                      muted
-                      preload="metadata"
-                    />
+                  <div className="h-12 w-20 shrink-0 overflow-hidden rounded-lg bg-black flex items-center justify-center">
+                    {v.source === 'YOUTUBE' ? (
+                      v.youtubeVideoId ? (
+                        <img
+                          src={`https://img.youtube.com/vi/${v.youtubeVideoId}/mqdefault.jpg`}
+                          alt=""
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <Link2 className="h-6 w-6 text-red-500" />
+                      )
+                    ) : (
+                      <video
+                        src={v.url}
+                        className="h-full w-full object-cover"
+                        muted
+                        preload="metadata"
+                      />
+                    )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">{v.title}</p>
-                    {v.durationSeconds > 0 && (
-                      <p className="text-xs text-muted-foreground">
-                        {Math.floor(v.durationSeconds / 60)}:
-                        {String(v.durationSeconds % 60).padStart(2, '0')}
-                      </p>
-                    )}
+                    <p className="text-xs text-muted-foreground">
+                      {v.source === 'YOUTUBE' ? 'YouTube' : t('common.uploadVideo')}
+                      {v.durationSeconds > 0 && (
+                        <>
+                          {' · '}
+                          {Math.floor(v.durationSeconds / 60)}:
+                          {String(v.durationSeconds % 60).padStart(2, '0')}
+                        </>
+                      )}
+                    </p>
                   </div>
                   <Button
                     variant="ghost"
@@ -215,6 +250,45 @@ export function StudioLessonEditPage() {
               toast.success(t('studio.videoAttached'))
             }}
           />
+          <div className="rounded-xl border bg-muted/30 p-4 flex flex-col gap-3">
+            <p className="text-sm font-medium">{t('studio.youtubeVideo')}</p>
+            <Input
+              value={youtubeTitle}
+              onChange={(e) => setYoutubeTitle(e.target.value)}
+              placeholder={t('studio.youtubeTitlePlaceholder')}
+            />
+            <Input
+              value={youtubeUrl}
+              onChange={(e) => setYoutubeUrl(e.target.value)}
+              placeholder={t('studio.youtubeUrlPlaceholder')}
+            />
+            <Button
+              type="button"
+              variant="outline"
+              disabled={!youtubeUrl.trim() || attachingYoutube}
+              onClick={async () => {
+                setAttachingYoutube(true)
+                try {
+                  await api.post(API.videos.attachYoutube(lessonId!), {
+                    title: youtubeTitle.trim() || t('studio.defaultVideoTitle'),
+                    youtubeUrl: youtubeUrl.trim(),
+                  })
+                  setYoutubeUrl('')
+                  setYoutubeTitle('')
+                  invalidateLesson()
+                  toast.success(t('studio.videoAttached'))
+                } catch {
+                  toast.error(t('studio.youtubeAttachFailed'))
+                } finally {
+                  setAttachingYoutube(false)
+                }
+              }}
+            >
+              <Link2 className="mr-2 h-4 w-4 text-red-500" />
+              {attachingYoutube ? t('common.processing') : t('studio.addYoutubeVideo')}
+            </Button>
+            <p className="text-xs text-muted-foreground">{t('studio.youtubeHint')}</p>
+          </div>
         </div>
 
         <div className="flex flex-col gap-3">

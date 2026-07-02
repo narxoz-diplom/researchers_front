@@ -44,6 +44,7 @@ export const API = {
   },
   videos: {
     attach: (lid: string) => `/lessons/${lid}/videos`,
+    attachYoutube: (lid: string) => `/lessons/${lid}/videos/youtube`,
     byId: (id: string) => `/videos/${id}`,
     update: (id: string) => `/videos/${id}`,
     delete: (id: string) => `/videos/${id}`,
