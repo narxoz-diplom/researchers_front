@@ -79,6 +79,7 @@
     "noLessonsYet": "Әлі сабақтар жоқ",
     "cost": "Баға: {{price}}",
     "pay": "{{price}} төлеу",
+    "payCourseHint": "Kaspi QR арқылы төлеңіз — өтінім автоматты түрде жасалады.",
     "grantAccess": "Қолжетімділік беру",
     "reject": "Қабылдамау",
     "revoke": "Кері алу",
@@ -120,7 +121,8 @@
     "languageToggle": "Тілді ауыстыру",
     "languageRu": "Русский",
     "languageKk": "Қазақша",
-    "backToHome": "Басты бетке"
+    "backToHome": "Басты бетке",
+    "send": "Жіберу"
   },
   "nav": {
     "catalog": "Каталог",
@@ -128,6 +130,8 @@
     "users": "Пайдаланушылар",
     "subscriptions": "Жазылымдар",
     "founders": "Біз туралы (видео)",
+    "payments": "Төлемдер",
+    "requests": "Өтінімдер",
     "adminAi": "AI (чат)",
     "profile": "Профиль",
     "sections": "Бөлімдер"
@@ -225,9 +229,9 @@
     "materialDeleted": "Материал жойылды",
     "materialAttached": "Материал тіркелді",
     "defaultVideoTitle": "Бейне",
-    "lessonPublished": "Қолжетімді",
+    "lessonPublished": "Барлығына қолжетімді",
     "lessonDraft": "Жасырын",
-    "lessonAvailable": "Студенттерге қолжетімді",
+    "lessonAvailable": "Барлығына қолжетімді",
     "youtubeVideo": "YouTube бейнесі",
     "youtubeTitlePlaceholder": "Бейне атауы (міндетті емес)",
     "youtubeUrlPlaceholder": "https://www.youtube.com/watch?v=...",
@@ -282,7 +286,16 @@
       "saved": "Сақталды",
       "saveFailed": "Сақтау сәтсіз",
       "deleted": "Жойылды",
-      "deleteFailed": "Жою сәтсіз"
+      "deleteFailed": "Жою сәтсіз",
+      "validation": {
+        "fullNameRequired": "Атын енгізіңіз",
+        "positionRequired": "Лауазымын енгізіңіз",
+        "descriptionRequired": "Сипаттама қосыңыз",
+        "videoRequired": "Видео жүктеңіз",
+        "invalidUrl": "Сілтеме дұрыс емес",
+        "orderMin": "Рет теріс болмауы керек",
+        "fixForm": "Форма өрістерін тексеріңіз"
+      }
     },
     "idCopied": "ID көшірілді",
     "copyFailed": "Көшіру сәтсіз аяқталды",
@@ -292,7 +305,56 @@
     "userDeleteFailed": "Пайдаланушыны жою сәтсіз аяқталды",
     "subscriptionRevoked": "Жазылым кері алынды",
     "subscriptionGranted": "Жазылым берілді",
-    "subscriptionGrantFailed": "Жазылым беру сәтсіз аяқталды"
+    "subscriptionGrantFailed": "Жазылым беру сәтсіз аяқталды",
+    "users": {
+      "editProfile": "Профильді өңдеу",
+      "resetPassword": "Құпия сөзді қалпына келтіру",
+      "newPassword": "Жаңа құпия сөз",
+      "confirmPassword": "Құпия сөзді растау",
+      "passwordEmailHint": "Жаңа құпия сөз пайдаланушының email-іне жіберіледі.",
+      "profileSaved": "Пайдаланушы профилі сақталды",
+      "profileSaveFailed": "Профильді сақтау сәтсіз аяқталды",
+      "passwordReset": "Құпия сөз өзгертілді және email-ге жіберілді",
+      "passwordResetFailed": "Құпия сөзді қалпына келтіру сәтсіз аяқталды",
+      "passwordMismatch": "Құпия сөздер сәйкес келмейді",
+      "passwordTooShort": "Құпия сөз кем дегенде 8 таңбадан тұруы керек"
+    },
+    "payments": {
+      "title": "Kaspi төлемдері",
+      "subtitle": "Картаңыздағы түсімдерді тексеріп, студенттерге қолжетімділік беріңіз",
+      "empty": "Күтілетін төлемдер жоқ",
+      "amount": "Төленді",
+      "expected": "{{amount}} ішінен",
+      "requestMore": "Қосымша төлем сұрау",
+      "requestMoreTitle": "Қосымша төлем сұрау",
+      "noteLabel": "Студентке хабарлама",
+      "notePlaceholder": "Мысалы: 5 000 ₸ түсті, 3 000 ₸ жетіспейді",
+      "approved": "Қолжетімділік берілді",
+      "approveFailed": "Қолжетімділік беру сәтсіз аяқталды",
+      "rejected": "Өтінім қабылданбады",
+      "rejectFailed": "Қабылдамау сәтсіз аяқталды",
+      "moreRequested": "Студентке қосымша төлем сұралды",
+      "moreRequestFailed": "Сұрау жіберу сәтсіз аяқталды"
+    },
+    "ai": {
+      "pageTitle": "AI — жазылушылар чаты",
+      "pageSubtitle": "Сабақ чатындағы жауаптар үшін платформаның ортақ Gemini кілті.",
+      "subscriberChat": {
+        "title": "Чат үшін Gemini кілті",
+        "description": "Бұл кілт сабақ AI-чатындағы embeddings пен жауаптарға арналған. Авторлар контент генерациясы үшін өз кілтін (BYOK) қолданады.",
+        "apiKeyLabel": "Google AI Studio API кілті",
+        "hasKey": "Кілт сақталды — жазылушылар чаты қолжетімді",
+        "noKey": "Кілт жоқ — жазылушылар чаты қолжетімсіз",
+        "encryptedNote": "Кілт дерекқорда шифрланған түрде сақталады. Толық мән көрсетілмейді.",
+        "saveKey": "Кілтті сақтау",
+        "removeKey": "Кілтті жою",
+        "keySaved": "Чат кілті сақталды",
+        "keyRemoved": "Чат кілті жойылды",
+        "saveError": "Кілтті сақтау сәтсіз аяқталды",
+        "removeError": "Кілтті жою сәтсіз аяқталды",
+        "loadError": "Баптауларды жүктеу сәтсіз аяқталды"
+      }
+    }
   },
   "errors": {
     "title": "Қате",
@@ -326,8 +388,36 @@
   "enrollmentStatuses": {
     "PENDING": "Өтінім",
     "PAID": "Төленді",
+    "UNDERPAID": "Төлем жеткіліксіз",
     "APPROVED": "Қолжетімділік берілді",
     "REJECTED": "Қабылданбады"
+  },
+  "checkout": {
+    "title": "Kaspi QR арқылы төлем",
+    "instructions": "Kaspi қосымшасында QR кодты сканерлеңіз, соманы аударыңыз және қанша жібергеніңізді көрсетіңіз.",
+    "qrHint": "ИП KAZAKH RESEARCHERS — сканерлеп, төлеңіз",
+    "empty": "Себет бос",
+    "alreadyPaid": "Төленген: {{amount}}",
+    "due": "Төлеуге: {{amount}}",
+    "totalDue": "Барлығы төлеуге",
+    "amountSent": "Аударым сомасы (₸)",
+    "amountHint": "Kaspi арқылы жіберген соманы көрсетіңіз",
+    "submit": "Төледім — өтінім жіберу",
+    "submitting": "Жіберілуде...",
+    "submitted": "Төлем өтінімі жіберілді. Растауды күтіңіз.",
+    "submitFailed": "Өтінімді жіберу сәтсіз аяқталды",
+    "invalidAmount": "Дұрыс соманы енгізіңіз",
+    "underpaidTitle": "Қосымша төлем қажет",
+    "payAgain": "Қосымша төлеу {{amount}}",
+    "payAgainHint": "Қосымша төлемнен кейін әкімші түсімді тексеріп, қолжетімділік береді."
+  },
+  "requests": {
+    "title": "Менің өтінімдерім",
+    "subtitle": "Курсқа өтінімдер мен төлем статустары",
+    "empty": "Курсқа өтінімдер әлі жоқ",
+    "paid": "Төленген: {{amount}}",
+    "openCourse": "Курсқа",
+    "viewHistory": "«Өтінімдер» бөлімінен қарау"
   },
   "media": {
     "fileTooLarge": "Файл тым үлкен. Максимум {{max}} МБ",
@@ -403,14 +493,15 @@
       "empty": "Себет бос — витринадан курс қосыңыз",
       "total": "Барлығы",
       "checkout": "Рәсімдеуге өту",
+      "checkoutPay": "Төлеу",
       "clear": "Себетті тазалау",
       "remove": "Жою",
-      "landing.cart.checkoutProcessing": "Өтінімдер рәсімделуде...",
-      "landing.cart.checkoutRegister": "Тіркеліп, рәсімдеу",
-      "landing.cart.viewCatalog": "Каталогқа өту",
-      "landing.cart.checkoutSuccess": "{{count}} курсқа өтінім жіберілді",
-      "landing.cart.checkoutFailed": "Өтінімдерді рәсімдеу сәтсіз аяқталды",
-      "landing.cart.subscribersOnly": "Рәсімдеу тек жазылушыларға қолжетімді"
+      "checkoutProcessing": "Өтінімдер рәсімделуде...",
+      "checkoutRegister": "Тіркеліп, рәсімдеу",
+      "viewCatalog": "Каталогқа өту",
+      "checkoutSuccess": "{{count}} курсқа өтінім жіберілді",
+      "checkoutFailed": "Өтінімдерді рәсімдеу сәтсіз аяқталды",
+      "subscribersOnly": "Рәсімдеу тек жазылушыларға қолжетімді"
     },
     "images": {
       "hero": "Кітаптармен толы кітапхана",
@@ -604,27 +695,6 @@
       "AI_SERVICE_UNAVAILABLE": "AI сервисі уақытша қолжетімсіз",
       "LESSON_INDEX_IN_PROGRESS": "Сабақ материалдары әлі индекстелуде. Күтіп, қайта көріңіз.",
       "LESSON_INDEX_FAILED": "Сабақты индекстеу сәтсіз аяқталды. Сабақ бетіндегі кодпен техникалық қолдауға жүгініңіз."
-    }
-  },
-  "admin": {
-    "ai": {
-      "pageTitle": "AI — жазылушылар чаты",
-      "pageSubtitle": "Сабақ чатындағы жауаптар үшін платформаның ортақ Gemini кілті.",
-      "subscriberChat": {
-        "title": "Чат үшін Gemini кілті",
-        "description": "Бұл кілт сабақ AI-чатындағы embeddings пен жауаптарға арналған. Авторлар контент генерациясы үшін өз кілтін (BYOK) қолданады.",
-        "apiKeyLabel": "Google AI Studio API кілті",
-        "hasKey": "Кілт сақталды — жазылушылар чаты қолжетімді",
-        "noKey": "Кілт жоқ — жазылушылар чаты қолжетімсіз",
-        "encryptedNote": "Кілт дерекқорда шифрланған түрде сақталады. Толық мән көрсетілмейді.",
-        "saveKey": "Кілтті сақтау",
-        "removeKey": "Кілтті жою",
-        "keySaved": "Чат кілті сақталды",
-        "keyRemoved": "Чат кілті жойылды",
-        "saveError": "Кілтті сақтау сәтсіз аяқталды",
-        "removeError": "Кілтті жою сәтсіз аяқталды",
-        "loadError": "Баптауларды жүктеу сәтсіз аяқталды"
-      }
     }
   }
 }

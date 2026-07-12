@@ -79,6 +79,7 @@
     "noLessonsYet": "Уроков пока нет",
     "cost": "Стоимость: {{price}}",
     "pay": "Оплатить {{price}}",
+    "payCourseHint": "Оплатите через Kaspi QR — заявка создастся автоматически.",
     "grantAccess": "Выдать доступ",
     "reject": "Отклонить",
     "revoke": "Отозвать",
@@ -120,7 +121,8 @@
     "languageToggle": "Сменить язык",
     "languageRu": "Русский",
     "languageKk": "Қазақша",
-    "backToHome": "На главную"
+    "backToHome": "На главную",
+    "send": "Отправить"
   },
   "nav": {
     "catalog": "Каталог",
@@ -128,6 +130,8 @@
     "users": "Пользователи",
     "subscriptions": "Подписки",
     "founders": "О нас (видео)",
+    "payments": "Оплаты",
+    "requests": "Запросы",
     "adminAi": "AI (чат)",
     "profile": "Профиль",
     "sections": "Разделы"
@@ -226,9 +230,9 @@
     "materialDeleted": "Материал удалён",
     "materialAttached": "Материал прикреплён",
     "defaultVideoTitle": "Видео",
-    "lessonPublished": "Доступен",
+    "lessonPublished": "Доступен для всех",
     "lessonDraft": "Скрыт",
-    "lessonAvailable": "Доступен для студентов",
+    "lessonAvailable": "Доступен для всех",
     "youtubeVideo": "Видео с YouTube",
     "youtubeTitlePlaceholder": "Название видео (необязательно)",
     "youtubeUrlPlaceholder": "https://www.youtube.com/watch?v=...",
@@ -282,7 +286,16 @@
       "saved": "Основатель сохранён",
       "saveFailed": "Не удалось сохранить",
       "deleted": "Основатель удалён",
-      "deleteFailed": "Не удалось удалить"
+      "deleteFailed": "Не удалось удалить",
+      "validation": {
+        "fullNameRequired": "Укажите имя",
+        "positionRequired": "Укажите должность",
+        "descriptionRequired": "Добавьте описание",
+        "videoRequired": "Загрузите видео-визитку",
+        "invalidUrl": "Некорректная ссылка",
+        "orderMin": "Порядок не может быть отрицательным",
+        "fixForm": "Проверьте поля формы"
+      }
     },
     "idCopied": "ID скопирован",
     "copyFailed": "Не удалось скопировать",
@@ -292,7 +305,56 @@
     "userDeleteFailed": "Не удалось удалить пользователя",
     "subscriptionRevoked": "Подписка отозвана",
     "subscriptionGranted": "Подписка выдана",
-    "subscriptionGrantFailed": "Не удалось выдать подписку"
+    "subscriptionGrantFailed": "Не удалось выдать подписку",
+    "users": {
+      "editProfile": "Редактировать профиль",
+      "resetPassword": "Сбросить пароль",
+      "newPassword": "Новый пароль",
+      "confirmPassword": "Подтвердите пароль",
+      "passwordEmailHint": "Новый пароль будет отправлен пользователю на email.",
+      "profileSaved": "Профиль пользователя сохранён",
+      "profileSaveFailed": "Не удалось сохранить профиль",
+      "passwordReset": "Пароль изменён и отправлен на email",
+      "passwordResetFailed": "Не удалось сбросить пароль",
+      "passwordMismatch": "Пароли не совпадают",
+      "passwordTooShort": "Пароль должен быть не короче 8 символов"
+    },
+    "payments": {
+      "title": "Оплаты Kaspi",
+      "subtitle": "Проверьте поступления на карту и выдайте доступ студентам",
+      "empty": "Нет ожидающих оплат",
+      "amount": "Оплачено",
+      "expected": "из {{amount}}",
+      "requestMore": "Запросить доплату",
+      "requestMoreTitle": "Запросить доплату",
+      "noteLabel": "Сообщение студенту",
+      "notePlaceholder": "Например: поступило 5 000 ₸, не хватает 3 000 ₸",
+      "approved": "Доступ выдан",
+      "approveFailed": "Не удалось выдать доступ",
+      "rejected": "Заявка отклонена",
+      "rejectFailed": "Не удалось отклонить",
+      "moreRequested": "Студенту отправлен запрос на доплату",
+      "moreRequestFailed": "Не удалось отправить запрос"
+    },
+    "ai": {
+      "pageTitle": "AI — чат подписчиков",
+      "pageSubtitle": "Общий Gemini-ключ платформы для ответов в чате урока (подписчики).",
+      "subscriberChat": {
+        "title": "Gemini-ключ для чата",
+        "description": "Этот ключ используется для embeddings и ответов в AI-чате урока. Авторы используют свой ключ (BYOK) для генерации контента.",
+        "apiKeyLabel": "Google AI Studio API-ключ",
+        "hasKey": "Ключ сохранён — чат подписчиков доступен",
+        "noKey": "Ключ не задан — чат подписчиков недоступен",
+        "encryptedNote": "Ключ хранится зашифрованным в базе данных. Полное значение не отображается.",
+        "saveKey": "Сохранить ключ",
+        "removeKey": "Удалить ключ",
+        "keySaved": "Ключ для чата сохранён",
+        "keyRemoved": "Ключ для чата удалён",
+        "saveError": "Не удалось сохранить ключ",
+        "removeError": "Не удалось удалить ключ",
+        "loadError": "Не удалось загрузить настройки"
+      }
+    }
   },
   "errors": {
     "title": "Ошибка",
@@ -326,8 +388,36 @@
   "enrollmentStatuses": {
     "PENDING": "Заявка",
     "PAID": "Оплачено",
+    "UNDERPAID": "Недостаточная оплата",
     "APPROVED": "Доступ выдан",
     "REJECTED": "Отклонено"
+  },
+  "checkout": {
+    "title": "Оплата через Kaspi QR",
+    "instructions": "Отсканируйте QR-код в приложении Kaspi, переведите сумму и укажите, сколько вы отправили.",
+    "qrHint": "ИП KAZAKH RESEARCHERS — сканируйте и оплатите",
+    "empty": "Корзина пуста",
+    "alreadyPaid": "Уже оплачено: {{amount}}",
+    "due": "К оплате: {{amount}}",
+    "totalDue": "Итого к оплате",
+    "amountSent": "Сумма перевода (₸)",
+    "amountHint": "Укажите сумму, которую вы отправили через Kaspi",
+    "submit": "Я оплатил — отправить заявку",
+    "submitting": "Отправка...",
+    "submitted": "Заявка на оплату отправлена. Ожидайте подтверждения.",
+    "submitFailed": "Не удалось отправить заявку",
+    "invalidAmount": "Укажите корректную сумму",
+    "underpaidTitle": "Требуется доплата",
+    "payAgain": "Доплатить {{amount}}",
+    "payAgainHint": "После доплаты администратор проверит поступление и выдаст доступ."
+  },
+  "requests": {
+    "title": "Мои запросы",
+    "subtitle": "История заявок на курсы и статусы оплаты",
+    "empty": "У вас пока нет заявок на курсы",
+    "paid": "Оплачено: {{amount}}",
+    "openCourse": "К курсу",
+    "viewHistory": "Смотреть в разделе «Запросы»"
   },
   "media": {
     "fileTooLarge": "Файл слишком большой. Максимум {{max}} МБ",
@@ -369,14 +459,15 @@
       "empty": "Корзина пуста — добавьте курсы с витрины",
       "total": "Итого",
       "checkout": "Перейти к оформлению",
+      "checkoutPay": "Оплатить",
       "clear": "Очистить корзину",
       "remove": "Удалить",
-      "landing.cart.checkoutProcessing": "Оформляем заявки...",
-      "landing.cart.checkoutRegister": "Зарегистрироваться и оформить",
-      "landing.cart.viewCatalog": "Перейти в каталог",
-      "landing.cart.checkoutSuccess": "Заявки на {{count}} курс(ов) отправлены",
-      "landing.cart.checkoutFailed": "Не удалось оформить заявки",
-      "landing.cart.subscribersOnly": "Оформление доступно только подписчикам"
+      "checkoutProcessing": "Оформляем заявки...",
+      "checkoutRegister": "Зарегистрироваться и оформить",
+      "viewCatalog": "Перейти в каталог",
+      "checkoutSuccess": "Заявки на {{count}} курс(ов) отправлены",
+      "checkoutFailed": "Не удалось оформить заявки",
+      "subscribersOnly": "Оформление доступно только подписчикам"
     },
     "images": {
       "hero": "Уютная библиотека с книгами",
@@ -604,27 +695,6 @@
       "AI_SERVICE_UNAVAILABLE": "AI-сервис временно недоступен",
       "LESSON_INDEX_IN_PROGRESS": "Материалы урока ещё индексируются. Подождите и повторите.",
       "LESSON_INDEX_FAILED": "Индексация урока не удалась. Обратитесь в техподдержку с кодом из сообщения на странице урока."
-    }
-  },
-  "admin": {
-    "ai": {
-      "pageTitle": "AI — чат подписчиков",
-      "pageSubtitle": "Общий Gemini-ключ платформы для ответов в чате урока (подписчики).",
-      "subscriberChat": {
-        "title": "Gemini-ключ для чата",
-        "description": "Этот ключ используется для embeddings и ответов в AI-чате урока. Авторы используют свой ключ (BYOK) для генерации контента.",
-        "apiKeyLabel": "Google AI Studio API-ключ",
-        "hasKey": "Ключ сохранён — чат подписчиков доступен",
-        "noKey": "Ключ не задан — чат подписчиков недоступен",
-        "encryptedNote": "Ключ хранится зашифрованным в базе данных. Полное значение не отображается.",
-        "saveKey": "Сохранить ключ",
-        "removeKey": "Удалить ключ",
-        "keySaved": "Ключ для чата сохранён",
-        "keyRemoved": "Ключ для чата удалён",
-        "saveError": "Не удалось сохранить ключ",
-        "removeError": "Не удалось удалить ключ",
-        "loadError": "Не удалось загрузить настройки"
-      }
     }
   }
 }

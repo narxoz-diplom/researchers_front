@@ -58,6 +58,15 @@ export const AdminFoundersPage = lazy(() =>
 export const AdminPlatformAiPage = lazy(() =>
   import('@/pages/admin/AdminPlatformAiPage').then((m) => ({ default: m.AdminPlatformAiPage })),
 )
+export const AdminPaymentsPage = lazy(() =>
+  import('@/pages/admin/AdminPaymentsPage').then((m) => ({ default: m.AdminPaymentsPage })),
+)
+export const CheckoutPage = lazy(() =>
+  import('@/pages/checkout/CheckoutPage').then((m) => ({ default: m.CheckoutPage })),
+)
+export const MyRequestsPage = lazy(() =>
+  import('@/pages/requests/MyRequestsPage').then((m) => ({ default: m.MyRequestsPage })),
+)
 export const ProfilePage = lazy(() =>
   import('@/pages/profile/ProfilePage').then((m) => ({ default: m.ProfilePage })),
 )

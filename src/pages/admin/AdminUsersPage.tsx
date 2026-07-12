@@ -1,10 +1,12 @@
 import { useState } from 'react'
+import { useForm } from 'react-hook-form'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Check, Copy, Search } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { Label } from '@/components/ui/label'
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
@@ -24,12 +26,32 @@ import { api } from '@/shared/api/axios'
 import { API } from '@/shared/api/endpoints'
 import type { User, Role, Meta } from '@/shared/types'
 
+interface EditUserForm {
+  fullName: string
+  email: string
+}
+
+interface ResetPasswordForm {
+  newPassword: string
+  confirmPassword: string
+}
+
 export function AdminUsersPage() {
   const { t } = useTranslation()
   const [search, setSearch] = useState('')
   const [roleDialog, setRoleDialog] = useState<{ user: User; newRole: Role } | null>(null)
+  const [editDialog, setEditDialog] = useState<User | null>(null)
+  const [passwordDialog, setPasswordDialog] = useState<User | null>(null)
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const qc = useQueryClient()
+
+  const editForm = useForm<EditUserForm>({
+    defaultValues: { fullName: '', email: '' },
+  })
+
+  const passwordForm = useForm<ResetPasswordForm>({
+    defaultValues: { newPassword: '', confirmPassword: '' },
+  })
 
   async function copyId(id: string) {
     try {
@@ -61,6 +83,31 @@ export function AdminUsersPage() {
     onError: () => toast.error(t('admin.roleChangeFailed')),
   })
 
+  const { mutate: updateUser, isPending: updatingUser } = useMutation({
+    mutationFn: ({ userId, payload }: { userId: string; payload: EditUserForm }) =>
+      api.patch(API.users.update(userId), {
+        fullName: payload.fullName.trim(),
+        email: payload.email.trim(),
+      }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['admin', 'users'] })
+      setEditDialog(null)
+      toast.success(t('admin.users.profileSaved'))
+    },
+    onError: () => toast.error(t('admin.users.profileSaveFailed')),
+  })
+
+  const { mutate: resetPassword, isPending: resettingPassword } = useMutation({
+    mutationFn: ({ userId, newPassword }: { userId: string; newPassword: string }) =>
+      api.patch(API.users.password(userId), { newPassword }),
+    onSuccess: () => {
+      setPasswordDialog(null)
+      passwordForm.reset()
+      toast.success(t('admin.users.passwordReset'))
+    },
+    onError: () => toast.error(t('admin.users.passwordResetFailed')),
+  })
+
   const { mutate: deleteUser } = useMutation({
     mutationFn: (id: string) => api.delete(API.users.byId(id)),
     onSuccess: () => {
@@ -69,6 +116,37 @@ export function AdminUsersPage() {
     },
     onError: () => toast.error(t('admin.userDeleteFailed')),
   })
+
+  function openEditDialog(user: User) {
+    setEditDialog(user)
+    editForm.reset({
+      fullName: user.fullName,
+      email: user.email,
+    })
+  }
+
+  function openPasswordDialog(user: User) {
+    setPasswordDialog(user)
+    passwordForm.reset({ newPassword: '', confirmPassword: '' })
+  }
+
+  function submitEdit(values: EditUserForm) {
+    if (!editDialog) return
+    updateUser({ userId: editDialog.id, payload: values })
+  }
+
+  function submitPassword(values: ResetPasswordForm) {
+    if (!passwordDialog) return
+    if (values.newPassword !== values.confirmPassword) {
+      toast.error(t('admin.users.passwordMismatch'))
+      return
+    }
+    if (values.newPassword.length < 8) {
+      toast.error(t('admin.users.passwordTooShort'))
+      return
+    }
+    resetPassword({ userId: passwordDialog.id, newPassword: values.newPassword })
+  }
 
   if (isError) return <ErrorState onRetry={() => void refetch()} />
 
@@ -119,7 +197,13 @@ export function AdminUsersPage() {
                 <Copy className="h-3.5 w-3.5 shrink-0" />
               )}
             </button>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" size="sm" className="flex-1" onClick={() => openEditDialog(user)}>
+                {t('common.edit')}
+              </Button>
+              <Button variant="outline" size="sm" className="flex-1" onClick={() => openPasswordDialog(user)}>
+                {t('admin.users.resetPassword')}
+              </Button>
               <Button
                 variant="outline"
                 size="sm"
@@ -197,12 +281,16 @@ export function AdminUsersPage() {
                 </TableCell>
                 <TableCell className="text-right">
                   <DropdownMenu>
-                    <DropdownMenuTrigger>
-                      <Button variant="ghost" size="sm">
-                        {t('common.actions')}
-                      </Button>
+                    <DropdownMenuTrigger render={<Button variant="outline" size="sm" />}>
+                      {t('common.actions')}
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => openEditDialog(user)}>
+                        {t('admin.users.editProfile')}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => openPasswordDialog(user)}>
+                        {t('admin.users.resetPassword')}
+                      </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() =>
                           setRoleDialog({ user, newRole: user.role === 'ADMIN' ? 'SUBSCRIBER' : 'AUTHOR' })
@@ -224,6 +312,83 @@ export function AdminUsersPage() {
           </TableBody>
         </Table>
       </div>
+
+      <Dialog open={!!editDialog} onOpenChange={() => setEditDialog(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('admin.users.editProfile')}</DialogTitle>
+          </DialogHeader>
+          {editDialog && (
+            <form onSubmit={editForm.handleSubmit(submitEdit)} className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                {t('common.user')}: <strong>{editDialog.fullName}</strong>
+              </p>
+              <div className="space-y-2">
+                <Label htmlFor="edit-fullName">{t('common.name')}</Label>
+                <Input id="edit-fullName" {...editForm.register('fullName', { required: true, minLength: 2 })} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-email">{t('common.email')}</Label>
+                <Input
+                  id="edit-email"
+                  type="email"
+                  {...editForm.register('email', { required: true })}
+                />
+              </div>
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setEditDialog(null)}>
+                  {t('common.cancel')}
+                </Button>
+                <Button type="submit" disabled={updatingUser}>
+                  {updatingUser ? t('common.saving') : t('common.save')}
+                </Button>
+              </DialogFooter>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!passwordDialog} onOpenChange={() => setPasswordDialog(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('admin.users.resetPassword')}</DialogTitle>
+          </DialogHeader>
+          {passwordDialog && (
+            <form onSubmit={passwordForm.handleSubmit(submitPassword)} className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                {t('common.user')}: <strong>{passwordDialog.fullName}</strong>
+              </p>
+              <p className="text-sm text-muted-foreground">{t('admin.users.passwordEmailHint')}</p>
+              <div className="space-y-2">
+                <Label htmlFor="new-password">{t('admin.users.newPassword')}</Label>
+                <Input
+                  id="new-password"
+                  type="password"
+                  autoComplete="new-password"
+                  {...passwordForm.register('newPassword', { required: true, minLength: 8 })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="confirm-password">{t('admin.users.confirmPassword')}</Label>
+                <Input
+                  id="confirm-password"
+                  type="password"
+                  autoComplete="new-password"
+                  {...passwordForm.register('confirmPassword', { required: true, minLength: 8 })}
+                />
+              </div>
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setPasswordDialog(null)}>
+                  {t('common.cancel')}
+                </Button>
+                <Button type="submit" disabled={resettingPassword}>
+                  {resettingPassword ? t('common.saving') : t('admin.users.resetPassword')}
+                </Button>
+              </DialogFooter>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={!!roleDialog} onOpenChange={() => setRoleDialog(null)}>
         <DialogContent>

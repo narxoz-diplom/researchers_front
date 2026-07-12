@@ -1,17 +1,14 @@
-import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Lock } from 'lucide-react'
 import { BookMarkIcon, BrandIcon } from '@/shared/components/BrandIcon'
 import { format } from 'date-fns'
 import { useTranslation } from 'react-i18next'
-import { toast } from 'sonner'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { Textarea } from '@/components/ui/textarea'
 import { ErrorState } from '@/shared/ui/ErrorState'
 import { StatusBadge } from '@/shared/ui/StatusBadge'
 import { api } from '@/shared/api/axios'
@@ -34,35 +31,11 @@ export function CourseDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const user = useAuthStore((s) => s.user)
-  const qc = useQueryClient()
-  const [requestMessage, setRequestMessage] = useState('')
 
   const { data: course, isLoading, isError, refetch } = useQuery({
     queryKey: ['course', id],
     queryFn: () => api.get<CourseDetail>(API.courses.byId(id!)).then((r) => r.data),
     enabled: !!id,
-  })
-
-  const { mutate: requestEnrollment, isPending: requesting } = useMutation({
-    mutationFn: () =>
-      api.post<MyEnrollment>(API.courses.enrollmentRequest(id!), {
-        message: requestMessage.trim() || undefined,
-      }),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: ['course', id] })
-      toast.success(t('course.enrollmentSent'))
-      setRequestMessage('')
-    },
-    onError: () => toast.error(t('course.enrollmentFailed')),
-  })
-
-  const { mutate: purchaseEnrollment, isPending: purchasing } = useMutation({
-    mutationFn: () => api.post<MyEnrollment>(API.courses.enrollmentPurchase(id!)),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: ['course', id] })
-      toast.success(t('course.paymentAccepted'))
-    },
-    onError: () => toast.error(t('course.submitRequestFirst')),
   })
 
   if (isLoading) return <CourseDetailSkeleton />
@@ -73,8 +46,12 @@ export function CourseDetailPage() {
   const isSubscriber = user?.role === 'SUBSCRIBER'
   const lessons = course.lessons
   const firstLessonId = lessons[0]?.id
+  const firstPublicLessonId = lessons.find((l) => l.isPublished)?.id
   const enrollment = course.myEnrollment
   const dateLocale = getDateLocale(i18n.language)
+
+  const canOpenLesson = (lesson: LessonSummary) =>
+    course.hasAccess || lesson.isPublished
 
   return (
     <div className="pb-12">
@@ -152,20 +129,23 @@ export function CourseDetailPage() {
               enrollment={enrollment}
               hasAccess={course.hasAccess}
               firstLessonId={firstLessonId}
-              requestMessage={requestMessage}
-              onRequestMessageChange={setRequestMessage}
-              onRequest={() => requestEnrollment()}
-              onPurchase={() => purchaseEnrollment()}
+              onCheckout={() => navigate(`/checkout?courseId=${course.id}`)}
               onStart={() => navigate(`/courses/${course.id}/lessons/${firstLessonId}`)}
-              requesting={requesting}
-              purchasing={purchasing}
             />
           ) : !user ? (
             <div className="flex flex-col gap-3 sm:flex-row">
+              {firstPublicLessonId && (
+                <Button
+                  className="w-full sm:w-auto"
+                  onClick={() => navigate(`/courses/${course.id}/lessons/${firstPublicLessonId}`)}
+                >
+                  {t('common.startLearning')}
+                </Button>
+              )}
               <Link
                 to="/auth/login"
                 state={{ from: { pathname: `/courses/${course.id}` } }}
-                className={cn(buttonVariants(), 'w-full sm:w-auto')}
+                className={cn(buttonVariants({ variant: firstPublicLessonId ? 'outline' : 'default' }), 'w-full sm:w-auto')}
               >
                 {t('landing.login')}
               </Link>
@@ -208,17 +188,17 @@ export function CourseDetailPage() {
                     key={lesson.id}
                     type="button"
                     onClick={() => {
-                      if (!course.hasAccess) return
+                      if (!canOpenLesson(lesson)) return
                       navigate(`/courses/${course.id}/lessons/${lesson.id}`)
                     }}
-                    disabled={!course.hasAccess}
+                    disabled={!canOpenLesson(lesson)}
                     className="flex items-center gap-4 rounded-xl p-3 text-left transition-colors enabled:hover:bg-muted disabled:cursor-not-allowed disabled:opacity-70"
                   >
                     <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground">
                       {index + 1}
                     </span>
                     <span className="flex-1 text-sm font-medium">{lesson.title}</span>
-                    {!course.hasAccess && (
+                    {!canOpenLesson(lesson) && (
                       <Lock className="h-4 w-4 text-muted-foreground" />
                     )}
                   </button>
@@ -247,25 +227,15 @@ function SubscriberActions({
   enrollment,
   hasAccess,
   firstLessonId,
-  requestMessage,
-  onRequestMessageChange,
-  onRequest,
-  onPurchase,
+  onCheckout,
   onStart,
-  requesting,
-  purchasing,
 }: {
   course: CourseDetail
   enrollment?: MyEnrollment | null
   hasAccess: boolean
   firstLessonId?: string
-  requestMessage: string
-  onRequestMessageChange: (v: string) => void
-  onRequest: () => void
-  onPurchase: () => void
+  onCheckout: () => void
   onStart: () => void
-  requesting: boolean
-  purchasing: boolean
 }) {
   const { t, i18n } = useTranslation()
   const price = formatPriceCents(course.priceCents, i18n.language)
@@ -278,38 +248,32 @@ function SubscriberActions({
     )
   }
 
-  if (!enrollment || enrollment.status === 'REJECTED') {
+  if (enrollment?.status === 'UNDERPAID') {
+    const dueCents = Math.max(
+      0,
+      (enrollment.expectedAmountCents ?? course.priceCents) - (enrollment.paidAmountCents ?? 0),
+    )
+    const duePrice = formatPriceCents(dueCents, i18n.language)
     return (
       <div className="flex flex-col gap-3 max-w-md">
-        <Textarea
-          placeholder={t('common.enrollmentComment')}
-          value={requestMessage}
-          onChange={(e) => onRequestMessageChange(e.target.value)}
-          rows={2}
-        />
-        <Button className="w-full sm:w-auto" onClick={onRequest} disabled={requesting}>
-          {requesting ? t('common.sending') : t('common.requestCourse')}
+        <Badge variant="outline" className="w-fit gap-1.5 border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-400">
+          <Lock className="h-3.5 w-3.5" />
+          {t('enrollmentStatuses.UNDERPAID')}
+        </Badge>
+        {enrollment.adminPaymentNote && (
+          <p className="text-sm text-amber-800 dark:text-amber-200 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3">
+            {enrollment.adminPaymentNote}
+          </p>
+        )}
+        <Button className="w-full sm:w-auto" onClick={onCheckout}>
+          {t('checkout.payAgain', { amount: duePrice })}
         </Button>
-        <p className="text-xs text-muted-foreground">
-          {t('common.cost', { price })}. {t('common.requestCourseHint')}
-        </p>
+        <p className="text-xs text-muted-foreground">{t('checkout.payAgainHint')}</p>
       </div>
     )
   }
 
-  if (enrollment.status === 'PENDING') {
-    return (
-      <div className="flex flex-col gap-3 max-w-md">
-        <Badge variant="outline" className="w-fit">{t('common.requestSent')}</Badge>
-        <Button className="w-full sm:w-auto" onClick={onPurchase} disabled={purchasing}>
-          {purchasing ? t('common.processing') : t('common.pay', { price })}
-        </Button>
-        <p className="text-xs text-muted-foreground">{t('common.afterPaymentHint')}</p>
-      </div>
-    )
-  }
-
-  if (enrollment.status === 'PAID') {
+  if (enrollment?.status === 'PAID') {
     return (
       <div className="flex flex-col gap-2 max-w-md">
         <Badge variant="outline" className="w-fit gap-1.5 border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-400">
@@ -317,11 +281,21 @@ function SubscriberActions({
           {t('common.paidAwaitingAuthor')}
         </Badge>
         <p className="text-xs text-muted-foreground">{t('common.authorWillConfirm')}</p>
+        <Link to="/requests" className="text-xs text-primary hover:underline">
+          {t('requests.viewHistory')}
+        </Link>
       </div>
     )
   }
 
-  return null
+  return (
+    <div className="flex flex-col gap-3 max-w-md">
+      <Button className="w-full sm:w-auto" onClick={onCheckout}>
+        {t('common.pay', { price })}
+      </Button>
+      <p className="text-xs text-muted-foreground">{t('common.payCourseHint')}</p>
+    </div>
+  )
 }
 
 function CourseDetailSkeleton() {

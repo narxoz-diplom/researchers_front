@@ -6,7 +6,7 @@ export type CourseStatus = 'DRAFT' | 'PUBLISHED' | 'ARCHIVED'
 
 export type SubscriptionStatus = 'ACTIVE' | 'EXPIRED' | 'REVOKED'
 
-export type CourseEnrollmentStatus = 'PENDING' | 'PAID' | 'APPROVED' | 'REJECTED'
+export type CourseEnrollmentStatus = 'PENDING' | 'PAID' | 'UNDERPAID' | 'APPROVED' | 'REJECTED'
 
 export type VideoSource = 'CLOUDINARY' | 'YOUTUBE'
 
@@ -15,7 +15,15 @@ export interface MyEnrollment {
   status: CourseEnrollmentStatus
   message?: string
   paidAt?: string
+  paidAmountCents?: number
+  expectedAmountCents?: number
+  adminPaymentNote?: string
   approvedAt?: string
+  createdAt?: string
+}
+
+export interface MyEnrollmentWithCourse extends MyEnrollment {
+  course: { id: string; title: string; coverUrl?: string; priceCents: number }
 }
 
 export interface CourseEnrollment {
@@ -25,9 +33,16 @@ export interface CourseEnrollment {
   status: CourseEnrollmentStatus
   message?: string
   paidAt?: string
+  paidAmountCents?: number
+  expectedAmountCents?: number
+  adminPaymentNote?: string
   approvedAt?: string
   createdAt: string
   user?: Pick<User, 'id' | 'email' | 'fullName'>
+}
+
+export interface PaymentEnrollment extends CourseEnrollment {
+  course: { id: string; title: string; priceCents: number }
 }
 
 export interface Meta {

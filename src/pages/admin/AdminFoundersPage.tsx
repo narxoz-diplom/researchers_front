@@ -1,14 +1,22 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Pencil, Plus, Trash2 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Skeleton } from '@/components/ui/skeleton'
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form'
 import {
   Dialog,
   DialogContent,
@@ -21,14 +29,10 @@ import { ErrorState } from '@/shared/ui/ErrorState'
 import { MediaUploader } from '@/shared/ui/MediaUploader'
 import { foundersApi } from '@/features/founders/api'
 import { useAdminFounders } from '@/features/founders/hooks/useFounders'
+import { createFounderSchema, type FounderSchema } from '@/features/founders/schemas'
 import type { CreateFounderPayload, Founder } from '@/features/founders/types'
 
-interface FounderForm extends CreateFounderPayload {
-  orderNumber: number
-  isPublished: boolean
-}
-
-const emptyForm: FounderForm = {
+const emptyForm: FounderSchema = {
   fullName: '',
   position: '',
   description: '',
@@ -44,19 +48,20 @@ export function AdminFoundersPage() {
   const { data: founders, isLoading, isError, refetch } = useAdminFounders()
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editing, setEditing] = useState<Founder | null>(null)
+  const founderSchema = useMemo(() => createFounderSchema(t), [t])
 
-  const { register, handleSubmit, reset, setValue, watch } = useForm<FounderForm>({
+  const form = useForm<FounderSchema>({
+    resolver: zodResolver(founderSchema),
     defaultValues: emptyForm,
   })
 
-  const videoUrl = watch('videoUrl')
-  const previewUrl = watch('previewUrl')
-  const isPublished = watch('isPublished')
+  const videoUrl = form.watch('videoUrl')
+  const previewUrl = form.watch('previewUrl')
 
   const invalidate = () => void qc.invalidateQueries({ queryKey: ['founders'] })
 
   const { mutate: saveFounder, isPending: saving } = useMutation({
-    mutationFn: (data: FounderForm) => {
+    mutationFn: (data: FounderSchema) => {
       const payload: CreateFounderPayload = {
         fullName: data.fullName.trim(),
         position: data.position.trim(),
@@ -74,7 +79,7 @@ export function AdminFoundersPage() {
       invalidate()
       setDialogOpen(false)
       setEditing(null)
-      reset(emptyForm)
+      form.reset(emptyForm)
       toast.success(t('admin.founders.saved'))
     },
     onError: () => toast.error(t('admin.founders.saveFailed')),
@@ -91,13 +96,13 @@ export function AdminFoundersPage() {
 
   function openCreate() {
     setEditing(null)
-    reset(emptyForm)
+    form.reset(emptyForm)
     setDialogOpen(true)
   }
 
   function openEdit(founder: Founder) {
     setEditing(founder)
-    reset({
+    form.reset({
       fullName: founder.fullName,
       position: founder.position,
       description: founder.description,
@@ -107,6 +112,14 @@ export function AdminFoundersPage() {
       isPublished: founder.isPublished,
     })
     setDialogOpen(true)
+  }
+
+  function onSubmit(values: FounderSchema) {
+    saveFounder(values)
+  }
+
+  function onInvalid() {
+    toast.error(t('admin.founders.validation.fixForm'))
   }
 
   if (isError) return <ErrorState onRetry={() => void refetch()} />
@@ -178,7 +191,16 @@ export function AdminFoundersPage() {
         </div>
       )}
 
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      <Dialog
+        open={dialogOpen}
+        onOpenChange={(open) => {
+          setDialogOpen(open)
+          if (!open) {
+            setEditing(null)
+            form.reset(emptyForm)
+          }
+        }}
+      >
         <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>
@@ -186,96 +208,168 @@ export function AdminFoundersPage() {
             </DialogTitle>
           </DialogHeader>
 
-          <form
-            onSubmit={handleSubmit((data) => saveFounder(data))}
-            className="flex flex-col gap-4"
-          >
-            <div>
-              <Label>{t('admin.founders.fullName')}</Label>
-              <Input {...register('fullName', { required: true })} className="mt-1" />
-            </div>
-            <div>
-              <Label>{t('admin.founders.position')}</Label>
-              <Input {...register('position', { required: true })} className="mt-1" />
-            </div>
-            <div>
-              <Label>{t('admin.founders.description')}</Label>
-              <Textarea {...register('description', { required: true })} rows={4} className="mt-1" />
-            </div>
-            <div>
-              <Label>{t('admin.founders.order')}</Label>
-              <Input
-                {...register('orderNumber', { valueAsNumber: true })}
-                type="number"
-                min={0}
-                className="mt-1"
+          <Form {...form}>
+            <form
+              onSubmit={form.handleSubmit(onSubmit, onInvalid)}
+              className="flex flex-col gap-4"
+            >
+              <FormField
+                control={form.control}
+                name="fullName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('admin.founders.fullName')}</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-            <label className="flex items-center gap-2 rounded-lg border p-3 text-sm">
-              <input
-                type="checkbox"
-                checked={isPublished}
-                onChange={(e) => setValue('isPublished', e.target.checked)}
-                className="h-4 w-4 rounded border-input"
+
+              <FormField
+                control={form.control}
+                name="position"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('admin.founders.position')}</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-              {t('admin.founders.showOnLanding')}
-            </label>
 
-            <div>
-              <Label>{t('admin.founders.video')}</Label>
-              <input type="hidden" {...register('videoUrl', { required: true })} />
-              <div className="mt-2">
-                <MediaUploader
-                  resourceType="video"
-                  folder="founders/videos"
-                  accept="video/mp4,video/webm,.mp4,.webm"
-                  maxSizeMb={100}
-                  label={t('admin.founders.uploadVideo')}
-                  onUploaded={(result) => {
-                    setValue('videoUrl', result.secure_url, { shouldDirty: true })
-                    toast.success(t('admin.founders.videoUploaded'))
-                  }}
-                />
-              </div>
-              {videoUrl && (
-                <p className="mt-1 truncate text-xs text-muted-foreground">{videoUrl}</p>
-              )}
-            </div>
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('admin.founders.description')}</FormLabel>
+                    <FormControl>
+                      <Textarea {...field} rows={4} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <div>
-              <Label>{t('admin.founders.preview')}</Label>
-              <input type="hidden" {...register('previewUrl')} />
-              <div className="mt-2">
-                <MediaUploader
-                  resourceType="image"
-                  folder="founders/previews"
-                  accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
-                  maxSizeMb={5}
-                  label={t('admin.founders.uploadPreview')}
-                  onUploaded={(result) => {
-                    setValue('previewUrl', result.secure_url, { shouldDirty: true })
-                    toast.success(t('admin.founders.previewUploaded'))
-                  }}
-                />
-              </div>
-              {previewUrl && (
-                <img
-                  src={previewUrl}
-                  alt=""
-                  className="mt-2 h-20 w-20 rounded-full object-cover"
-                />
-              )}
-            </div>
+              <FormField
+                control={form.control}
+                name="orderNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('admin.founders.order')}</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        type="number"
+                        min={0}
+                        onChange={(e) => field.onChange(e.target.valueAsNumber || 0)}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
-                {t('common.cancel')}
-              </Button>
-              <Button type="submit" disabled={saving}>
-                {saving ? t('common.saving') : t('common.save')}
-              </Button>
-            </DialogFooter>
-          </form>
+              <FormField
+                control={form.control}
+                name="isPublished"
+                render={({ field }) => (
+                  <FormItem>
+                    <label className="flex items-center gap-2 rounded-lg border p-3 text-sm">
+                      <FormControl>
+                        <input
+                          type="checkbox"
+                          checked={field.value}
+                          onChange={(e) => field.onChange(e.target.checked)}
+                          className="h-4 w-4 rounded border-input"
+                        />
+                      </FormControl>
+                      {t('admin.founders.showOnLanding')}
+                    </label>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="videoUrl"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('admin.founders.video')}</FormLabel>
+                    <input type="hidden" {...field} />
+                    <div className="mt-2">
+                      <MediaUploader
+                        resourceType="video"
+                        folder="founders/videos"
+                        accept="video/mp4,video/webm,.mp4,.webm"
+                        maxSizeMb={100}
+                        label={t('admin.founders.uploadVideo')}
+                        onUploaded={(result) => {
+                          form.setValue('videoUrl', result.secure_url, {
+                            shouldDirty: true,
+                            shouldValidate: true,
+                          })
+                          toast.success(t('admin.founders.videoUploaded'))
+                        }}
+                      />
+                    </div>
+                    {videoUrl && (
+                      <p className="mt-1 truncate text-xs text-muted-foreground">{videoUrl}</p>
+                    )}
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="previewUrl"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('admin.founders.preview')}</FormLabel>
+                    <input type="hidden" {...field} />
+                    <div className="mt-2">
+                      <MediaUploader
+                        resourceType="image"
+                        folder="founders/previews"
+                        accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
+                        maxSizeMb={5}
+                        label={t('admin.founders.uploadPreview')}
+                        onUploaded={(result) => {
+                          form.setValue('previewUrl', result.secure_url, {
+                            shouldDirty: true,
+                            shouldValidate: true,
+                          })
+                          toast.success(t('admin.founders.previewUploaded'))
+                        }}
+                      />
+                    </div>
+                    {previewUrl && (
+                      <img
+                        src={previewUrl}
+                        alt=""
+                        className="mt-2 h-20 w-20 rounded-full object-cover"
+                      />
+                    )}
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
+                  {t('common.cancel')}
+                </Button>
+                <Button type="submit" disabled={saving}>
+                  {saving ? t('common.saving') : t('common.save')}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
         </DialogContent>
       </Dialog>
     </div>

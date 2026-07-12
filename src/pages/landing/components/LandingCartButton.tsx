@@ -23,7 +23,6 @@ export function LandingCartButton({ catalogHref, className }: Props) {
   const removeItem = useCartStore((s) => s.removeItem)
   const clear = useCartStore((s) => s.clear)
   const { checkout, isCheckingOut, isSubscriber, isLoggedIn } = useCartCheckout()
-
   const controls = useAnimation()
   const [open, setOpen] = useState(false)
 
@@ -40,7 +39,8 @@ export function LandingCartButton({ catalogHref, className }: Props) {
       navigate(catalogHref)
       return
     }
-    void checkout().then(() => setOpen(false))
+    setOpen(false)
+    checkout()
   }
 
   useEffect(() => {
@@ -132,7 +132,7 @@ export function LandingCartButton({ catalogHref, className }: Props) {
                 ? t('landing.cart.checkoutRegister')
                 : !isSubscriber
                   ? t('landing.cart.viewCatalog')
-                  : t('landing.cart.checkout')}
+                  : t('landing.cart.checkoutPay')}
           </Button>
           {items.length > 0 && (
             <Button variant="outline" className="w-full" onClick={() => clear()}>

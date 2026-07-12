@@ -13,6 +13,8 @@ export const API = {
     mePassword: '/users/me/password',
     list: '/users',
     byId: (id: string) => `/users/${id}`,
+    update: (id: string) => `/users/${id}`,
+    password: (id: string) => `/users/${id}/password`,
     role: (id: string) => `/users/${id}/role`,
   },
   courses: {
@@ -32,6 +34,11 @@ export const API = {
       `/courses/${courseId}/enrollments/${enrollmentId}/approve`,
     enrollmentReject: (courseId: string, enrollmentId: string) =>
       `/courses/${courseId}/enrollments/${enrollmentId}/reject`,
+    enrollmentRequestMore: (courseId: string, enrollmentId: string) =>
+      `/courses/${courseId}/enrollments/${enrollmentId}/request-more`,
+  },
+  adminEnrollments: {
+    pendingPayments: '/admin/enrollments/payments',
   },
   lessons: {
     byCourse: (cid: string) => `/courses/${cid}/lessons`,
@@ -81,6 +88,9 @@ export const API = {
   },
   progress: {
     my: '/me/progress',
+  },
+  enrollments: {
+    mine: '/me/enrollments',
   },
   admin: {
     subscriberChatAi: '/admin/ai-settings/subscriber-chat',

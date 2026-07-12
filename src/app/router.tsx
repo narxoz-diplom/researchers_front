@@ -10,6 +10,9 @@ import {
   AdminUsersPage,
   AdminFoundersPage,
   AdminPlatformAiPage,
+  AdminPaymentsPage,
+  CheckoutPage,
+  MyRequestsPage,
   CatalogPage,
   CheckEmailPage,
   CourseDetailPage,
@@ -51,7 +54,9 @@ export const router = createBrowserRouter([
     element: <AdaptiveBrowseLayout />,
     children: [
       { path: 'catalog', element: <Lazy><CatalogPage /></Lazy> },
+      { path: 'checkout', element: <Lazy><CheckoutPage /></Lazy> },
       { path: 'courses/:id', element: <Lazy><CourseDetailPage /></Lazy> },
+      { path: 'courses/:cid/lessons/:lessonId', element: <Lazy><LessonPlayerPage /></Lazy> },
     ],
   },
   {
@@ -62,8 +67,8 @@ export const router = createBrowserRouter([
       {
         element: <AppLayout />,
         children: [
-          { path: 'courses/:cid/lessons/:lessonId', element: <Lazy><LessonPlayerPage /></Lazy> },
           { path: 'profile', element: <Lazy><ProfilePage /></Lazy> },
+          { path: 'requests', element: <Lazy><MyRequestsPage /></Lazy> },
 
           {
             element: <ProtectedRoute allowedRoles={['AUTHOR', 'ADMIN']} />,
@@ -83,6 +88,7 @@ export const router = createBrowserRouter([
               { path: 'admin/users', element: <Lazy><AdminUsersPage /></Lazy> },
               { path: 'admin/subscriptions', element: <Lazy><AdminSubscriptionsPage /></Lazy> },
               { path: 'admin/founders', element: <Lazy><AdminFoundersPage /></Lazy> },
+              { path: 'admin/payments', element: <Lazy><AdminPaymentsPage /></Lazy> },
               { path: 'admin/ai', element: <Lazy><AdminPlatformAiPage /></Lazy> },
             ],
           },
