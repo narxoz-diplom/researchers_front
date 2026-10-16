@@ -1,0 +1,580 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Аналитика данных для бизнеса — Researchers.kz</title>
+  <meta name="description" content="Команда исследователей Researchers.kz: анализ социальных сетей и отзывов, исследования рынка, BI-дашборды и прогнозные модели для компаний Казахстана." />
+  <meta property="og:title" content="Аналитика данных для бизнеса — Researchers.kz" />
+  <meta property="og:description" content="Анализ соцсетей и отзывов, исследования рынка, дашборды и прогнозы — с научной методологией." />
+  <meta property="og:type" content="website" />
+  <link rel="icon" href="https://researchers.kz/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #ffffff;
+      --bg-soft: #f5f7fb;
+      --card: #ffffff;
+      --text: #0f172a;
+      --muted: #5b6475;
+      --border: #e3e8f0;
+      --primary: hsl(221 83% 53%);
+      --primary-soft: hsl(221 83% 53% / 0.09);
+      --primary-text: #ffffff;
+      --shadow: 0 1px 2px rgb(15 23 42 / 0.04), 0 8px 24px rgb(15 23 42 / 0.06);
+      --radius: 16px;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --bg: #0b1120;
+        --bg-soft: #0f172a;
+        --card: #111a2e;
+        --text: #e8edf6;
+        --muted: #9aa5b8;
+        --border: #1f2a40;
+        --primary: hsl(217 91% 60%);
+        --primary-soft: hsl(217 91% 60% / 0.14);
+        --primary-text: #0b1120;
+        --shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 8px 24px rgb(0 0 0 / 0.25);
+      }
+    }
+    :root[data-theme="dark"] {
+      --bg: #0b1120;
+      --bg-soft: #0f172a;
+      --card: #111a2e;
+      --text: #e8edf6;
+      --muted: #9aa5b8;
+      --border: #1f2a40;
+      --primary: hsl(217 91% 60%);
+      --primary-soft: hsl(217 91% 60% / 0.14);
+      --primary-text: #0b1120;
+      --shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 8px 24px rgb(0 0 0 / 0.25);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: inherit; }
+    .wrap { max-width: 1120px; margin: 0 auto; padding: 0 16px; }
+    @media (min-width: 768px) { .wrap { padding: 0 32px; } }
+
+    /* Header */
+    header {
+      position: sticky; top: 0; z-index: 10;
+      background: color-mix(in srgb, var(--bg) 85%, transparent);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav { display: flex; align-items: center; justify-content: space-between; height: 64px; gap: 12px; }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; text-decoration: none; white-space: nowrap; }
+    .brand-mark {
+      width: 30px; height: 30px; border-radius: 8px; background: var(--primary);
+      display: grid; place-items: center; color: var(--primary-text);
+    }
+    .brand small { font-weight: 500; color: var(--muted); }
+    .nav-links { display: none; gap: 24px; font-size: 14px; color: var(--muted); }
+    .nav-links a { text-decoration: none; }
+    .nav-links a:hover { color: var(--text); }
+    @media (min-width: 900px) { .nav-links { display: flex; } }
+    .nav-right { display: flex; align-items: center; gap: 8px; }
+    .lang { display: flex; border: 1px solid var(--border); border-radius: 999px; padding: 2px; }
+    .lang button {
+      border: 0; background: transparent; color: var(--muted); font: inherit; font-size: 13px; font-weight: 600;
+      padding: 4px 10px; border-radius: 999px; cursor: pointer;
+    }
+    .lang button[aria-pressed="true"] { background: var(--primary-soft); color: var(--primary); }
+
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      font: inherit; font-weight: 600; font-size: 15px; text-decoration: none; cursor: pointer;
+      padding: 12px 20px; border-radius: 12px; border: 1px solid transparent;
+      transition: transform .15s ease, opacity .15s ease, background .15s ease;
+    }
+    .btn:hover { transform: translateY(-1px); }
+    .btn-primary { background: var(--primary); color: var(--primary-text); }
+    .btn-ghost { border-color: var(--border); background: var(--card); color: var(--text); }
+    .btn-sm { padding: 8px 14px; font-size: 14px; border-radius: 10px; }
+    .nav-right .btn-sm { display: none; }
+    @media (min-width: 560px) { .nav-right .btn-sm { display: inline-flex; } }
+
+    /* Hero */
+    .hero { padding: 64px 0 56px; background:
+      radial-gradient(800px 360px at 85% -10%, var(--primary-soft), transparent 70%),
+      radial-gradient(600px 300px at -10% 110%, var(--primary-soft), transparent 70%); }
+    @media (min-width: 768px) { .hero { padding: 96px 0 88px; } }
+    .eyebrow {
+      display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600;
+      color: var(--primary); background: var(--primary-soft); padding: 6px 12px; border-radius: 999px;
+    }
+    h1 { font-size: clamp(32px, 6vw, 56px); line-height: 1.08; letter-spacing: -0.02em; margin: 20px 0 16px; max-width: 820px; }
+    h1 span { color: var(--primary); }
+    .lead { font-size: clamp(17px, 2.2vw, 20px); color: var(--muted); max-width: 680px; margin: 0 0 32px; }
+    .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+    .trust { display: flex; flex-wrap: wrap; gap: 10px 24px; margin-top: 40px; color: var(--muted); font-size: 14px; }
+    .trust span { display: inline-flex; align-items: center; gap: 8px; }
+    .trust svg { color: var(--primary); flex: none; }
+
+    /* Sections */
+    section { padding: 72px 0; }
+    .soft { background: var(--bg-soft); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+    h2 { font-size: clamp(26px, 4vw, 38px); line-height: 1.15; letter-spacing: -0.015em; margin: 0 0 12px; }
+    .section-lead { color: var(--muted); max-width: 640px; margin: 0 0 40px; font-size: 17px; }
+    .grid { display: grid; gap: 16px; grid-template-columns: 1fr; }
+    @media (min-width: 640px) { .grid-2, .grid-3 { grid-template-columns: repeat(2, 1fr); } }
+    @media (min-width: 960px) { .grid-3 { grid-template-columns: repeat(3, 1fr); } .grid-4 { grid-template-columns: repeat(4, 1fr); } }
+    @media (min-width: 640px) and (max-width: 959px) { .grid-4 { grid-template-columns: repeat(2, 1fr); } }
+    .card {
+      background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 24px; box-shadow: var(--shadow);
+    }
+    .card h3 { font-size: 18px; margin: 14px 0 8px; line-height: 1.3; }
+    .card p { margin: 0; color: var(--muted); font-size: 15px; }
+    .card ul { margin: 12px 0 0; padding-left: 18px; color: var(--muted); font-size: 14px; }
+    .card li { margin: 4px 0; }
+    .icon {
+      width: 44px; height: 44px; border-radius: 12px; background: var(--primary-soft); color: var(--primary);
+      display: grid; place-items: center;
+    }
+    .step-num {
+      width: 36px; height: 36px; border-radius: 999px; background: var(--primary); color: var(--primary-text);
+      display: grid; place-items: center; font-weight: 700;
+    }
+    .chips { display: flex; flex-wrap: wrap; gap: 10px; }
+    .chip {
+      border: 1px solid var(--border); background: var(--card); border-radius: 999px;
+      padding: 10px 16px; font-weight: 500; font-size: 15px;
+    }
+
+    /* FAQ */
+    details { border-bottom: 1px solid var(--border); padding: 18px 0; }
+    details:first-of-type { border-top: 1px solid var(--border); }
+    summary { cursor: pointer; font-weight: 600; font-size: 17px; list-style: none; display: flex; justify-content: space-between; gap: 16px; }
+    summary::-webkit-details-marker { display: none; }
+    summary::after { content: "+"; color: var(--primary); font-size: 22px; line-height: 1; }
+    details[open] summary::after { content: "−"; }
+    details p { color: var(--muted); margin: 10px 0 0; max-width: 760px; }
+
+    /* Contact */
+    .contact { display: grid; gap: 24px; grid-template-columns: 1fr; align-items: start; }
+    @media (min-width: 900px) { .contact { grid-template-columns: 1fr 1.1fr; gap: 48px; } }
+    .channels { display: flex; flex-direction: column; gap: 12px; margin-top: 24px; }
+    .channel {
+      display: flex; align-items: center; gap: 14px; text-decoration: none;
+      background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px;
+      transition: border-color .15s ease;
+    }
+    .channel:hover { border-color: var(--primary); }
+    .channel strong { display: block; font-size: 15px; }
+    .channel span { color: var(--muted); font-size: 14px; word-break: break-all; }
+    form { display: grid; gap: 14px; }
+    label { font-size: 14px; font-weight: 600; display: grid; gap: 6px; }
+    input, textarea {
+      font: inherit; font-weight: 400; color: var(--text); background: var(--bg);
+      border: 1px solid var(--border); border-radius: 10px; padding: 11px 14px; width: 100%;
+    }
+    input:focus, textarea:focus { outline: 2px solid var(--primary); outline-offset: 1px; border-color: transparent; }
+    textarea { min-height: 120px; resize: vertical; }
+    .form-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+    .hint { font-size: 13px; color: var(--muted); margin: 0; }
+
+    footer { padding: 32px 0; color: var(--muted); font-size: 14px; border-top: 1px solid var(--border); }
+    .foot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; }
+    footer a { color: var(--primary); text-decoration: none; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap nav">
+      <a class="brand" href="#top" aria-label="Researchers.kz">
+        <span class="brand-mark" aria-hidden="true">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 6-6"/></svg>
+        </span>
+        <span>Researchers.kz <small data-i18n="brandSuffix">Data Analysis</small></span>
+      </a>
+      <nav class="nav-links" aria-label="Sections">
+        <a href="#services" data-i18n="navServices">Услуги</a>
+        <a href="#process" data-i18n="navProcess">Как работаем</a>
+        <a href="#why" data-i18n="navWhy">Почему мы</a>
+        <a href="#faq" data-i18n="navFaq">Вопросы</a>
+      </nav>
+      <div class="nav-right">
+        <div class="lang" role="group" aria-label="Language">
+          <button type="button" data-lang="ru" aria-pressed="true">RU</button>
+          <button type="button" data-lang="kk" aria-pressed="false">KZ</button>
+        </div>
+        <a class="btn btn-primary btn-sm" href="#contact" data-i18n="ctaShort">Обсудить задачу</a>
+      </div>
+    </div>
+  </header>
+
+  <main id="top">
+    <div class="hero">
+      <div class="wrap">
+        <span class="eyebrow" data-i18n="eyebrow">Аналитика данных для бизнеса</span>
+        <h1 data-i18n-html="heroTitle">Решения на основе данных — <span>с научной точностью</span></h1>
+        <p class="lead" data-i18n="heroLead">Команда исследователей Researchers.kz помогает компаниям превращать данные в понятные выводы: анализ социальных сетей и отзывов, исследования рынка, дашборды и прогнозные модели.</p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="#contact" data-i18n="ctaMain">Обсудить задачу</a>
+          <a class="btn btn-ghost" href="#services" data-i18n="ctaServices">Посмотреть услуги</a>
+        </div>
+        <div class="trust">
+          <span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span data-i18n="trust1">Научная методология</span></span>
+          <span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span data-i18n="trust2">Python, NLP, SNA, статистика</span></span>
+          <span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span data-i18n="trust3">Тексты на казахском и русском</span></span>
+          <span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span data-i18n="trust4">Конфиденциальность данных</span></span>
+        </div>
+      </div>
+    </div>
+
+    <section id="services">
+      <div class="wrap">
+        <h2 data-i18n="servicesTitle">Услуги</h2>
+        <p class="section-lead" data-i18n="servicesLead">Берём задачу целиком — от сбора и очистки данных до выводов и рекомендаций, которые можно применить.</p>
+        <div class="grid grid-3">
+          <article class="card">
+            <div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 9h8M8 13h5"/></svg></div>
+            <h3 data-i18n="s1Title">Анализ социальных сетей</h3>
+            <p data-i18n="s1Text">Мониторинг упоминаний бренда и конкурентов, тональность обсуждений, тренды и хэштеги, ключевые лидеры мнений.</p>
+          </article>
+          <article class="card">
+            <div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 15 8.5 22 9.3l-5 4.8 1.2 7L12 17.8 5.8 21l1.2-7-5-4.8 7-.8z"/></svg></div>
+            <h3 data-i18n="s2Title">Анализ отзывов и обращений</h3>
+            <p data-i18n="s2Text">Автоматическая классификация отзывов, жалоб и обращений (NLP, topic modeling): о чём говорят клиенты и что стоит улучшить в первую очередь.</p>
+          </article>
+          <article class="card">
+            <div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11H5a2 2 0 0 0-2 2v7h18v-7a2 2 0 0 0-2-2h-4"/><rect x="9" y="3" width="6" height="18" rx="1"/></svg></div>
+            <h3 data-i18n="s3Title">Исследования рынка и опросы</h3>
+            <p data-i18n="s3Text">Дизайн анкеты и выборки, сбор ответов, статистический анализ и отчёт: аудитория, спрос, восприятие бренда, удовлетворённость.</p>
+          </article>
+          <article class="card">
+            <div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 16v-4M12 16V8M17 16v-6"/></svg></div>
+            <h3 data-i18n="s4Title">BI-дашборды и отчётность</h3>
+            <p data-i18n="s4Text">Сводим данные из Excel, Google Sheets, CRM и учётных систем в наглядные дашборды, которые обновляются без ручной работы.</p>
+          </article>
+          <article class="card">
+            <div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m7 14 4-4 3 3 5-6"/><path d="M15 7h4v4"/></svg></div>
+            <h3 data-i18n="s5Title">Прогнозы и сегментация</h3>
+            <p data-i18n="s5Text">Модели прогноза продаж и спроса, оценка оттока клиентов, сегментация аудитории для точного маркетинга.</p>
+          </article>
+          <article class="card">
+            <div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="6" r="2.5"/><circle cx="19" cy="6" r="2.5"/><circle cx="12" cy="18" r="2.5"/><path d="M7.2 7.3 10.6 16M16.8 7.3 13.4 16M7.5 6h9"/></svg></div>
+            <h3 data-i18n="s6Title">Сетевой анализ (SNA)</h3>
+            <p data-i18n="s6Text">Карта связей между аккаунтами и сообществами: кто влияет на обсуждение и как распространяется информация.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="process" class="soft">
+      <div class="wrap">
+        <h2 data-i18n="processTitle">Как мы работаем</h2>
+        <p class="section-lead" data-i18n="processLead">Прозрачный процесс: вы заранее знаете объём работ, сроки и стоимость.</p>
+        <div class="grid grid-4">
+          <div class="card"><div class="step-num">1</div><h3 data-i18n="p1Title">Бриф</h3><p data-i18n="p1Text">Бесплатная консультация: обсуждаем бизнес-задачу и какие данные у вас есть.</p></div>
+          <div class="card"><div class="step-num">2</div><h3 data-i18n="p2Title">Предложение</h3><p data-i18n="p2Text">Оцениваем данные, предлагаем методы, фиксируем сроки и стоимость.</p></div>
+          <div class="card"><div class="step-num">3</div><h3 data-i18n="p3Title">Анализ</h3><p data-i18n="p3Text">Собираем и очищаем данные, строим модели, держим вас в курсе промежуточных результатов.</p></div>
+          <div class="card"><div class="step-num">4</div><h3 data-i18n="p4Title">Результат</h3><p data-i18n="p4Text">Отчёт с выводами и рекомендациями, дашборд и презентация для руководства.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="why">
+      <div class="wrap">
+        <h2 data-i18n="whyTitle">Почему Researchers.kz</h2>
+        <p class="section-lead" data-i18n="whyLead">Мы — сообщество исследователей и преподавателей, которые применяют академические методы к задачам бизнеса.</p>
+        <div class="grid grid-2">
+          <div class="card">
+            <h3 data-i18n="w1Title">Научный подход</h3>
+            <p data-i18n="w1Text">Корректные выборки, проверяемые гипотезы и статистическая значимость — выводы, на которые можно опираться.</p>
+          </div>
+          <div class="card">
+            <h3 data-i18n="w2Title">Понятный результат</h3>
+            <p data-i18n="w2Text">Без лишнего жаргона: конкретные выводы и шаги, которые понятны маркетингу, продажам и руководству.</p>
+          </div>
+          <div class="card">
+            <h3 data-i18n="w3Title">Локальный контекст</h3>
+            <p data-i18n="w3Text">Работаем с казахстанскими площадками и текстами на казахском и русском языках, учитываем специфику рынка.</p>
+          </div>
+          <div class="card">
+            <h3 data-i18n="w4Title">Прозрачность и конфиденциальность</h3>
+            <p data-i18n="w4Text">Описываем методы и передаём код и данные проекта. Ваши данные используются только для вашей задачи.</p>
+          </div>
+        </div>
+
+        <h3 style="margin:48px 0 16px;font-size:20px" data-i18n="industriesTitle">Для кого</h3>
+        <div class="chips">
+          <span class="chip" data-i18n="i1">Ритейл и e-commerce</span>
+          <span class="chip" data-i18n="i2">Банки и финтех</span>
+          <span class="chip" data-i18n="i3">Маркетинговые и PR-агентства</span>
+          <span class="chip" data-i18n="i4">Телеком и IT</span>
+          <span class="chip" data-i18n="i5">Девелопмент и недвижимость</span>
+          <span class="chip" data-i18n="i6">HoReCa и услуги</span>
+          <span class="chip" data-i18n="i7">Образование</span>
+          <span class="chip" data-i18n="i8">Квазигосударственный сектор</span>
+        </div>
+      </div>
+    </section>
+
+    <section id="faq" class="soft">
+      <div class="wrap">
+        <h2 data-i18n="faqTitle">Частые вопросы</h2>
+        <div style="margin-top:24px">
+          <details>
+            <summary data-i18n="f1Q">Сколько стоит проект?</summary>
+            <p data-i18n="f1A">Стоимость зависит от объёма данных и задачи. После бесплатного брифа мы присылаем предложение с фиксированной сметой.</p>
+          </details>
+          <details>
+            <summary data-i18n="f2Q">Какие сроки?</summary>
+            <p data-i18n="f2A">Сроки фиксируем в предложении после оценки данных. Можно начать с небольшого пилота, чтобы быстро увидеть первые результаты.</p>
+          </details>
+          <details>
+            <summary data-i18n="f3Q">У нас нет «больших данных». Это подходит?</summary>
+            <p data-i18n="f3A">Да. Часто достаточно выгрузки из CRM, таблицы продаж или отзывов клиентов. Если данных не хватает — поможем их собрать.</p>
+          </details>
+          <details>
+            <summary data-i18n="f4Q">Как вы защищаете наши данные?</summary>
+            <p data-i18n="f4A">Данные используются только для вашего проекта и не передаются третьим лицам. При необходимости обсуждаем соглашение о конфиденциальности.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section id="contact">
+      <div class="wrap contact">
+        <div>
+          <h2 data-i18n="contactTitle">Обсудим вашу задачу</h2>
+          <p class="section-lead" style="margin-bottom:0" data-i18n="contactLead">Напишите нам удобным способом — ответим и предложим время для бесплатной консультации.</p>
+          <div class="channels" id="channels"></div>
+        </div>
+        <div class="card">
+          <form id="lead-form" novalidate>
+            <label><span data-i18n="formName">Ваше имя</span><input name="name" autocomplete="name" required /></label>
+            <label><span data-i18n="formCompany">Компания</span><input name="company" autocomplete="organization" /></label>
+            <label><span data-i18n="formTask">Задача</span><textarea name="task" data-i18n-placeholder="formTaskPh" placeholder="Например: хотим понять, что клиенты пишут о нас в Instagram и отзывах"></textarea></label>
+            <div class="form-actions" id="form-actions"></div>
+            <p class="hint" data-i18n="formHint">Сообщение откроется в выбранном мессенджере или почте — останется только отправить.</p>
+          </form>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap foot">
+      <span>© <span id="year"></span> Researchers.kz</span>
+      <a href="https://researchers.kz" data-i18n="footerLink">Курсы и платформа Researchers.kz →</a>
+    </div>
+  </footer>
+
+  <script>
+    // Contacts for incoming requests. Empty values are hidden from the page.
+    var CONTACTS = {
+      whatsapp: '', // digits only, e.g. '77001234567'
+      telegram: '', // username without @
+      email: ''
+    };
+
+    var I18N = {
+      ru: {
+        title: 'Аналитика данных для бизнеса — Researchers.kz',
+        brandSuffix: 'Data Analysis',
+        navServices: 'Услуги', navProcess: 'Как работаем', navWhy: 'Почему мы', navFaq: 'Вопросы',
+        ctaShort: 'Обсудить задачу',
+        eyebrow: 'Аналитика данных для бизнеса',
+        heroTitle: 'Решения на основе данных — <span>с научной точностью</span>',
+        heroLead: 'Команда исследователей Researchers.kz помогает компаниям превращать данные в понятные выводы: анализ социальных сетей и отзывов, исследования рынка, дашборды и прогнозные модели.',
+        ctaMain: 'Обсудить задачу', ctaServices: 'Посмотреть услуги',
+        trust1: 'Научная методология', trust2: 'Python, NLP, SNA, статистика', trust3: 'Тексты на казахском и русском', trust4: 'Конфиденциальность данных',
+        servicesTitle: 'Услуги',
+        servicesLead: 'Берём задачу целиком — от сбора и очистки данных до выводов и рекомендаций, которые можно применить.',
+        s1Title: 'Анализ социальных сетей', s1Text: 'Мониторинг упоминаний бренда и конкурентов, тональность обсуждений, тренды и хэштеги, ключевые лидеры мнений.',
+        s2Title: 'Анализ отзывов и обращений', s2Text: 'Автоматическая классификация отзывов, жалоб и обращений (NLP, topic modeling): о чём говорят клиенты и что стоит улучшить в первую очередь.',
+        s3Title: 'Исследования рынка и опросы', s3Text: 'Дизайн анкеты и выборки, сбор ответов, статистический анализ и отчёт: аудитория, спрос, восприятие бренда, удовлетворённость.',
+        s4Title: 'BI-дашборды и отчётность', s4Text: 'Сводим данные из Excel, Google Sheets, CRM и учётных систем в наглядные дашборды, которые обновляются без ручной работы.',
+        s5Title: 'Прогнозы и сегментация', s5Text: 'Модели прогноза продаж и спроса, оценка оттока клиентов, сегментация аудитории для точного маркетинга.',
+        s6Title: 'Сетевой анализ (SNA)', s6Text: 'Карта связей между аккаунтами и сообществами: кто влияет на обсуждение и как распространяется информация.',
+        processTitle: 'Как мы работаем', processLead: 'Прозрачный процесс: вы заранее знаете объём работ, сроки и стоимость.',
+        p1Title: 'Бриф', p1Text: 'Бесплатная консультация: обсуждаем бизнес-задачу и какие данные у вас есть.',
+        p2Title: 'Предложение', p2Text: 'Оцениваем данные, предлагаем методы, фиксируем сроки и стоимость.',
+        p3Title: 'Анализ', p3Text: 'Собираем и очищаем данные, строим модели, держим вас в курсе промежуточных результатов.',
+        p4Title: 'Результат', p4Text: 'Отчёт с выводами и рекомендациями, дашборд и презентация для руководства.',
+        whyTitle: 'Почему Researchers.kz', whyLead: 'Мы — сообщество исследователей и преподавателей, которые применяют академические методы к задачам бизнеса.',
+        w1Title: 'Научный подход', w1Text: 'Корректные выборки, проверяемые гипотезы и статистическая значимость — выводы, на которые можно опираться.',
+        w2Title: 'Понятный результат', w2Text: 'Без лишнего жаргона: конкретные выводы и шаги, которые понятны маркетингу, продажам и руководству.',
+        w3Title: 'Локальный контекст', w3Text: 'Работаем с казахстанскими площадками и текстами на казахском и русском языках, учитываем специфику рынка.',
+        w4Title: 'Прозрачность и конфиденциальность', w4Text: 'Описываем методы и передаём код и данные проекта. Ваши данные используются только для вашей задачи.',
+        industriesTitle: 'Для кого',
+        i1: 'Ритейл и e-commerce', i2: 'Банки и финтех', i3: 'Маркетинговые и PR-агентства', i4: 'Телеком и IT', i5: 'Девелопмент и недвижимость', i6: 'HoReCa и услуги', i7: 'Образование', i8: 'Квазигосударственный сектор',
+        faqTitle: 'Частые вопросы',
+        f1Q: 'Сколько стоит проект?', f1A: 'Стоимость зависит от объёма данных и задачи. После бесплатного брифа мы присылаем предложение с фиксированной сметой.',
+        f2Q: 'Какие сроки?', f2A: 'Сроки фиксируем в предложении после оценки данных. Можно начать с небольшого пилота, чтобы быстро увидеть первые результаты.',
+        f3Q: 'У нас нет «больших данных». Это подходит?', f3A: 'Да. Часто достаточно выгрузки из CRM, таблицы продаж или отзывов клиентов. Если данных не хватает — поможем их собрать.',
+        f4Q: 'Как вы защищаете наши данные?', f4A: 'Данные используются только для вашего проекта и не передаются третьим лицам. При необходимости обсуждаем соглашение о конфиденциальности.',
+        contactTitle: 'Обсудим вашу задачу', contactLead: 'Напишите нам удобным способом — ответим и предложим время для бесплатной консультации.',
+        formName: 'Ваше имя', formCompany: 'Компания', formTask: 'Задача',
+        formTaskPh: 'Например: хотим понять, что клиенты пишут о нас в Instagram и отзывах',
+        formHint: 'Сообщение откроется в выбранном мессенджере или почте — останется только отправить.',
+        sendWhatsapp: 'Отправить в WhatsApp', sendTelegram: 'Написать в Telegram', sendEmail: 'Отправить на почту',
+        chWhatsapp: 'WhatsApp', chTelegram: 'Telegram', chEmail: 'Email',
+        noContacts: 'Контакты скоро появятся.',
+        msgHello: 'Здравствуйте! Хочу обсудить проект по анализу данных.',
+        msgName: 'Имя', msgCompany: 'Компания', msgTask: 'Задача',
+        emailSubject: 'Заявка: анализ данных',
+        footerLink: 'Курсы и платформа Researchers.kz →'
+      },
+      kk: {
+        title: 'Бизнеске арналған деректер аналитикасы — Researchers.kz',
+        brandSuffix: 'Data Analysis',
+        navServices: 'Қызметтер', navProcess: 'Жұмыс тәртібі', navWhy: 'Неге біз', navFaq: 'Сұрақтар',
+        ctaShort: 'Тапсырманы талқылау',
+        eyebrow: 'Бизнеске арналған деректер аналитикасы',
+        heroTitle: 'Деректерге негізделген шешімдер — <span>ғылыми дәлдікпен</span>',
+        heroLead: 'Researchers.kz зерттеушілер командасы компанияларға деректерді түсінікті қорытындыларға айналдыруға көмектеседі: әлеуметтік желілер мен пікірлерді талдау, нарықты зерттеу, дашбордтар және болжамдық модельдер.',
+        ctaMain: 'Тапсырманы талқылау', ctaServices: 'Қызметтерді көру',
+        trust1: 'Ғылыми әдістеме', trust2: 'Python, NLP, SNA, статистика', trust3: 'Қазақ және орыс тіліндегі мәтіндер', trust4: 'Деректер құпиялылығы',
+        servicesTitle: 'Қызметтер',
+        servicesLead: 'Тапсырманы толық орындаймыз — деректерді жинау мен тазалаудан бастап, қолдануға болатын қорытындылар мен ұсыныстарға дейін.',
+        s1Title: 'Әлеуметтік желілерді талдау', s1Text: 'Бренд пен бәсекелестердің аталуын мониторингтеу, талқылаулардың тоналдылығы, трендтер мен хэштегтер, негізгі пікір көшбасшылары.',
+        s2Title: 'Пікірлер мен өтініштерді талдау', s2Text: 'Пікірлерді, шағымдар мен өтініштерді автоматты жіктеу (NLP, topic modeling): клиенттер не туралы айтады және алдымен нені жақсарту керек.',
+        s3Title: 'Нарықты зерттеу және сауалнамалар', s3Text: 'Сауалнама мен іріктеме дизайны, жауаптарды жинау, статистикалық талдау және есеп: аудитория, сұраныс, брендті қабылдау, қанағаттану.',
+        s4Title: 'BI-дашбордтар және есептілік', s4Text: 'Excel, Google Sheets, CRM және есеп жүйелеріндегі деректерді қолмен жұмыссыз жаңартылатын көрнекі дашбордтарға біріктіреміз.',
+        s5Title: 'Болжамдар және сегменттеу', s5Text: 'Сату мен сұранысты болжау модельдері, клиенттердің кетуін бағалау, нақты маркетинг үшін аудиторияны сегменттеу.',
+        s6Title: 'Желілік талдау (SNA)', s6Text: 'Аккаунттар мен қауымдастықтар арасындағы байланыс картасы: талқылауға кім әсер етеді және ақпарат қалай таралады.',
+        processTitle: 'Біз қалай жұмыс істейміз', processLead: 'Ашық процесс: жұмыс көлемін, мерзімі мен құнын алдын ала білесіз.',
+        p1Title: 'Бриф', p1Text: 'Тегін кеңес: бизнес-тапсырманы және сізде қандай деректер бар екенін талқылаймыз.',
+        p2Title: 'Ұсыныс', p2Text: 'Деректерді бағалаймыз, әдістерді ұсынамыз, мерзімі мен құнын бекітеміз.',
+        p3Title: 'Талдау', p3Text: 'Деректерді жинап, тазалаймыз, модельдер құрамыз, аралық нәтижелер туралы хабардар етеміз.',
+        p4Title: 'Нәтиже', p4Text: 'Қорытындылар мен ұсыныстары бар есеп, дашборд және басшылыққа арналған презентация.',
+        whyTitle: 'Неге Researchers.kz', whyLead: 'Біз — академиялық әдістерді бизнес міндеттеріне қолданатын зерттеушілер мен оқытушылар қауымдастығымыз.',
+        w1Title: 'Ғылыми тәсіл', w1Text: 'Дұрыс іріктеме, тексерілетін гипотезалар және статистикалық маңыздылық — сенім артуға болатын қорытындылар.',
+        w2Title: 'Түсінікті нәтиже', w2Text: 'Артық жаргонсыз: маркетингке, сатуға және басшылыққа түсінікті нақты қорытындылар мен қадамдар.',
+        w3Title: 'Жергілікті контекст', w3Text: 'Қазақстандық платформалармен және қазақ, орыс тіліндегі мәтіндермен жұмыс істейміз, нарық ерекшелігін ескереміз.',
+        w4Title: 'Ашықтық және құпиялылық', w4Text: 'Әдістерді сипаттаймыз, жобаның коды мен деректерін тапсырамыз. Деректеріңіз тек сіздің тапсырмаңыз үшін қолданылады.',
+        industriesTitle: 'Кімге арналған',
+        i1: 'Ритейл және e-commerce', i2: 'Банктер және финтех', i3: 'Маркетинг және PR агенттіктері', i4: 'Телеком және IT', i5: 'Девелопмент және жылжымайтын мүлік', i6: 'HoReCa және қызмет көрсету', i7: 'Білім беру', i8: 'Квазимемлекеттік сектор',
+        faqTitle: 'Жиі қойылатын сұрақтар',
+        f1Q: 'Жоба қанша тұрады?', f1A: 'Құны деректер көлемі мен тапсырмаға байланысты. Тегін брифтен кейін бекітілген сметасы бар ұсыныс жібереміз.',
+        f2Q: 'Мерзімі қандай?', f2A: 'Мерзімді деректерді бағалағаннан кейін ұсыныста бекітеміз. Алғашқы нәтижелерді тез көру үшін шағын пилоттан бастауға болады.',
+        f3Q: 'Бізде «үлкен деректер» жоқ. Бұл жарай ма?', f3A: 'Иә. Көбіне CRM-нен алынған деректер, сату кестесі немесе клиент пікірлері жеткілікті. Деректер жетпесе — жинауға көмектесеміз.',
+        f4Q: 'Деректерімізді қалай қорғайсыздар?', f4A: 'Деректер тек сіздің жобаңыз үшін қолданылады және үшінші тұлғаларға берілмейді. Қажет болса, құпиялылық туралы келісімді талқылаймыз.',
+        contactTitle: 'Тапсырмаңызды талқылайық', contactLead: 'Бізге ыңғайлы тәсілмен жазыңыз — жауап беріп, тегін кеңес уақытын ұсынамыз.',
+        formName: 'Атыңыз', formCompany: 'Компания', formTask: 'Тапсырма',
+        formTaskPh: 'Мысалы: клиенттер бізді Instagram мен пікірлерде қалай бағалайтынын білгіміз келеді',
+        formHint: 'Хабарлама таңдалған мессенджерде немесе поштада ашылады — тек жіберу қалады.',
+        sendWhatsapp: 'WhatsApp-қа жіберу', sendTelegram: 'Telegram-ға жазу', sendEmail: 'Поштаға жіберу',
+        chWhatsapp: 'WhatsApp', chTelegram: 'Telegram', chEmail: 'Email',
+        noContacts: 'Байланыс деректері жақында қосылады.',
+        msgHello: 'Сәлеметсіз бе! Деректерді талдау жобасын талқылағым келеді.',
+        msgName: 'Аты', msgCompany: 'Компания', msgTask: 'Тапсырма',
+        emailSubject: 'Өтінім: деректерді талдау',
+        footerLink: 'Researchers.kz курстары мен платформасы →'
+      }
+    };
+
+    var lang = 'ru';
+
+    function t(key) { return (I18N[lang] && I18N[lang][key]) || I18N.ru[key] || ''; }
+
+    function el(tag, attrs, children) {
+      var node = document.createElement(tag);
+      Object.keys(attrs || {}).forEach(function (k) {
+        if (k === 'text') node.textContent = attrs[k];
+        else node.setAttribute(k, attrs[k]);
+      });
+      (children || []).forEach(function (c) { node.appendChild(c); });
+      return node;
+    }
+
+    function buildMessage() {
+      var form = document.getElementById('lead-form');
+      var name = form.elements.name.value.trim();
+      var company = form.elements.company.value.trim();
+      var task = form.elements.task.value.trim();
+      var lines = [t('msgHello')];
+      if (name) lines.push(t('msgName') + ': ' + name);
+      if (company) lines.push(t('msgCompany') + ': ' + company);
+      if (task) lines.push(t('msgTask') + ': ' + task);
+      return lines.join('\n');
+    }
+
+    function contactLinks() {
+      var links = [];
+      if (CONTACTS.whatsapp) links.push({ key: 'whatsapp', label: t('chWhatsapp'), value: '+' + CONTACTS.whatsapp, send: t('sendWhatsapp'),
+        href: function (msg) { return 'https://wa.me/' + CONTACTS.whatsapp + (msg ? '?text=' + encodeURIComponent(msg) : ''); } });
+      if (CONTACTS.telegram) links.push({ key: 'telegram', label: t('chTelegram'), value: '@' + CONTACTS.telegram, send: t('sendTelegram'),
+        href: function () { return 'https://t.me/' + CONTACTS.telegram; } });
+      if (CONTACTS.email) links.push({ key: 'email', label: t('chEmail'), value: CONTACTS.email, send: t('sendEmail'),
+        href: function (msg) { return 'mailto:' + CONTACTS.email + '?subject=' + encodeURIComponent(t('emailSubject')) + (msg ? '&body=' + encodeURIComponent(msg) : ''); } });
+      return links;
+    }
+
+    var ICONS = {
+      whatsapp: '<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/>',
+      telegram: '<path d="m22 2-7 20-4-9-9-4z"/><path d="M22 2 11 13"/>',
+      email: '<rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/>'
+    };
+
+    function renderContacts() {
+      var channels = document.getElementById('channels');
+      var actions = document.getElementById('form-actions');
+      channels.textContent = '';
+      actions.textContent = '';
+      var links = contactLinks();
+      if (!links.length) {
+        channels.appendChild(el('p', { class: 'hint', text: t('noContacts') }));
+        return;
+      }
+      links.forEach(function (c, i) {
+        var icon = el('span', { class: 'icon' });
+        icon.innerHTML = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + ICONS[c.key] + '</svg>';
+        var a = el('a', { class: 'channel', href: c.href(''), target: '_blank', rel: 'noopener' }, [
+          icon,
+          el('div', {}, [el('strong', { text: c.label }), el('span', { text: c.value })])
+        ]);
+        channels.appendChild(a);
+
+        var btn = el('button', { type: 'button', class: 'btn ' + (i === 0 ? 'btn-primary' : 'btn-ghost'), text: c.send });
+        btn.addEventListener('click', function () {
+          var msg = buildMessage();
+          // Telegram links can't carry a prefilled message — copy it so it can be pasted.
+          if (c.key === 'telegram' && navigator.clipboard) navigator.clipboard.writeText(msg).catch(function () {});
+          window.open(c.href(msg), '_blank', 'noopener');
+        });
+        actions.appendChild(btn);
+      });
+    }
+
+    function applyLang(next) {
+      lang = I18N[next] ? next : 'ru';
+      document.documentElement.lang = lang === 'kk' ? 'kk' : 'ru';
+      document.title = t('title');
+      document.querySelectorAll('[data-i18n]').forEach(function (node) { node.textContent = t(node.getAttribute('data-i18n')); });
+      document.querySelectorAll('[data-i18n-html]').forEach(function (node) { node.innerHTML = t(node.getAttribute('data-i18n-html')); });
+      document.querySelectorAll('[data-i18n-placeholder]').forEach(function (node) { node.placeholder = t(node.getAttribute('data-i18n-placeholder')); });
+      document.querySelectorAll('[data-lang]').forEach(function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-lang') === lang)); });
+      renderContacts();
+      try { localStorage.setItem('da-lang', lang); } catch (e) {}
+    }
+
+    document.querySelectorAll('[data-lang]').forEach(function (b) {
+      b.addEventListener('click', function () { applyLang(b.getAttribute('data-lang')); });
+    });
+    document.getElementById('lead-form').addEventListener('submit', function (e) { e.preventDefault(); });
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    var initial = new URLSearchParams(location.search).get('lang');
+    if (!initial) { try { initial = localStorage.getItem('da-lang'); } catch (e) {} }
+    applyLang(initial || 'ru');
+  </script>
+</body>
+</html>
