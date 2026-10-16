@@ -15,7 +15,7 @@ export function createFounderSchema(t: TFunction) {
       z.literal(''),
       z.string().trim().url(t('admin.founders.validation.invalidUrl')),
     ]),
-    orderNumber: z.coerce.number().min(0, t('admin.founders.validation.orderMin')),
+    orderNumber: z.number().min(0, t('admin.founders.validation.orderMin')),
     isPublished: z.boolean(),
   })
 }

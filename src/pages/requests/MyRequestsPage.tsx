@@ -99,9 +99,11 @@ export function MyRequestsPage() {
                 {row.adminPaymentNote && (
                   <p className="text-xs text-amber-700 dark:text-amber-300">{row.adminPaymentNote}</p>
                 )}
-                <p className="text-xs text-muted-foreground">
-                  {format(new Date(row.createdAt ?? Date.now()), 'd MMM yyyy HH:mm', { locale: dateLocale })}
-                </p>
+                {row.createdAt && (
+                  <p className="text-xs text-muted-foreground">
+                    {format(new Date(row.createdAt), 'd MMM yyyy HH:mm', { locale: dateLocale })}
+                  </p>
+                )}
                 <div className="flex flex-col gap-2">
                   {renderPayButton(row, 'w-full')}
                   <Button
