@@ -33,6 +33,8 @@ export function MyRequestsPage() {
   })
 
   function dueAmount(row: MyEnrollmentWithCourse) {
+    // A rejected payment is discarded by the API on resubmission.
+    if (row.status === 'REJECTED') return row.course.priceCents
     const expected = row.expectedAmountCents ?? row.course.priceCents
     return Math.max(0, expected - (row.paidAmountCents ?? 0))
   }

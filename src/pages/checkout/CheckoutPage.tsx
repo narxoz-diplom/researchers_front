@@ -55,11 +55,14 @@ export function CheckoutPage() {
   const lines: CheckoutLine[] = useMemo(() => {
     if (courseId && singleCourse) {
       const enrollment = singleCourse.myEnrollment
-      const expected = enrollment?.expectedAmountCents ?? singleCourse.priceCents
-      const alreadyPaid = enrollment?.paidAmountCents ?? 0
-      // UNDERPAID is intentionally payable again; the rest of the active statuses block checkout.
+      // A rejected payment is discarded by the API on resubmission, so it is paid in full again.
+      const isRejected = enrollment?.status === 'REJECTED'
+      const expected = isRejected
+        ? singleCourse.priceCents
+        : (enrollment?.expectedAmountCents ?? singleCourse.priceCents)
+      const alreadyPaid = isRejected ? 0 : (enrollment?.paidAmountCents ?? 0)
+      // PENDING (no payment yet) and UNDERPAID are payable; PAID/APPROVED block checkout.
       const blocked =
-        enrollment?.status === 'PENDING' ||
         enrollment?.status === 'PAID' ||
         enrollment?.status === 'APPROVED'
       return [
@@ -81,7 +84,8 @@ export function CheckoutPage() {
         coverUrl: item.coverUrl,
         priceCents: item.priceCents,
         alreadyPaidCents: 0,
-        blocked: !!enrollment && enrollment.status !== 'UNDERPAID',
+        blocked:
+          !!enrollment && enrollment.status !== 'UNDERPAID' && enrollment.status !== 'PENDING',
       }
     })
   }, [courseId, singleCourse, cartItems, getActiveEnrollment])

@@ -36,6 +36,9 @@ export function CourseDetailPage() {
     queryKey: ['course', id],
     queryFn: () => api.get<CourseDetail>(API.courses.byId(id!)).then((r) => r.data),
     enabled: !!id,
+    // Enrollment status is changed by the author/admin elsewhere — always show the latest one.
+    staleTime: 0,
+    refetchOnWindowFocus: true,
   })
 
   if (isLoading) return <CourseDetailSkeleton />
@@ -273,14 +276,36 @@ function SubscriberActions({
     )
   }
 
+  if (enrollment?.status === 'REJECTED') {
+    return (
+      <div className="flex flex-col gap-3 max-w-md">
+        <Badge variant="outline" className="w-fit gap-1.5 border-destructive/40 bg-destructive/10 text-destructive">
+          <Lock className="h-3.5 w-3.5" />
+          {t('enrollment.rejectedBadge')}
+        </Badge>
+        <p className="text-xs text-muted-foreground">{t('enrollment.rejectedHint')}</p>
+        <Button className="w-full sm:w-auto" onClick={onCheckout}>
+          {t('common.pay', { price })}
+        </Button>
+        <Link to="/requests" className="text-xs text-primary hover:underline">
+          {t('requests.viewHistory')}
+        </Link>
+      </div>
+    )
+  }
+
+  // PENDING = the request exists but no payment was submitted yet, so it must stay payable.
   if (enrollment?.status === 'PENDING') {
     return (
-      <div className="flex flex-col gap-2 max-w-md">
+      <div className="flex flex-col gap-3 max-w-md">
         <Badge variant="outline" className="w-fit gap-1.5 border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-400">
           <Lock className="h-3.5 w-3.5" />
           {t('enrollment.pendingBadge')}
         </Badge>
         <p className="text-xs text-muted-foreground">{t('enrollment.pendingHint')}</p>
+        <Button className="w-full sm:w-auto" onClick={onCheckout}>
+          {t('common.pay', { price })}
+        </Button>
         <Link to="/requests" className="text-xs text-primary hover:underline">
           {t('requests.viewHistory')}
         </Link>
