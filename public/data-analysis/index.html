@@ -379,9 +379,9 @@
   <script>
     // Contacts for incoming requests. Empty values are hidden from the page.
     var CONTACTS = {
-      whatsapp: '', // digits only, e.g. '77001234567'
+      whatsapp: '77474145470', // digits only, e.g. '77001234567'
       telegram: '', // username without @
-      email: ''
+      email: 'akbayan.b@gmail.com'
     };
 
     var I18N = {
@@ -509,7 +509,8 @@
 
     function contactLinks() {
       var links = [];
-      if (CONTACTS.whatsapp) links.push({ key: 'whatsapp', label: t('chWhatsapp'), value: '+' + CONTACTS.whatsapp, send: t('sendWhatsapp'),
+      var phone = CONTACTS.whatsapp.replace(/^(\d)(\d{3})(\d{3})(\d{2})(\d{2})$/, '+$1 $2 $3 $4 $5');
+      if (CONTACTS.whatsapp) links.push({ key: 'whatsapp', label: t('chWhatsapp'), value: phone, send: t('sendWhatsapp'),
         href: function (msg) { return 'https://wa.me/' + CONTACTS.whatsapp + (msg ? '?text=' + encodeURIComponent(msg) : ''); } });
       if (CONTACTS.telegram) links.push({ key: 'telegram', label: t('chTelegram'), value: '@' + CONTACTS.telegram, send: t('sendTelegram'),
         href: function () { return 'https://t.me/' + CONTACTS.telegram; } });
