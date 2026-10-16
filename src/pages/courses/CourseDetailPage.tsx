@@ -273,6 +273,21 @@ function SubscriberActions({
     )
   }
 
+  if (enrollment?.status === 'PENDING') {
+    return (
+      <div className="flex flex-col gap-2 max-w-md">
+        <Badge variant="outline" className="w-fit gap-1.5 border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-400">
+          <Lock className="h-3.5 w-3.5" />
+          {t('enrollment.pendingBadge')}
+        </Badge>
+        <p className="text-xs text-muted-foreground">{t('enrollment.pendingHint')}</p>
+        <Link to="/requests" className="text-xs text-primary hover:underline">
+          {t('requests.viewHistory')}
+        </Link>
+      </div>
+    )
+  }
+
   if (enrollment?.status === 'PAID') {
     return (
       <div className="flex flex-col gap-2 max-w-md">

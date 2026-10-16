@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft } from 'lucide-react'
+import { isAxiosError } from 'axios'
+import { ArrowLeft, Lock } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -12,6 +13,7 @@ import { api } from '@/shared/api/axios'
 import { API } from '@/shared/api/endpoints'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import { useCartStore } from '@/features/cart/store/cart.store'
+import { useMyEnrollments } from '@/features/enrollments/useMyEnrollments'
 import { formatPriceCents } from '@/lib/format-price'
 import type { Course, MyEnrollment } from '@/shared/types'
 
@@ -21,6 +23,8 @@ interface CheckoutLine {
   coverUrl?: string
   priceCents: number
   alreadyPaidCents: number
+  // An enrollment already exists (pending/paid/approved) — the course cannot be purchased again.
+  blocked: boolean
 }
 
 interface CourseDetailCheckout extends Course {
@@ -46,11 +50,18 @@ export function CheckoutPage() {
     enabled: !!courseId,
   })
 
+  const { getActiveEnrollment } = useMyEnrollments()
+
   const lines: CheckoutLine[] = useMemo(() => {
     if (courseId && singleCourse) {
       const enrollment = singleCourse.myEnrollment
       const expected = enrollment?.expectedAmountCents ?? singleCourse.priceCents
       const alreadyPaid = enrollment?.paidAmountCents ?? 0
+      // UNDERPAID is intentionally payable again; the rest of the active statuses block checkout.
+      const blocked =
+        enrollment?.status === 'PENDING' ||
+        enrollment?.status === 'PAID' ||
+        enrollment?.status === 'APPROVED'
       return [
         {
           id: singleCourse.id,
@@ -58,19 +69,27 @@ export function CheckoutPage() {
           coverUrl: singleCourse.coverUrl,
           priceCents: expected,
           alreadyPaidCents: alreadyPaid,
+          blocked,
         },
       ]
     }
-    return cartItems.map((item) => ({
-      id: item.id,
-      title: item.title,
-      coverUrl: item.coverUrl,
-      priceCents: item.priceCents,
-      alreadyPaidCents: 0,
-    }))
-  }, [courseId, singleCourse, cartItems])
+    return cartItems.map((item) => {
+      const enrollment = getActiveEnrollment(item.id)
+      return {
+        id: item.id,
+        title: item.title,
+        coverUrl: item.coverUrl,
+        priceCents: item.priceCents,
+        alreadyPaidCents: 0,
+        blocked: !!enrollment && enrollment.status !== 'UNDERPAID',
+      }
+    })
+  }, [courseId, singleCourse, cartItems, getActiveEnrollment])
 
-  const dueCents = lines.reduce(
+  const payableLines = lines.filter((line) => !line.blocked)
+  const hasBlockedLines = lines.some((line) => line.blocked)
+
+  const dueCents = payableLines.reduce(
     (sum, line) => sum + Math.max(0, line.priceCents - line.alreadyPaidCents),
     0,
   )
@@ -88,7 +107,10 @@ export function CheckoutPage() {
       toast.error(t('landing.cart.subscribersOnly'))
       return
     }
-    if (lines.length === 0) return
+    if (payableLines.length === 0) {
+      toast.error(t('enrollment.alreadyRequested'))
+      return
+    }
 
     const paidTotalCents = Math.round(Number(displayAmount.replace(',', '.')) * 100)
     if (!paidTotalCents || paidTotalCents < 1) {
@@ -100,10 +122,10 @@ export function CheckoutPage() {
     try {
       let remaining = paidTotalCents
 
-      for (let i = 0; i < lines.length; i++) {
-        const line = lines[i]
+      for (let i = 0; i < payableLines.length; i++) {
+        const line = payableLines[i]
         const lineDue = Math.max(0, line.priceCents - line.alreadyPaidCents)
-        const isLast = i === lines.length - 1
+        const isLast = i === payableLines.length - 1
         const linePayment = isLast ? remaining : Math.min(lineDue, remaining)
         remaining -= linePayment
 
@@ -118,8 +140,12 @@ export function CheckoutPage() {
       void qc.invalidateQueries({ queryKey: ['my-enrollments'] })
       toast.success(t('checkout.submitted'))
       navigate('/catalog')
-    } catch {
-      toast.error(t('checkout.submitFailed'))
+    } catch (error) {
+      if (isAxiosError(error) && error.response?.status === 409) {
+        toast.error(t('enrollment.alreadyRequested'))
+      } else {
+        toast.error(t('checkout.submitFailed'))
+      }
     } finally {
       setSubmitting(false)
     }
@@ -160,6 +186,13 @@ export function CheckoutPage() {
       <h1 className="text-2xl font-semibold mb-2">{t('checkout.title')}</h1>
       <p className="text-sm text-muted-foreground mb-6">{t('checkout.instructions')}</p>
 
+      {hasBlockedLines && (
+        <div className="mb-6 flex items-start gap-2 rounded-xl border border-amber-500/40 bg-amber-500/10 p-4 text-sm text-amber-900 dark:text-amber-200">
+          <Lock className="mt-0.5 h-4 w-4 shrink-0" />
+          <p>{courseId ? t('enrollment.alreadyRequested') : t('enrollment.cartSkipped')}</p>
+        </div>
+      )}
+
       {underpaidNote && (
         <div className="mb-6 rounded-xl border border-amber-500/40 bg-amber-500/10 p-4 text-sm text-amber-900 dark:text-amber-200">
           <p className="font-medium mb-1">{t('checkout.underpaidTitle')}</p>
@@ -180,7 +213,10 @@ export function CheckoutPage() {
 
       <div className="mb-6 space-y-3">
         {lines.map((line) => (
-          <div key={line.id} className="flex gap-3 rounded-xl border bg-card p-3">
+          <div
+            key={line.id}
+            className={`flex gap-3 rounded-xl border bg-card p-3 ${line.blocked ? 'opacity-60' : ''}`}
+          >
             <div className="h-14 w-20 shrink-0 overflow-hidden rounded-lg bg-muted">
               {line.coverUrl ? (
                 <img src={line.coverUrl} alt="" className="h-full w-full object-cover" />
@@ -195,14 +231,21 @@ export function CheckoutPage() {
                   })}
                 </p>
               )}
-              <p className="text-sm font-semibold text-primary">
-                {t('checkout.due', {
-                  amount: formatPriceCents(
-                    Math.max(0, line.priceCents - line.alreadyPaidCents),
-                    i18n.language,
-                  ),
-                })}
-              </p>
+              {line.blocked ? (
+                <p className="flex items-center gap-1 text-xs font-medium text-amber-700 dark:text-amber-400">
+                  <Lock className="h-3 w-3" />
+                  {t('enrollment.requestedButton')}
+                </p>
+              ) : (
+                <p className="text-sm font-semibold text-primary">
+                  {t('checkout.due', {
+                    amount: formatPriceCents(
+                      Math.max(0, line.priceCents - line.alreadyPaidCents),
+                      i18n.language,
+                    ),
+                  })}
+                </p>
+              )}
             </div>
           </div>
         ))}
@@ -227,7 +270,11 @@ export function CheckoutPage() {
         <p className="text-xs text-muted-foreground">{t('checkout.amountHint')}</p>
       </div>
 
-      <Button className="w-full" disabled={submitting} onClick={() => void handleSubmit()}>
+      <Button
+        className="w-full"
+        disabled={submitting || payableLines.length === 0}
+        onClick={() => void handleSubmit()}
+      >
         {submitting ? t('checkout.submitting') : t('checkout.submit')}
       </Button>
     </div>

@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { BrandIcon } from '@/shared/components/BrandIcon'
 import { useCartStore } from '@/features/cart/store/cart.store'
+import { useMyEnrollments } from '@/features/enrollments/useMyEnrollments'
 import { formatPriceCents } from '@/lib/format-price'
 import { cn } from '@/lib/utils'
 import { getCategoryLabel } from '@/features/courses/course-categories'
@@ -21,12 +22,18 @@ export function MarketplaceCourseCard({ course, index = 0, compact = false }: Pr
   const { t, i18n } = useTranslation()
   const addItem = useCartStore((s) => s.addItem)
   const inCart = useCartStore((s) => s.hasItem(course.id))
+  const { getActiveEnrollment } = useMyEnrollments()
+  const activeEnrollment = getActiveEnrollment(course.id)
   const rating = course.ratingAvg ?? 0
   const ratingCount = course.ratingCount ?? 0
 
   function handleAddToCart(e: React.MouseEvent) {
     e.preventDefault()
     e.stopPropagation()
+    if (activeEnrollment) {
+      toast.error(t('enrollment.alreadyRequested'))
+      return
+    }
     if (inCart) return
 
     const added = addItem({
@@ -93,12 +100,18 @@ export function MarketplaceCourseCard({ course, index = 0, compact = false }: Pr
           </span>
           <Button
             size="sm"
-            variant={inCart ? 'secondary' : 'default'}
-            disabled={inCart}
+            variant={activeEnrollment || inCart ? 'secondary' : 'default'}
+            disabled={!!activeEnrollment || inCart}
             onClick={handleAddToCart}
-            className={cn('shrink-0', !inCart && 'shadow-sm')}
+            className={cn('shrink-0', !activeEnrollment && !inCart && 'shadow-sm')}
           >
-            {inCart ? t('landing.marketplace.inCart') : t('landing.marketplace.addToCart')}
+            {activeEnrollment
+              ? activeEnrollment.status === 'APPROVED'
+                ? t('enrollment.accessGranted')
+                : t('enrollment.requestedButton')
+              : inCart
+                ? t('landing.marketplace.inCart')
+                : t('landing.marketplace.addToCart')}
           </Button>
         </div>
       </div>
