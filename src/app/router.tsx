@@ -1,6 +1,7 @@
 import { Suspense } from 'react'
-import { createBrowserRouter, Navigate } from 'react-router-dom'
+import { createBrowserRouter, Navigate, type RouteObject } from 'react-router-dom'
 import { AppLayout } from '@/shared/components/AppLayout'
+import { RootLayout } from '@/shared/components/RootLayout'
 import { AuthLayout } from '@/shared/components/AuthLayout'
 import { AdaptiveBrowseLayout } from '@/shared/components/AdaptiveBrowseLayout'
 import { ProtectedRoute } from '@/shared/components/ProtectedRoute'
@@ -38,7 +39,7 @@ function Lazy({ children }: { children: React.ReactNode }) {
   return <Suspense fallback={<LoadingState />}>{children}</Suspense>
 }
 
-export const router = createBrowserRouter([
+const routes: RouteObject[] = [
   { path: '/', element: <Lazy><LandingPage /></Lazy> },
   {
     path: '/auth',
@@ -103,4 +104,6 @@ export const router = createBrowserRouter([
     ? [{ path: '/_/design', element: <Lazy><DesignSystemPage /></Lazy> }]
     : []),
   { path: '*', element: <Lazy><NotFoundPage /></Lazy> },
-])
+]
+
+export const router = createBrowserRouter([{ element: <RootLayout />, children: routes }])

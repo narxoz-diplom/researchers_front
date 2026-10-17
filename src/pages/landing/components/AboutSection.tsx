@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import { ArrowRight } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useFounders } from '@/features/founders/hooks/useFounders'
 import type { Founder } from '@/features/founders/types'
@@ -33,6 +33,7 @@ export function AboutSection() {
   const { t } = useTranslation()
   const { data: founders, isLoading } = useFounders()
   const [selected, setSelected] = useState<Founder | null>(null)
+  const navigate = useNavigate()
 
   const fallbackParts = t('landing.about.parts', { returnObjects: true }) as AboutPart[]
 
@@ -103,7 +104,12 @@ export function AboutSection() {
                         }
                       : undefined
                   }
-                  onOpen={() => founder && setSelected(founder)}
+                  onOpen={() => {
+                    if (!founder) return
+                    // With a video the card plays it; otherwise it opens the personal page.
+                    if (founder.videoUrl) setSelected(founder)
+                    else navigate(`/founders/${founder.id}`)
+                  }}
                 />
 
                 <div className="flex w-full flex-col gap-3 px-1">

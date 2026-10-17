@@ -46,15 +46,16 @@ export function AboutPortraitVideoCard({ video, index = 0, onOpen }: Props) {
       viewport={{ once: true, margin: '-40px' }}
       transition={{ duration: 0.5, delay: index * 0.1, ease: 'easeOut' }}
       style={{ rotate: rotation }}
-      onClick={video?.videoUrl ? onOpen : undefined}
+      onClick={video ? onOpen : undefined}
       onMouseEnter={handleEnter}
       onMouseLeave={handleLeave}
       onFocus={handleEnter}
       onBlur={handleLeave}
-      disabled={!video?.videoUrl}
+      disabled={!video}
+      aria-label={video?.label}
       className={cn(
         'group relative mx-auto w-full max-w-[220px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50',
-        video?.videoUrl && 'cursor-pointer',
+        video && 'cursor-pointer',
       )}
     >
       <div
