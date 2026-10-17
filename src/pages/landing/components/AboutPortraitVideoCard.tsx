@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils'
 
 interface VideoData {
   id: string
-  videoUrl: string
+  videoUrl?: string
   previewUrl?: string
   label: string
 }

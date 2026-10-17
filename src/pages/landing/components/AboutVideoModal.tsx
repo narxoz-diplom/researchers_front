@@ -11,6 +11,8 @@ interface Props {
   subtitle?: string
   description?: string
   videoUrl?: string
+  profileUrl?: string
+  profileLabel?: string
   open: boolean
   onOpenChange: (open: boolean) => void
 }
@@ -20,6 +22,8 @@ export function AboutVideoModal({
   subtitle,
   description,
   videoUrl,
+  profileUrl,
+  profileLabel,
   open,
   onOpenChange,
 }: Props) {
@@ -47,6 +51,16 @@ export function AboutVideoModal({
           </DialogHeader>
           {description && (
             <p className="text-sm leading-relaxed text-muted-foreground">{description}</p>
+          )}
+          {profileUrl && (
+            <a
+              href={profileUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block text-sm font-medium text-primary hover:underline"
+            >
+              {profileLabel}
+            </a>
           )}
         </div>
       </DialogContent>

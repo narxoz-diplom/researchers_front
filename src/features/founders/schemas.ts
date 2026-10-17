@@ -6,12 +6,15 @@ export function createFounderSchema(t: TFunction) {
     fullName: z.string().trim().min(1, t('admin.founders.validation.fullNameRequired')),
     position: z.string().trim().min(1, t('admin.founders.validation.positionRequired')),
     description: z.string().trim().min(1, t('admin.founders.validation.descriptionRequired')),
-    videoUrl: z
-      .string()
-      .trim()
-      .min(1, t('admin.founders.validation.videoRequired'))
-      .url(t('admin.founders.validation.invalidUrl')),
+    videoUrl: z.union([
+      z.literal(''),
+      z.string().trim().url(t('admin.founders.validation.invalidUrl')),
+    ]),
     previewUrl: z.union([
+      z.literal(''),
+      z.string().trim().url(t('admin.founders.validation.invalidUrl')),
+    ]),
+    profileUrl: z.union([
       z.literal(''),
       z.string().trim().url(t('admin.founders.validation.invalidUrl')),
     ]),

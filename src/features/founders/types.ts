@@ -3,8 +3,9 @@ export interface Founder {
   fullName: string
   position: string
   description: string
-  videoUrl: string
+  videoUrl?: string
   previewUrl?: string
+  profileUrl?: string
   orderNumber: number
   isPublished: boolean
   createdAt: string
@@ -15,8 +16,9 @@ export interface CreateFounderPayload {
   fullName: string
   position: string
   description: string
-  videoUrl: string
+  videoUrl?: string | null
   previewUrl?: string | null
+  profileUrl?: string | null
   orderNumber?: number
   isPublished?: boolean
 }

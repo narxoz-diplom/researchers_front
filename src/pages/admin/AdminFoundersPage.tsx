@@ -38,6 +38,7 @@ const emptyForm: FounderSchema = {
   description: '',
   videoUrl: '',
   previewUrl: '',
+  profileUrl: '',
   orderNumber: 0,
   isPublished: true,
 }
@@ -66,8 +67,9 @@ export function AdminFoundersPage() {
         fullName: data.fullName.trim(),
         position: data.position.trim(),
         description: data.description.trim(),
-        videoUrl: data.videoUrl.trim(),
+        videoUrl: data.videoUrl?.trim() || null,
         previewUrl: data.previewUrl?.trim() || null,
+        profileUrl: data.profileUrl?.trim() || null,
         orderNumber: Number(data.orderNumber) || 0,
         isPublished: data.isPublished,
       }
@@ -106,8 +108,9 @@ export function AdminFoundersPage() {
       fullName: founder.fullName,
       position: founder.position,
       description: founder.description,
-      videoUrl: founder.videoUrl,
+      videoUrl: founder.videoUrl ?? '',
       previewUrl: founder.previewUrl ?? '',
+      profileUrl: founder.profileUrl ?? '',
       orderNumber: founder.orderNumber,
       isPublished: founder.isPublished,
     })
@@ -249,6 +252,20 @@ export function AdminFoundersPage() {
                     <FormLabel>{t('admin.founders.description')}</FormLabel>
                     <FormControl>
                       <Textarea {...field} rows={4} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="profileUrl"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('admin.founders.profileUrl')}</FormLabel>
+                    <FormControl>
+                      <Input {...field} type="url" placeholder="https://" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
+import { ExternalLink } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useFounders } from '@/features/founders/hooks/useFounders'
@@ -108,6 +109,17 @@ export function AboutSection() {
                   <h3 className="text-lg font-semibold">{title}</h3>
                   {subtitle && <p className="text-sm font-medium text-primary">{subtitle}</p>}
                   <p className="text-sm leading-relaxed text-muted-foreground">{description}</p>
+                  {founder?.profileUrl && (
+                    <a
+                      href={founder.profileUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center justify-center gap-1.5 text-sm font-medium text-primary hover:underline"
+                    >
+                      {t('landing.about.profileLink')}
+                      <ExternalLink className="h-3.5 w-3.5" />
+                    </a>
+                  )}
                   {points.length > 0 && (
                     <ul className="flex flex-col gap-1.5 text-left">
                       {points.map((point) => (
@@ -132,6 +144,8 @@ export function AboutSection() {
         subtitle={selected?.position}
         description={selected?.description}
         videoUrl={selected?.videoUrl}
+        profileUrl={selected?.profileUrl}
+        profileLabel={t('landing.about.profileLink')}
       />
     </section>
   )
