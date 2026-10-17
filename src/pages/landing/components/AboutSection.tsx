@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
-import { ExternalLink } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { Link } from 'react-router-dom'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useFounders } from '@/features/founders/hooks/useFounders'
 import type { Founder } from '@/features/founders/types'
@@ -106,19 +107,25 @@ export function AboutSection() {
                 />
 
                 <div className="flex w-full flex-col gap-3 px-1">
-                  <h3 className="text-lg font-semibold">{title}</h3>
+                  <h3 className="text-lg font-semibold">
+                    {founder ? (
+                      <Link to={`/founders/${founder.id}`} className="hover:text-primary">
+                        {title}
+                      </Link>
+                    ) : (
+                      title
+                    )}
+                  </h3>
                   {subtitle && <p className="text-sm font-medium text-primary">{subtitle}</p>}
                   <p className="text-sm leading-relaxed text-muted-foreground">{description}</p>
-                  {founder?.profileUrl && (
-                    <a
-                      href={founder.profileUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                  {founder && (
+                    <Link
+                      to={`/founders/${founder.id}`}
                       className="inline-flex items-center justify-center gap-1.5 text-sm font-medium text-primary hover:underline"
                     >
-                      {t('landing.about.profileLink')}
-                      <ExternalLink className="h-3.5 w-3.5" />
-                    </a>
+                      {t('landing.about.readMore')}
+                      <ArrowRight className="h-3.5 w-3.5" />
+                    </Link>
                   )}
                   {points.length > 0 && (
                     <ul className="flex flex-col gap-1.5 text-left">

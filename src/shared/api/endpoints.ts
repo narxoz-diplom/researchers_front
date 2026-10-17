@@ -70,6 +70,7 @@ export const API = {
   founders: {
     list: '/founders',
     all: '/founders/all',
+    byId: (id: string) => `/founders/${id}`,
     create: '/founders',
     update: (id: string) => `/founders/${id}`,
     delete: (id: string) => `/founders/${id}`,

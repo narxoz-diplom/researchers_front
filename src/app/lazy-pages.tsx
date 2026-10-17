@@ -21,6 +21,9 @@ export const CatalogPage = lazy(() =>
 export const CourseDetailPage = lazy(() =>
   import('@/pages/courses/CourseDetailPage').then((m) => ({ default: m.CourseDetailPage })),
 )
+export const FounderPage = lazy(() =>
+  import('@/pages/founders/FounderPage').then((m) => ({ default: m.FounderPage })),
+)
 export const LessonPlayerPage = lazy(() =>
   import('@/pages/courses/LessonPlayerPage').then((m) => ({ default: m.LessonPlayerPage })),
 )

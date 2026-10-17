@@ -17,6 +17,7 @@ import {
   CheckEmailPage,
   CourseDetailPage,
   ForbiddenPage,
+  FounderPage,
   LandingPage,
   LessonPlayerPage,
   LoginPage,
@@ -57,6 +58,7 @@ export const router = createBrowserRouter([
       { path: 'checkout', element: <Lazy><CheckoutPage /></Lazy> },
       { path: 'courses/:id', element: <Lazy><CourseDetailPage /></Lazy> },
       { path: 'courses/:cid/lessons/:lessonId', element: <Lazy><LessonPlayerPage /></Lazy> },
+      { path: 'founders/:id', element: <Lazy><FounderPage /></Lazy> },
     ],
   },
   {

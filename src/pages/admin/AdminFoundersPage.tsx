@@ -39,8 +39,17 @@ const emptyForm: FounderSchema = {
   videoUrl: '',
   previewUrl: '',
   profileUrl: '',
+  bio: '',
+  gallery: '',
   orderNumber: 0,
   isPublished: true,
+}
+
+function parseGallery(value: string): string[] {
+  return value
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean)
 }
 
 export function AdminFoundersPage() {
@@ -70,6 +79,8 @@ export function AdminFoundersPage() {
         videoUrl: data.videoUrl?.trim() || null,
         previewUrl: data.previewUrl?.trim() || null,
         profileUrl: data.profileUrl?.trim() || null,
+        bio: data.bio.trim() || null,
+        gallery: parseGallery(data.gallery),
         orderNumber: Number(data.orderNumber) || 0,
         isPublished: data.isPublished,
       }
@@ -111,6 +122,8 @@ export function AdminFoundersPage() {
       videoUrl: founder.videoUrl ?? '',
       previewUrl: founder.previewUrl ?? '',
       profileUrl: founder.profileUrl ?? '',
+      bio: founder.bio ?? '',
+      gallery: founder.gallery.join('\n'),
       orderNumber: founder.orderNumber,
       isPublished: founder.isPublished,
     })
@@ -267,6 +280,35 @@ export function AdminFoundersPage() {
                     <FormControl>
                       <Input {...field} type="url" placeholder="https://" />
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="bio"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('admin.founders.bio')}</FormLabel>
+                    <FormControl>
+                      <Textarea {...field} rows={8} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="gallery"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('admin.founders.gallery')}</FormLabel>
+                    <FormControl>
+                      <Textarea {...field} rows={4} placeholder="https://..." />
+                    </FormControl>
+                    <p className="text-xs text-muted-foreground">{t('admin.founders.galleryHint')}</p>
                     <FormMessage />
                   </FormItem>
                 )}

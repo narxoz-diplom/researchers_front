@@ -5,6 +5,7 @@ import type { CreateFounderPayload, Founder, UpdateFounderPayload } from './type
 export const foundersApi = {
   list: () => api.get<Founder[]>(API.founders.list).then((r) => r.data),
   listAll: () => api.get<Founder[]>(API.founders.all).then((r) => r.data),
+  get: (id: string) => api.get<Founder>(API.founders.byId(id)).then((r) => r.data),
   create: (payload: CreateFounderPayload) =>
     api.post<Founder>(API.founders.create, payload).then((r) => r.data),
   update: (id: string, payload: UpdateFounderPayload) =>

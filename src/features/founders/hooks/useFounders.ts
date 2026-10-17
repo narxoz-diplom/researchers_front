@@ -9,6 +9,14 @@ export function useFounders() {
   })
 }
 
+export function useFounder(id: string | undefined) {
+  return useQuery({
+    queryKey: ['founders', 'one', id],
+    queryFn: () => foundersApi.get(id!),
+    enabled: !!id,
+  })
+}
+
 export function useAdminFounders() {
   return useQuery({
     queryKey: ['founders', 'admin'],
