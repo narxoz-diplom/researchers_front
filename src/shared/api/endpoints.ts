@@ -105,6 +105,7 @@ export const API = {
     mine: '/me/enrollments',
   },
   admin: {
+    mailTest: '/admin/mail/test',
     subscriberChatAi: '/admin/ai-settings/subscriber-chat',
     authors: '/admin/authors',
     approveAuthor: (userId: string) => `/admin/authors/${userId}/approve`,

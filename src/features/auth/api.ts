@@ -29,6 +29,8 @@ export interface RegisterResponse {
   email: string
   /** Local development without SMTP only: the confirmation link that would have been emailed. */
   devVerifyUrl?: string
+  /** The account was created but the SMTP server refused the confirmation mail. */
+  mailFailed?: boolean
 }
 
 export interface MessageResponse {

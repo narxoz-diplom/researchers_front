@@ -24,7 +24,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { PageHeader } from '@/shared/ui/PageHeader'
 import { ErrorState } from '@/shared/ui/ErrorState'
 import { RoleBadge } from '@/shared/ui/RoleBadge'
-import { api } from '@/shared/api/axios'
+import { api, extractApiError } from '@/shared/api/axios'
 import { API } from '@/shared/api/endpoints'
 import type { User, Role, Meta } from '@/shared/types'
 
@@ -88,6 +88,30 @@ export function AdminUsersPage() {
     staleTime: 5 * 60 * 1000,
   })
   const mailNotConfigured = health?.checks?.mail === 'not_configured'
+
+  const { mutate: sendTestMail, isPending: sendingTestMail } = useMutation({
+    mutationFn: () =>
+      api
+        .post<{ ok: true; to: string; transport: string; response?: string }>(API.admin.mailTest)
+        .then((r) => r.data),
+    onSuccess: (res) => {
+      toast.success(t('admin.users.mailTestSent', { to: res.to }), {
+        description: `${res.transport}${res.response ? ` · ${res.response}` : ''}`,
+        duration: 10000,
+      })
+    },
+    onError: (err) => {
+      const apiErr = extractApiError(err) as { message?: string; detail?: string; transport?: string } | null
+      if (apiErr?.message === 'MAIL_NOT_CONFIGURED') {
+        toast.error(t('admin.users.mailNotConfiguredShort'))
+        return
+      }
+      toast.error(t('admin.users.mailTestFailed'), {
+        description: [apiErr?.detail, apiErr?.transport].filter(Boolean).join(' · ') || undefined,
+        duration: 15000,
+      })
+    },
+  })
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['admin', 'users', search],
@@ -237,6 +261,16 @@ export function AdminUsersPage() {
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
+            <Button
+              variant="outline"
+              className="gap-2"
+              disabled={sendingTestMail}
+              title={t('admin.users.mailTestHint')}
+              onClick={() => sendTestMail()}
+            >
+              <MailCheck className="h-4 w-4" />
+              {sendingTestMail ? t('common.sending') : t('admin.users.mailTest')}
+            </Button>
             <Button
               className="gap-2"
               onClick={() => {

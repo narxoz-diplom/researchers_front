@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import { toast } from 'sonner'
 import { CheckCircle, Loader2, Mail, XCircle } from 'lucide-react'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -18,8 +19,10 @@ export function CheckEmailPage() {
   const [resending, setResending] = useState(false)
   const [resent, setResent] = useState(false)
   // Present only in local development without SMTP (the API decides); lets the flow be tested.
-  const [devVerifyUrl, setDevVerifyUrl] = useState<string | null>(
-    (location.state as { devVerifyUrl?: string } | null)?.devVerifyUrl ?? null,
+  const navState = location.state as { devVerifyUrl?: string; mailFailed?: boolean } | null
+  const [devVerifyUrl, setDevVerifyUrl] = useState<string | null>(navState?.devVerifyUrl ?? null)
+  const [mailFailed, setMailFailed] = useState<string | null>(
+    navState?.mailFailed ? t('auth.mailFailed') : null,
   )
 
   async function handleResend() {
@@ -28,7 +31,14 @@ export function CheckEmailPage() {
     try {
       const res = await authApi.resendVerification(email)
       setResent(true)
+      setMailFailed(null)
       if (res.devVerifyUrl) setDevVerifyUrl(res.devVerifyUrl)
+    } catch (err) {
+      // The SMTP server refused the mail: say so instead of pretending it was sent.
+      const detail = (extractApiError(err) as { detail?: string } | null)?.detail
+      const message = detail ? `${t('auth.mailFailed')} (${detail})` : t('auth.mailFailed')
+      setMailFailed(message)
+      toast.error(message)
     } finally {
       setResending(false)
     }
@@ -48,6 +58,11 @@ export function CheckEmailPage() {
           <p className="rounded-xl bg-muted px-4 py-3 text-sm font-medium break-all">{email}</p>
         )}
         <p className="text-sm text-muted-foreground">{t('auth.checkEmailHint')}</p>
+        {mailFailed && (
+          <p className="rounded-xl border border-destructive/40 bg-destructive/10 p-3 text-left text-sm text-destructive">
+            {mailFailed}
+          </p>
+        )}
         {devVerifyUrl && (
           <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-left text-sm text-amber-900 dark:text-amber-200">
             <p className="font-medium">{t('auth.devVerifyTitle')}</p>

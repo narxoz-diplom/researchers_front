@@ -58,7 +58,10 @@ export function RegisterForm() {
           toast.success(t('auth.checkEmailSent'))
           void navigate(`/auth/check-email?email=${encodeURIComponent(data.email)}`, {
             replace: true,
-            state: data.devVerifyUrl ? { devVerifyUrl: data.devVerifyUrl } : null,
+            state: {
+              ...(data.devVerifyUrl ? { devVerifyUrl: data.devVerifyUrl } : {}),
+              ...(data.mailFailed ? { mailFailed: true } : {}),
+            },
           })
         },
         onError: (err) => {
