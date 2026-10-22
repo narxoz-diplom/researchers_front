@@ -61,6 +61,12 @@ export const AdminFoundersPage = lazy(() =>
 export const AdminPlatformAiPage = lazy(() =>
   import('@/pages/admin/AdminPlatformAiPage').then((m) => ({ default: m.AdminPlatformAiPage })),
 )
+export const AdminAuthorsPage = lazy(() =>
+  import('@/pages/admin/AdminAuthorsPage').then((m) => ({ default: m.AdminAuthorsPage })),
+)
+export const OfferPage = lazy(() =>
+  import('@/pages/offer/OfferPage').then((m) => ({ default: m.OfferPage })),
+)
 export const AdminPaymentsPage = lazy(() =>
   import('@/pages/admin/AdminPaymentsPage').then((m) => ({ default: m.AdminPaymentsPage })),
 )

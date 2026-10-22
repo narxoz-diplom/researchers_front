@@ -15,9 +15,11 @@ export function useLogout() {
       return rt ? authApi.logout(rt) : Promise.resolve()
     },
     onSettled: () => {
+      // Leave the protected page first, so ProtectedRoute does not remember it as the
+      // place to return to after the next login (possibly by a user with another role).
+      void navigate('/auth/login', { replace: true, state: null })
       logout()
       qc.clear()
-      void navigate('/auth/login')
     },
   })
 }

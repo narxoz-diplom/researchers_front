@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, CheckCircle, Download, FileText, List, Lock, Sparkles } from 'lucide-react'
+import { ArrowLeft, CheckCircle, Download, Eye, FileText, List, Lock, Sparkles } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
-import ReactPlayer from 'react-player'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
@@ -15,7 +14,9 @@ import { api, extractApiError } from '@/shared/api/axios'
 import { API } from '@/shared/api/endpoints'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import { downloadMaterialById } from '@/lib/cloudinary-download'
-import type { Lesson } from '@/shared/types'
+import { ProtectedVideoPlayer } from '@/features/lessons/components/ProtectedVideoPlayer'
+import { MaterialViewer } from '@/features/lessons/components/MaterialViewer'
+import type { Lesson, LessonMaterial } from '@/shared/types'
 import { LessonChatPanel } from '@/features/ai/components/LessonChatPanel'
 import { CourseCompletionCelebration } from '@/shared/ui/CourseCompletionCelebration'
 
@@ -38,6 +39,15 @@ export function LessonPlayerPage() {
   const [courseCelebrationOpen, setCourseCelebrationOpen] = useState(false)
   const [lessonsOpen, setLessonsOpen] = useState(false)
   const [chatOpen, setChatOpen] = useState(false)
+  // Both choices are keyed by lesson, so moving to another lesson starts from its first video.
+  const [videoChoice, setVideoChoice] = useState<{ lessonId: string; index: number } | null>(null)
+  const [materialChoice, setMaterialChoice] = useState<{
+    lessonId: string
+    material: LessonMaterial
+  } | null>(null)
+  const videoIndex = videoChoice && videoChoice.lessonId === lessonId ? videoChoice.index : 0
+  const openMaterial =
+    materialChoice && materialChoice.lessonId === lessonId ? materialChoice.material : null
 
   const { data: lesson, isLoading, isError } = useQuery({
     queryKey: ['lesson', lessonId],
@@ -117,7 +127,7 @@ export function LessonPlayerPage() {
   const prevLesson = currentIndex > 0 ? allLessons?.[currentIndex - 1] : null
   const nextLesson = allLessons && currentIndex < allLessons.length - 1 ? allLessons[currentIndex + 1] : null
 
-  const mainVideo = lesson.videos[0]
+  const mainVideo = lesson.videos[videoIndex] ?? lesson.videos[0]
   const showProgress = user?.role === 'SUBSCRIBER' && progress
   const showChat = user?.role === 'SUBSCRIBER'
   const courseDone = progress && progress.completedLessons >= progress.totalLessons && progress.totalLessons > 0
@@ -195,13 +205,23 @@ export function LessonPlayerPage() {
           )}
 
           {mainVideo ? (
-            <div className="overflow-hidden rounded-2xl bg-black aspect-video">
-              <ReactPlayer
-                src={mainVideo.url}
-                width="100%"
-                height="100%"
-                controls
-              />
+            <div className="flex flex-col gap-2">
+              <ProtectedVideoPlayer key={mainVideo.id} video={mainVideo} />
+              {lesson.videos.length > 1 && (
+                <div className="flex flex-wrap gap-2">
+                  {lesson.videos.map((v, idx) => (
+                    <Button
+                      key={v.id}
+                      type="button"
+                      size="sm"
+                      variant={v.id === mainVideo.id ? 'default' : 'outline'}
+                      onClick={() => setVideoChoice({ lessonId: lessonId!, index: idx })}
+                    >
+                      {idx + 1}. {v.title}
+                    </Button>
+                  ))}
+                </div>
+              )}
             </div>
           ) : (
             <div className="flex aspect-video items-center justify-center rounded-2xl bg-muted">
@@ -262,6 +282,7 @@ export function LessonPlayerPage() {
           {lesson.materials.length > 0 && (
             <div className="flex flex-col gap-2">
               <h3 className="text-sm font-semibold">{t('common.materials')}</h3>
+              <p className="text-xs text-muted-foreground">{t('lesson.viewOnly')}</p>
               {lesson.materials.map((m) => (
                 <div
                   key={m.id}
@@ -278,20 +299,34 @@ export function LessonPlayerPage() {
                   </div>
                   <Button
                     type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7 shrink-0 text-muted-foreground"
-                    title={t('common.download')}
-                    onClick={() => {
-                      void downloadMaterialById(m.id, m.title).catch((err) => {
-                        toast.error(extractApiError(err)?.message ?? t('common.downloadFailed'))
-                      })
-                    }}
+                    variant="outline"
+                    size="sm"
+                    className="shrink-0 gap-1.5"
+                    onClick={() => setMaterialChoice({ lessonId: lessonId!, material: m })}
                   >
-                    <Download className="h-4 w-4" />
+                    <Eye className="h-4 w-4" />
+                    {t('lesson.openMaterial')}
                   </Button>
+                  {/* The origin URL is sent only to the course author and admins: they may keep the file. */}
+                  {m.url && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 shrink-0 text-muted-foreground"
+                      title={t('common.download')}
+                      onClick={() => {
+                        void downloadMaterialById(m.id, m.title).catch((err) => {
+                          toast.error(extractApiError(err)?.message ?? t('common.downloadFailed'))
+                        })
+                      }}
+                    >
+                      <Download className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
               ))}
+              <MaterialViewer material={openMaterial} onClose={() => setMaterialChoice(null)} />
             </div>
           )}
 

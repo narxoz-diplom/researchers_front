@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Check, Copy, Search } from 'lucide-react'
+import { isAxiosError } from 'axios'
+import { Check, Copy, MailCheck, Search, UserPlus } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { Input } from '@/components/ui/input'
+import { PasswordInput } from '@/components/ui/password-input'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import {
@@ -36,14 +38,28 @@ interface ResetPasswordForm {
   confirmPassword: string
 }
 
+interface CreateUserForm {
+  fullName: string
+  email: string
+  password: string
+  confirmPassword: string
+  role: Role
+}
+
 export function AdminUsersPage() {
   const { t } = useTranslation()
   const [search, setSearch] = useState('')
   const [roleDialog, setRoleDialog] = useState<{ user: User; newRole: Role } | null>(null)
   const [editDialog, setEditDialog] = useState<User | null>(null)
   const [passwordDialog, setPasswordDialog] = useState<User | null>(null)
+  const [createDialog, setCreateDialog] = useState(false)
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const qc = useQueryClient()
+
+  const createForm = useForm<CreateUserForm>({
+    defaultValues: { fullName: '', email: '', password: '', confirmPassword: '', role: 'ADMIN' },
+  })
+  const createRole = createForm.watch('role')
 
   const editForm = useForm<EditUserForm>({
     defaultValues: { fullName: '', email: '' },
@@ -108,6 +124,38 @@ export function AdminUsersPage() {
     onError: () => toast.error(t('admin.users.passwordResetFailed')),
   })
 
+  const { mutate: createUser, isPending: creatingUser } = useMutation({
+    mutationFn: (payload: Omit<CreateUserForm, 'confirmPassword'>) =>
+      api.post<User>(API.users.create, {
+        fullName: payload.fullName.trim(),
+        email: payload.email.trim(),
+        password: payload.password,
+        role: payload.role,
+      }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['admin', 'users'] })
+      setCreateDialog(false)
+      createForm.reset()
+      toast.success(t('admin.users.created'))
+    },
+    onError: (err) => {
+      if (isAxiosError(err) && err.response?.status === 409) {
+        toast.error(t('admin.users.emailTaken'))
+        return
+      }
+      toast.error(t('admin.users.createFailed'))
+    },
+  })
+
+  const { mutate: verifyEmail } = useMutation({
+    mutationFn: (userId: string) => api.patch(API.users.verifyEmail(userId)),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['admin', 'users'] })
+      toast.success(t('admin.users.emailVerified'))
+    },
+    onError: () => toast.error(t('admin.users.verifyEmailFailed')),
+  })
+
   const { mutate: deleteUser } = useMutation({
     mutationFn: (id: string) => api.delete(API.users.byId(id)),
     onSuccess: () => {
@@ -135,6 +183,20 @@ export function AdminUsersPage() {
     updateUser({ userId: editDialog.id, payload: values })
   }
 
+  function submitCreate(values: CreateUserForm) {
+    if (values.password !== values.confirmPassword) {
+      toast.error(t('admin.users.passwordMismatch'))
+      return
+    }
+    if (values.password.length < 8) {
+      toast.error(t('admin.users.passwordTooShort'))
+      return
+    }
+    const { confirmPassword: _confirm, ...payload } = values
+    void _confirm
+    createUser(payload)
+  }
+
   function submitPassword(values: ResetPasswordForm) {
     if (!passwordDialog) return
     if (values.newPassword !== values.confirmPassword) {
@@ -156,14 +218,26 @@ export function AdminUsersPage() {
         title={t('nav.users')}
         subtitle={data ? t('common.total', { count: data.meta.total }) : undefined}
         actions={
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder={t('common.search')}
-              className="pl-9 w-full sm:w-56"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder={t('common.search')}
+                className="pl-9 w-full sm:w-56"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+            <Button
+              className="gap-2"
+              onClick={() => {
+                createForm.reset({ fullName: '', email: '', password: '', confirmPassword: '', role: 'ADMIN' })
+                setCreateDialog(true)
+              }}
+            >
+              <UserPlus className="h-4 w-4" />
+              {t('admin.users.addUser')}
+            </Button>
           </div>
         }
       />
@@ -182,6 +256,11 @@ export function AdminUsersPage() {
               <div className="min-w-0 flex-1">
                 <p className="font-medium truncate">{user.fullName}</p>
                 <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                {user.emailVerified === false && (
+                  <p className="text-xs font-medium text-amber-700 dark:text-amber-300">
+                    {t('admin.users.emailUnverified')}
+                  </p>
+                )}
               </div>
               <RoleBadge role={user.role} />
             </div>
@@ -204,6 +283,12 @@ export function AdminUsersPage() {
               <Button variant="outline" size="sm" className="flex-1" onClick={() => openPasswordDialog(user)}>
                 {t('admin.users.resetPassword')}
               </Button>
+              {user.emailVerified === false && (
+                <Button variant="outline" size="sm" className="flex-1" onClick={() => verifyEmail(user.id)}>
+                  <MailCheck className="h-4 w-4 mr-1" />
+                  {t('admin.users.verifyEmail')}
+                </Button>
+              )}
               <Button
                 variant="outline"
                 size="sm"
@@ -258,6 +343,11 @@ export function AdminUsersPage() {
                     <div>
                       <p className="text-sm font-medium">{user.fullName}</p>
                       <p className="text-xs text-muted-foreground">{user.email}</p>
+                      {user.emailVerified === false && (
+                        <p className="text-xs font-medium text-amber-700 dark:text-amber-300">
+                          {t('admin.users.emailUnverified')}
+                        </p>
+                      )}
                     </div>
                   </div>
                 </TableCell>
@@ -291,6 +381,11 @@ export function AdminUsersPage() {
                       <DropdownMenuItem onClick={() => openPasswordDialog(user)}>
                         {t('admin.users.resetPassword')}
                       </DropdownMenuItem>
+                      {user.emailVerified === false && (
+                        <DropdownMenuItem onClick={() => verifyEmail(user.id)}>
+                          {t('admin.users.verifyEmail')}
+                        </DropdownMenuItem>
+                      )}
                       <DropdownMenuItem
                         onClick={() =>
                           setRoleDialog({ user, newRole: user.role === 'ADMIN' ? 'SUBSCRIBER' : 'AUTHOR' })
@@ -312,6 +407,74 @@ export function AdminUsersPage() {
           </TableBody>
         </Table>
       </div>
+
+      <Dialog open={createDialog} onOpenChange={setCreateDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('admin.users.addUserTitle')}</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={createForm.handleSubmit(submitCreate)} className="space-y-4">
+            <p className="text-sm text-muted-foreground">{t('admin.users.addUserHint')}</p>
+            <div className="space-y-2">
+              <Label htmlFor="create-fullName">{t('common.name')}</Label>
+              <Input
+                id="create-fullName"
+                autoComplete="off"
+                {...createForm.register('fullName', { required: true, minLength: 2 })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="create-email">{t('common.email')}</Label>
+              <Input
+                id="create-email"
+                type="email"
+                autoComplete="off"
+                {...createForm.register('email', { required: true })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>{t('common.role')}</Label>
+              <Select
+                value={createRole}
+                onValueChange={(v) => createForm.setValue('role', v as Role)}
+              >
+                <SelectTrigger>
+                  <SelectValue>{t(`roles.${createRole}`)}</SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ADMIN">{t('roles.ADMIN')}</SelectItem>
+                  <SelectItem value="AUTHOR">{t('roles.AUTHOR')}</SelectItem>
+                  <SelectItem value="SUBSCRIBER">{t('roles.SUBSCRIBER')}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="create-password">{t('admin.users.password')}</Label>
+              <PasswordInput
+                id="create-password"
+                autoComplete="new-password"
+                {...createForm.register('password', { required: true, minLength: 8 })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="create-confirm">{t('admin.users.confirmPassword')}</Label>
+              <PasswordInput
+                id="create-confirm"
+                autoComplete="new-password"
+                {...createForm.register('confirmPassword', { required: true, minLength: 8 })}
+              />
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setCreateDialog(false)}>
+                {t('common.cancel')}
+              </Button>
+              <Button type="submit" disabled={creatingUser}>
+                {creatingUser ? t('common.saving') : t('common.save')}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={!!editDialog} onOpenChange={() => setEditDialog(null)}>
         <DialogContent>
@@ -361,18 +524,16 @@ export function AdminUsersPage() {
               <p className="text-sm text-muted-foreground">{t('admin.users.passwordEmailHint')}</p>
               <div className="space-y-2">
                 <Label htmlFor="new-password">{t('admin.users.newPassword')}</Label>
-                <Input
+                <PasswordInput
                   id="new-password"
-                  type="password"
                   autoComplete="new-password"
                   {...passwordForm.register('newPassword', { required: true, minLength: 8 })}
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="confirm-password">{t('admin.users.confirmPassword')}</Label>
-                <Input
+                <PasswordInput
                   id="confirm-password"
-                  type="password"
                   autoComplete="new-password"
                   {...passwordForm.register('confirmPassword', { required: true, minLength: 8 })}
                 />
@@ -405,7 +566,7 @@ export function AdminUsersPage() {
                 onValueChange={(v) => setRoleDialog({ ...roleDialog, newRole: v as Role })}
               >
                 <SelectTrigger>
-                  <SelectValue />
+                  <SelectValue>{t(`roles.${roleDialog.newRole}`)}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="SUBSCRIBER">{t('roles.SUBSCRIBER')}</SelectItem>

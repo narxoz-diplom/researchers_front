@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Check, MessageSquareWarning, X } from 'lucide-react'
+import { ArrowLeft, Check, MessageSquareWarning, Pencil, X } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -21,6 +21,7 @@ import {
 } from '@/components/ui/table'
 import { PageHeader } from '@/shared/ui/PageHeader'
 import { ErrorState } from '@/shared/ui/ErrorState'
+import { AdjustAmountDialog, type AdjustAmountTarget } from '@/features/enrollments/components/AdjustAmountDialog'
 import { api } from '@/shared/api/axios'
 import { API } from '@/shared/api/endpoints'
 import { formatPriceCents } from '@/lib/format-price'
@@ -36,6 +37,7 @@ export function StudioEnrollmentsPage() {
   const dateLocale = getDateLocale(i18n.language)
   const [moreDialog, setMoreDialog] = useState<CourseEnrollment | null>(null)
   const [moreNote, setMoreNote] = useState('')
+  const [adjustTarget, setAdjustTarget] = useState<AdjustAmountTarget | null>(null)
 
   const { data: course } = useQuery({
     queryKey: ['course', courseId],
@@ -57,7 +59,10 @@ export function StudioEnrollmentsPage() {
       void qc.invalidateQueries({ queryKey: ['enrollments', courseId] })
       toast.success(t('studio.accessGranted'))
     },
-    onError: () => toast.error(t('studio.accessGrantFailed')),
+    onError: () => {
+      void qc.invalidateQueries({ queryKey: ['enrollments', courseId] })
+      toast.error(t('studio.accessGrantFailed'))
+    },
   })
 
   const { mutate: reject } = useMutation({
@@ -67,7 +72,10 @@ export function StudioEnrollmentsPage() {
       void qc.invalidateQueries({ queryKey: ['enrollments', courseId] })
       toast.success(t('studio.enrollmentRejected'))
     },
-    onError: () => toast.error(t('studio.enrollmentRejectFailed')),
+    onError: () => {
+      void qc.invalidateQueries({ queryKey: ['enrollments', courseId] })
+      toast.error(t('studio.enrollmentRejectFailed'))
+    },
   })
 
   const { mutate: requestMore, isPending: requestingMore } = useMutation({
@@ -79,12 +87,16 @@ export function StudioEnrollmentsPage() {
       setMoreNote('')
       toast.success(t('admin.payments.moreRequested'))
     },
-    onError: () => toast.error(t('admin.payments.moreRequestFailed')),
+    onError: () => {
+      void qc.invalidateQueries({ queryKey: ['enrollments', courseId] })
+      toast.error(t('admin.payments.moreRequestFailed'))
+    },
   })
 
   function formatPayment(row: CourseEnrollment) {
-    if (!row.paidAmountCents) return '—'
+    if (row.paidAmountCents == null) return '—'
     const expected = row.expectedAmountCents ?? course?.priceCents ?? 0
+    const overpaid = row.paidAmountCents - expected
     return (
       <div>
         <div className="text-sm font-medium">
@@ -95,8 +107,25 @@ export function StudioEnrollmentsPage() {
             amount: formatPriceCents(expected, i18n.language),
           })}
         </div>
+        {overpaid > 0 && (
+          <div className="text-xs font-medium text-amber-700 dark:text-amber-300">
+            {t('admin.payments.overpaid', { amount: formatPriceCents(overpaid, i18n.language) })}
+          </div>
+        )}
       </div>
     )
+  }
+
+  function openAdjust(row: CourseEnrollment) {
+    setAdjustTarget({
+      id: row.id,
+      courseId: courseId!,
+      paidAmountCents: row.paidAmountCents,
+      expectedAmountCents: row.expectedAmountCents,
+      priceCents: course?.priceCents ?? 0,
+      studentName: row.user?.fullName,
+      courseTitle: course?.title ?? '',
+    })
   }
 
   function renderActions(row: CourseEnrollment) {
@@ -122,12 +151,20 @@ export function StudioEnrollmentsPage() {
             </Button>
           </>
         )}
+        {(row.status === 'PAID' || row.status === 'UNDERPAID') && (
+          <Button size="sm" variant="outline" className="w-full sm:w-auto" onClick={() => openAdjust(row)}>
+            <Pencil className="h-4 w-4 mr-1" />
+            {t('admin.payments.adjustAmount')}
+          </Button>
+        )}
         {(row.status === 'PENDING' || row.status === 'PAID' || row.status === 'UNDERPAID') && (
           <Button
             size="sm"
             variant="outline"
             className="w-full sm:w-auto"
-            onClick={() => reject(row.id)}
+            onClick={() => {
+              if (window.confirm(t('admin.payments.rejectConfirm'))) reject(row.id)
+            }}
           >
             <X className="h-4 w-4 mr-1" />
             {t('common.reject')}
@@ -238,6 +275,12 @@ export function StudioEnrollmentsPage() {
           </div>
         </>
       )}
+
+      <AdjustAmountDialog
+        target={adjustTarget}
+        onClose={() => setAdjustTarget(null)}
+        onSaved={() => void qc.invalidateQueries({ queryKey: ['enrollments', courseId] })}
+      />
 
       <Dialog open={!!moreDialog} onOpenChange={() => setMoreDialog(null)}>
         <DialogContent>

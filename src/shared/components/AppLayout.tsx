@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { LayoutDashboard, Layers, Menu, Shield, Sparkles, UserCircle, Users, Video, Wallet, ClipboardList } from 'lucide-react'
+import { LayoutDashboard, Layers, Menu, Shield, Sparkles, UserCircle, Users, Video, Wallet, ClipboardList, UserCheck } from 'lucide-react'
 import { BookMarkIcon } from '@/shared/components/BrandIcon'
 import { BrandWordmark } from '@/shared/components/BrandWordmark'
 import { buttonVariants } from '@/components/ui/button'
@@ -16,7 +16,7 @@ import type { Role } from '@/shared/types'
 
 interface NavItem {
   href: string
-  labelKey: 'nav.catalog' | 'nav.studio' | 'nav.sections' | 'nav.users' | 'nav.subscriptions' | 'nav.founders' | 'nav.payments' | 'nav.adminAi' | 'nav.profile' | 'nav.requests'
+  labelKey: 'nav.catalog' | 'nav.studio' | 'nav.sections' | 'nav.users' | 'nav.subscriptions' | 'nav.founders' | 'nav.payments' | 'nav.authors' | 'nav.adminAi' | 'nav.profile' | 'nav.requests'
   icon: React.ReactNode
   roles: Role[]
 }
@@ -25,11 +25,13 @@ const NAV_ITEMS: NavItem[] = [
   { href: '/catalog', labelKey: 'nav.catalog', icon: <BookMarkIcon className="h-4 w-4" />, roles: ['SUBSCRIBER', 'AUTHOR', 'ADMIN'] },
   { href: '/requests', labelKey: 'nav.requests', icon: <ClipboardList className="h-4 w-4" />, roles: ['SUBSCRIBER'] },
   { href: '/studio', labelKey: 'nav.studio', icon: <Video className="h-4 w-4" />, roles: ['AUTHOR', 'ADMIN'] },
-  { href: '/studio/sections', labelKey: 'nav.sections', icon: <Layers className="h-4 w-4" />, roles: ['AUTHOR', 'ADMIN'] },
+  // Section texts are site copy: admins only.
+  { href: '/studio/sections', labelKey: 'nav.sections', icon: <Layers className="h-4 w-4" />, roles: ['ADMIN'] },
   { href: '/admin/users', labelKey: 'nav.users', icon: <Users className="h-4 w-4" />, roles: ['ADMIN'] },
   { href: '/admin/subscriptions', labelKey: 'nav.subscriptions', icon: <Shield className="h-4 w-4" />, roles: ['ADMIN'] },
   { href: '/admin/founders', labelKey: 'nav.founders', icon: <UserCircle className="h-4 w-4" />, roles: ['ADMIN'] },
   { href: '/admin/payments', labelKey: 'nav.payments', icon: <Wallet className="h-4 w-4" />, roles: ['ADMIN'] },
+  { href: '/admin/authors', labelKey: 'nav.authors', icon: <UserCheck className="h-4 w-4" />, roles: ['ADMIN'] },
   { href: '/admin/ai', labelKey: 'nav.adminAi', icon: <Sparkles className="h-4 w-4" />, roles: ['ADMIN'] },
   { href: '/profile', labelKey: 'nav.profile', icon: <LayoutDashboard className="h-4 w-4" />, roles: ['SUBSCRIBER', 'AUTHOR', 'ADMIN'] },
 ]

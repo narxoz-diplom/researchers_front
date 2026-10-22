@@ -10,7 +10,7 @@ import { PageHeader } from '@/shared/ui/PageHeader'
 import { EmptyState } from '@/shared/ui/EmptyState'
 import { ErrorState } from '@/shared/ui/ErrorState'
 import { StatusBadge } from '@/shared/ui/StatusBadge'
-import { api } from '@/shared/api/axios'
+import { api, extractApiError } from '@/shared/api/axios'
 import { API } from '@/shared/api/endpoints'
 import type { Course } from '@/shared/types'
 import { getCategoryLabel } from '@/features/courses/course-categories'
@@ -44,6 +44,14 @@ export function StudioCoursesPage() {
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['courses', 'mine'] })
       toast.success(t('studio.deleteSuccess'))
+    },
+    onError: (err) => {
+      // Courses with paid enrollments are archived, not deleted.
+      toast.error(
+        extractApiError(err)?.message === 'COURSE_HAS_PAID_ENROLLMENTS'
+          ? t('studio.deleteHasPayments')
+          : t('studio.deleteFailed'),
+      )
     },
   })
 
@@ -117,7 +125,11 @@ export function StudioCoursesPage() {
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     className="text-destructive focus:text-destructive"
-                    onClick={() => deleteCourse(course.id)}
+                    onClick={() => {
+                      if (window.confirm(t('studio.deleteConfirm', { title: course.title }))) {
+                        deleteCourse(course.id)
+                      }
+                    }}
                   >
                     <Trash2 className="mr-2 h-4 w-4" />
                     {t('common.delete')}

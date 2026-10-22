@@ -18,6 +18,7 @@ import { api } from '@/shared/api/axios'
 import { API } from '@/shared/api/endpoints'
 import type { Lesson, LessonVectorIndexStatus } from '@/shared/types'
 import { LessonGeneratePanel } from '@/features/ai/components/LessonGeneratePanel'
+import { resolveStreamUrl } from '@/features/lessons/lib/stream-url'
 
 interface LessonForm {
   title: string
@@ -146,6 +147,7 @@ export function StudioLessonEditPage() {
             </label>
           </div>
         </div>
+        <p className="-mt-4 text-xs text-muted-foreground">{t('studio.lessonVisibilityHint')}</p>
 
         <div>
           <div className="mb-1 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -193,7 +195,7 @@ export function StudioLessonEditPage() {
                       )
                     ) : (
                       <video
-                        src={v.url}
+                        src={v.url ?? resolveStreamUrl(v) ?? undefined}
                         className="h-full w-full object-cover"
                         muted
                         preload="metadata"

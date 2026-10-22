@@ -39,6 +39,7 @@ export function CheckoutPage() {
   const user = useAuthStore((s) => s.user)
   const cartItems = useCartStore((s) => s.items)
   const clearCart = useCartStore((s) => s.clear)
+  const removeCartItem = useCartStore((s) => s.removeItem)
   const qc = useQueryClient()
   const [submitting, setSubmitting] = useState(false)
   const [amountTenge, setAmountTenge] = useState('')
@@ -55,12 +56,12 @@ export function CheckoutPage() {
   const lines: CheckoutLine[] = useMemo(() => {
     if (courseId && singleCourse) {
       const enrollment = singleCourse.myEnrollment
-      // A rejected payment is discarded by the API on resubmission, so it is paid in full again.
-      const isRejected = enrollment?.status === 'REJECTED'
-      const expected = isRejected
+      // A rejected or cancelled payment is discarded by the API on resubmission, so it is paid in full again.
+      const isRestart = enrollment?.status === 'REJECTED' || enrollment?.status === 'CANCELLED'
+      const expected = isRestart
         ? singleCourse.priceCents
         : (enrollment?.expectedAmountCents ?? singleCourse.priceCents)
-      const alreadyPaid = isRejected ? 0 : (enrollment?.paidAmountCents ?? 0)
+      const alreadyPaid = isRestart ? 0 : (enrollment?.paidAmountCents ?? 0)
       // PENDING (no payment yet) and UNDERPAID are payable; PAID/APPROVED block checkout.
       const blocked =
         enrollment?.status === 'PAID' ||
@@ -116,41 +117,57 @@ export function CheckoutPage() {
       return
     }
 
-    const paidTotalCents = Math.round(Number(displayAmount.replace(',', '.')) * 100)
-    if (!paidTotalCents || paidTotalCents < 1) {
+    // Free courses (nothing due) enroll with a zero amount.
+    const paidTotalCents =
+      dueCents === 0 && !amountTenge
+        ? 0
+        : Math.round(Number(displayAmount.replace(',', '.')) * 100)
+    if (!Number.isFinite(paidTotalCents) || paidTotalCents < 0 || (dueCents > 0 && paidTotalCents < 1)) {
       toast.error(t('checkout.invalidAmount'))
+      return
+    }
+    // One transfer for several courses must cover all of them; otherwise some
+    // courses would silently get nothing. A single course may be paid in part.
+    if (payableLines.length > 1 && paidTotalCents < dueCents) {
+      toast.error(t('checkout.amountBelowTotal'))
       return
     }
 
     setSubmitting(true)
+    const paidIds: string[] = []
     try {
       let remaining = paidTotalCents
-
       for (let i = 0; i < payableLines.length; i++) {
         const line = payableLines[i]
         const lineDue = Math.max(0, line.priceCents - line.alreadyPaidCents)
         const isLast = i === payableLines.length - 1
+        // Each course gets its price; any overpayment goes to the last one.
         const linePayment = isLast ? remaining : Math.min(lineDue, remaining)
         remaining -= linePayment
-
-        if (linePayment <= 0) continue
 
         await api.post(API.courses.enrollmentPurchase(line.id), {
           paidAmountCents: linePayment,
         })
+        paidIds.push(line.id)
       }
 
       if (!courseId) clearCart()
-      void qc.invalidateQueries({ queryKey: ['my-enrollments'] })
       toast.success(t('checkout.submitted'))
-      navigate('/catalog')
+      navigate('/requests')
     } catch (error) {
-      if (isAxiosError(error) && error.response?.status === 409) {
+      // Courses paid before the failure must not be paid twice on retry.
+      if (!courseId) paidIds.forEach((id) => removeCartItem(id))
+      if (paidIds.length > 0) {
+        toast.error(t('checkout.partiallySubmitted', { count: paidIds.length }))
+      } else if (isAxiosError(error) && (error.response?.status === 409 || error.response?.status === 400)) {
         toast.error(t('enrollment.alreadyRequested'))
       } else {
         toast.error(t('checkout.submitFailed'))
       }
     } finally {
+      void qc.invalidateQueries({ queryKey: ['my-enrollments'] })
+      if (courseId) void qc.invalidateQueries({ queryKey: ['checkout-course', courseId] })
+      void qc.invalidateQueries({ queryKey: ['course'] })
       setSubmitting(false)
     }
   }
@@ -265,7 +282,7 @@ export function CheckoutPage() {
         <Input
           id="paid-amount"
           type="number"
-          min={1}
+          min={dueCents > 0 ? 1 : 0}
           inputMode="decimal"
           placeholder={defaultAmountTenge}
           value={amountTenge}

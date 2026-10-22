@@ -13,9 +13,11 @@ export const API = {
     mePassword: '/users/me/password',
     list: '/users',
     byId: (id: string) => `/users/${id}`,
+    create: '/users',
     update: (id: string) => `/users/${id}`,
     password: (id: string) => `/users/${id}/password`,
     role: (id: string) => `/users/${id}/role`,
+    verifyEmail: (id: string) => `/users/${id}/verify-email`,
   },
   courses: {
     list: '/courses',
@@ -30,14 +32,19 @@ export const API = {
     enrollments: (courseId: string) => `/courses/${courseId}/enrollments`,
     enrollmentRequest: (courseId: string) => `/courses/${courseId}/enrollments/request`,
     enrollmentPurchase: (courseId: string) => `/courses/${courseId}/enrollments/purchase`,
+    enrollmentCancel: (courseId: string) => `/courses/${courseId}/enrollments/cancel`,
     enrollmentApprove: (courseId: string, enrollmentId: string) =>
       `/courses/${courseId}/enrollments/${enrollmentId}/approve`,
     enrollmentReject: (courseId: string, enrollmentId: string) =>
       `/courses/${courseId}/enrollments/${enrollmentId}/reject`,
     enrollmentRequestMore: (courseId: string, enrollmentId: string) =>
       `/courses/${courseId}/enrollments/${enrollmentId}/request-more`,
+    enrollmentAdjustAmount: (courseId: string, enrollmentId: string) =>
+      `/courses/${courseId}/enrollments/${enrollmentId}/adjust-amount`,
   },
   adminEnrollments: {
+    list: '/admin/enrollments',
+    stats: '/admin/enrollments/stats',
     pendingPayments: '/admin/enrollments/payments',
   },
   lessons: {
@@ -53,12 +60,15 @@ export const API = {
     attach: (lid: string) => `/lessons/${lid}/videos`,
     attachYoutube: (lid: string) => `/lessons/${lid}/videos/youtube`,
     byId: (id: string) => `/videos/${id}`,
+    stream: (id: string) => `/videos/${id}/stream`,
     update: (id: string) => `/videos/${id}`,
     delete: (id: string) => `/videos/${id}`,
   },
   materials: {
     attach: (lid: string) => `/lessons/${lid}/materials`,
     byId: (id: string) => `/materials/${id}`,
+    view: (id: string) => `/materials/${id}/view`,
+    html: (id: string) => `/materials/${id}/html`,
     download: (id: string) => `/materials/${id}/download`,
     delete: (id: string) => `/materials/${id}`,
   },
@@ -95,5 +105,11 @@ export const API = {
   },
   admin: {
     subscriberChatAi: '/admin/ai-settings/subscriber-chat',
+    authors: '/admin/authors',
+    approveAuthor: (userId: string) => `/admin/authors/${userId}/approve`,
+    rejectAuthor: (userId: string) => `/admin/authors/${userId}/reject`,
+  },
+  authorApplication: {
+    mine: '/me/author-application',
   },
 } as const

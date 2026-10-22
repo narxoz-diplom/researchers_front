@@ -1,9 +1,10 @@
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
-import { ArrowLeft, Lock } from 'lucide-react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { ArrowLeft, Lock, XCircle } from 'lucide-react'
 import { BookMarkIcon, BrandIcon } from '@/shared/components/BrandIcon'
 import { format } from 'date-fns'
 import { useTranslation } from 'react-i18next'
+import { toast } from 'sonner'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -31,6 +32,7 @@ export function CourseDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const user = useAuthStore((s) => s.user)
+  const qc = useQueryClient()
 
   const { data: course, isLoading, isError, refetch } = useQuery({
     queryKey: ['course', id],
@@ -41,6 +43,19 @@ export function CourseDetailPage() {
     refetchOnWindowFocus: true,
   })
 
+  const { mutate: cancelEnrollment, isPending: cancelling } = useMutation({
+    mutationFn: () => api.post(API.courses.enrollmentCancel(id!)),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['course', id] })
+      void qc.invalidateQueries({ queryKey: ['my-enrollments'] })
+      toast.success(t('enrollment.cancelled'))
+    },
+    onError: () => {
+      void qc.invalidateQueries({ queryKey: ['course', id] })
+      toast.error(t('enrollment.cancelFailed'))
+    },
+  })
+
   if (isLoading) return <CourseDetailSkeleton />
   if (isError) return <ErrorState onRetry={() => void refetch()} />
   if (!course) return null
@@ -49,12 +64,11 @@ export function CourseDetailPage() {
   const isSubscriber = user?.role === 'SUBSCRIBER'
   const lessons = course.lessons
   const firstLessonId = lessons[0]?.id
-  const firstPublicLessonId = lessons.find((l) => l.isPublished)?.id
   const enrollment = course.myEnrollment
   const dateLocale = getDateLocale(i18n.language)
 
-  const canOpenLesson = (lesson: LessonSummary) =>
-    course.hasAccess || lesson.isPublished
+  // Lessons are paid content: the program is visible, opening a lesson needs access.
+  const canOpenLessons = course.hasAccess
 
   return (
     <div className="pb-12">
@@ -134,21 +148,17 @@ export function CourseDetailPage() {
               firstLessonId={firstLessonId}
               onCheckout={() => navigate(`/checkout?courseId=${course.id}`)}
               onStart={() => navigate(`/courses/${course.id}/lessons/${firstLessonId}`)}
+              onCancel={() => {
+                if (window.confirm(t('enrollment.cancelConfirm'))) cancelEnrollment()
+              }}
+              cancelling={cancelling}
             />
           ) : !user ? (
             <div className="flex flex-col gap-3 sm:flex-row">
-              {firstPublicLessonId && (
-                <Button
-                  className="w-full sm:w-auto"
-                  onClick={() => navigate(`/courses/${course.id}/lessons/${firstPublicLessonId}`)}
-                >
-                  {t('common.startLearning')}
-                </Button>
-              )}
               <Link
                 to="/auth/login"
                 state={{ from: { pathname: `/courses/${course.id}` } }}
-                className={cn(buttonVariants({ variant: firstPublicLessonId ? 'outline' : 'default' }), 'w-full sm:w-auto')}
+                className={cn(buttonVariants({ variant: 'default' }), 'w-full sm:w-auto')}
               >
                 {t('landing.login')}
               </Link>
@@ -160,12 +170,13 @@ export function CourseDetailPage() {
               </Link>
             </div>
           ) : course.hasAccess ? (
-            <Button
-              onClick={() => navigate(`/courses/${course.id}/lessons/${firstLessonId}`)}
-              disabled={!firstLessonId}
-            >
-              {t('common.startLearning')}
-            </Button>
+            firstLessonId ? (
+              <Button onClick={() => navigate(`/courses/${course.id}/lessons/${firstLessonId}`)}>
+                {t('common.startLearning')}
+              </Button>
+            ) : (
+              <p className="max-w-md text-sm text-muted-foreground">{t('course.noLessonsForStudent')}</p>
+            )
           ) : null}
         </div>
       </div>
@@ -191,17 +202,17 @@ export function CourseDetailPage() {
                     key={lesson.id}
                     type="button"
                     onClick={() => {
-                      if (!canOpenLesson(lesson)) return
+                      if (!canOpenLessons) return
                       navigate(`/courses/${course.id}/lessons/${lesson.id}`)
                     }}
-                    disabled={!canOpenLesson(lesson)}
+                    disabled={!canOpenLessons}
                     className="flex items-center gap-4 rounded-xl p-3 text-left transition-colors enabled:hover:bg-muted disabled:cursor-not-allowed disabled:opacity-70"
                   >
                     <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground">
                       {index + 1}
                     </span>
                     <span className="flex-1 text-sm font-medium">{lesson.title}</span>
-                    {!canOpenLesson(lesson) && (
+                    {!canOpenLessons && (
                       <Lock className="h-4 w-4 text-muted-foreground" />
                     )}
                   </button>
@@ -232,6 +243,8 @@ function SubscriberActions({
   firstLessonId,
   onCheckout,
   onStart,
+  onCancel,
+  cancelling,
 }: {
   course: CourseDetail
   enrollment?: MyEnrollment | null
@@ -239,13 +252,35 @@ function SubscriberActions({
   firstLessonId?: string
   onCheckout: () => void
   onStart: () => void
+  onCancel: () => void
+  cancelling: boolean
 }) {
   const { t, i18n } = useTranslation()
   const price = formatPriceCents(course.priceCents, i18n.language)
 
+  // Until access is granted the student may withdraw the request or payment.
+  const cancelButton = (
+    <Button
+      variant="outline"
+      className="w-full sm:w-auto"
+      disabled={cancelling}
+      onClick={onCancel}
+    >
+      <XCircle className="mr-1.5 h-4 w-4" />
+      {t('enrollment.cancel')}
+    </Button>
+  )
+
   if (hasAccess) {
+    if (!firstLessonId) {
+      return (
+        <p className="max-w-md rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-900 dark:text-amber-200">
+          {t('course.noLessonsForStudent')}
+        </p>
+      )
+    }
     return (
-      <Button className="w-full sm:w-auto" onClick={onStart} disabled={!firstLessonId}>
+      <Button className="w-full sm:w-auto" onClick={onStart}>
         {t('common.startLearning')}
       </Button>
     )
@@ -268,10 +303,31 @@ function SubscriberActions({
             {enrollment.adminPaymentNote}
           </p>
         )}
-        <Button className="w-full sm:w-auto" onClick={onCheckout}>
-          {t('checkout.payAgain', { amount: duePrice })}
-        </Button>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <Button className="w-full sm:w-auto" onClick={onCheckout}>
+            {t('checkout.payAgain', { amount: duePrice })}
+          </Button>
+          {cancelButton}
+        </div>
         <p className="text-xs text-muted-foreground">{t('checkout.payAgainHint')}</p>
+      </div>
+    )
+  }
+
+  if (enrollment?.status === 'CANCELLED') {
+    return (
+      <div className="flex flex-col gap-3 max-w-md">
+        <Badge variant="outline" className="w-fit gap-1.5">
+          <XCircle className="h-3.5 w-3.5" />
+          {t('enrollment.cancelledBadge')}
+        </Badge>
+        <p className="text-xs text-muted-foreground">{t('enrollment.cancelledHint')}</p>
+        <Button className="w-full sm:w-auto" onClick={onCheckout}>
+          {t('common.pay', { price })}
+        </Button>
+        <Link to="/requests" className="text-xs text-primary hover:underline">
+          {t('requests.viewHistory')}
+        </Link>
       </div>
     )
   }
@@ -303,9 +359,12 @@ function SubscriberActions({
           {t('enrollment.pendingBadge')}
         </Badge>
         <p className="text-xs text-muted-foreground">{t('enrollment.pendingHint')}</p>
-        <Button className="w-full sm:w-auto" onClick={onCheckout}>
-          {t('common.pay', { price })}
-        </Button>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <Button className="w-full sm:w-auto" onClick={onCheckout}>
+            {t('common.pay', { price })}
+          </Button>
+          {cancelButton}
+        </div>
         <Link to="/requests" className="text-xs text-primary hover:underline">
           {t('requests.viewHistory')}
         </Link>
@@ -321,6 +380,7 @@ function SubscriberActions({
           {t('common.paidAwaitingAuthor')}
         </Badge>
         <p className="text-xs text-muted-foreground">{t('common.authorWillConfirm')}</p>
+        {cancelButton}
         <Link to="/requests" className="text-xs text-primary hover:underline">
           {t('requests.viewHistory')}
         </Link>

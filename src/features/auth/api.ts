@@ -1,17 +1,21 @@
 import { api } from '@/shared/api/axios'
 import { API } from '@/shared/api/endpoints'
 import type { User } from '@/shared/types'
+import type { AuthorApplicationPayload } from '@/features/authors/types'
 
 export interface LoginPayload {
   email: string
   password: string
 }
 
+
 export interface RegisterPayload {
   email: string
   password: string
   fullName: string
   role: 'SUBSCRIBER' | 'AUTHOR'
+  /** Required for AUTHOR: the accepted public offer. */
+  authorApplication?: AuthorApplicationPayload
 }
 
 export interface AuthResponse {
@@ -23,10 +27,13 @@ export interface AuthResponse {
 export interface RegisterResponse {
   message: 'CHECK_EMAIL'
   email: string
+  /** Local development without SMTP only: the confirmation link that would have been emailed. */
+  devVerifyUrl?: string
 }
 
 export interface MessageResponse {
   message: string
+  devVerifyUrl?: string
 }
 
 export const authApi = {

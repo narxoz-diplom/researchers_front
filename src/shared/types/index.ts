@@ -6,7 +6,14 @@ export type CourseStatus = 'DRAFT' | 'PUBLISHED' | 'ARCHIVED'
 
 export type SubscriptionStatus = 'ACTIVE' | 'EXPIRED' | 'REVOKED'
 
-export type CourseEnrollmentStatus = 'PENDING' | 'PAID' | 'UNDERPAID' | 'APPROVED' | 'REJECTED'
+export type CourseEnrollmentStatus =
+  | 'PENDING'
+  | 'PAID'
+  | 'UNDERPAID'
+  | 'APPROVED'
+  | 'REJECTED'
+  /** Withdrawn by the student before access was granted. */
+  | 'CANCELLED'
 
 export type VideoSource = 'CLOUDINARY' | 'YOUTUBE'
 
@@ -45,6 +52,37 @@ export interface PaymentEnrollment extends CourseEnrollment {
   course: { id: string; title: string; priceCents: number }
 }
 
+export type EnrollmentEventType =
+  | 'REQUESTED'
+  | 'PAYMENT_SUBMITTED'
+  | 'MORE_PAYMENT_REQUESTED'
+  | 'AMOUNT_ADJUSTED'
+  | 'APPROVED'
+  | 'REJECTED'
+  | 'CANCELLED'
+
+/** One line of the enrollment journal. */
+export interface EnrollmentEvent {
+  id: string
+  type: EnrollmentEventType
+  actor?: { id: string; fullName: string; role: Role }
+  amountCents?: number
+  totalPaidCents?: number
+  note?: string
+  createdAt: string
+}
+
+export interface AdminEnrollment extends PaymentEnrollment {
+  updatedAt: string
+  events: EnrollmentEvent[]
+}
+
+export interface AdminEnrollmentStats {
+  counts: Record<CourseEnrollmentStatus, number>
+  soldRevenueCents: number
+  awaitingReviewCents: number
+}
+
 export interface Meta {
   total: number
   page: number
@@ -59,13 +97,25 @@ export interface ApiError {
   timestamp: string
 }
 
+/** Admin review of an author's public offer. Only APPROVED authors manage courses. */
+export type AuthorStatus = 'PENDING' | 'APPROVED' | 'REJECTED'
+
 export interface User {
   id: string
   email: string
   fullName: string
   role: Role
+  authorStatus?: AuthorStatus
+  /** False until the confirmation link was used or an admin verified the account. */
+  emailVerified?: boolean
   avatarUrl?: string
   createdAt: string
+}
+
+/** True when the user may create and edit courses. */
+export function canManageCourses(user: Pick<User, 'role' | 'authorStatus'> | null | undefined): boolean {
+  if (!user) return false
+  return user.role === 'ADMIN' || (user.role === 'AUTHOR' && user.authorStatus === 'APPROVED')
 }
 
 export interface Course {
@@ -115,7 +165,10 @@ export interface LessonVideo {
   source: VideoSource
   cloudinaryPublicId?: string
   youtubeVideoId?: string
-  url: string
+  /** Origin URL; the API sends it only to the course author and admins. */
+  url?: string
+  /** API path that streams the file to the current viewer (uploaded videos only). */
+  streamUrl?: string
   durationSeconds: number
   orderNumber: number
   sizeBytes?: string
@@ -124,7 +177,12 @@ export interface LessonVideo {
 export interface LessonMaterial {
   id: string
   title: string
-  url: string
+  /** Origin URL; the API sends it only to the course author and admins. */
+  url?: string
+  /** API path that serves the file inline to a viewer with access. */
+  viewUrl?: string
+  /** API path returning the document as HTML (DOCX). */
+  htmlUrl?: string
   mimeType: string
   sizeBytes: string
 }

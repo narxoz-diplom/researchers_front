@@ -18,6 +18,7 @@ import { ErrorState } from '@/shared/ui/ErrorState'
 import { MediaUploader } from '@/shared/ui/MediaUploader'
 import { api, extractApiError } from '@/shared/api/axios'
 import { API } from '@/shared/api/endpoints'
+import { useAuthStore } from '@/features/auth/store/auth.store'
 import {
   COURSE_SECTION_CATEGORIES,
   isCourseSectionCategory,
@@ -61,6 +62,7 @@ interface CourseForm {
 
 export function StudioCourseEditPage() {
   const { t } = useTranslation()
+  const isAdmin = useAuthStore((s) => s.user?.role === 'ADMIN')
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const qc = useQueryClient()
@@ -115,8 +117,13 @@ export function StudioCourseEditPage() {
         coverUrl: data.coverUrl.trim() || null,
         priceCents,
         category: data.category,
-        ratingAvg: Number.parseFloat(data.ratingAvg.replace(',', '.')) || 0,
-        ratingCount: Number.parseInt(data.ratingCount, 10) || 0,
+        // Ratings are curated by admins; the API ignores them from authors.
+        ...(isAdmin
+          ? {
+              ratingAvg: Number.parseFloat(data.ratingAvg.replace(',', '.')) || 0,
+              ratingCount: Number.parseInt(data.ratingCount, 10) || 0,
+            }
+          : {}),
       })
     },
     onSuccess: () => {
@@ -221,7 +228,9 @@ export function StudioCourseEditPage() {
                 render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger className="mt-1 w-full">
-                      <SelectValue placeholder={t('studio.categoryPlaceholder')} />
+                      <SelectValue placeholder={t('studio.categoryPlaceholder')}>
+                        {field.value ? t(`landing.nav.${field.value}`) : null}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       {COURSE_SECTION_CATEGORIES.map((cat) => (
@@ -234,13 +243,19 @@ export function StudioCourseEditPage() {
                 )}
               />
               <p className="mt-1 text-xs text-muted-foreground">
-                {t('studio.categoryHelp')}{' '}
-                <Link to="/studio/sections" className="text-primary underline underline-offset-2">
-                  {t('studio.sections.editLink')}
-                </Link>
+                {t('studio.categoryHelp')}
+                {isAdmin && (
+                  <>
+                    {' '}
+                    <Link to="/studio/sections" className="text-primary underline underline-offset-2">
+                      {t('studio.sections.editLink')}
+                    </Link>
+                  </>
+                )}
               </p>
             </div>
 
+            {isAdmin && (
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
                 <Label>{t('common.rating')}</Label>
@@ -264,6 +279,7 @@ export function StudioCourseEditPage() {
                 />
               </div>
             </div>
+            )}
 
             <div>
               <Label>{t('common.cover')}</Label>
@@ -349,6 +365,12 @@ export function StudioCourseEditPage() {
               </Button>
             </div>
           </div>
+
+          {course.status === 'PUBLISHED' && lessons && !lessons.some((l) => l.isPublished) && (
+            <p className="mb-3 rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-900 dark:text-amber-200">
+              {t('studio.noVisibleLessonsWarning')}
+            </p>
+          )}
 
           {lessonsLoading ? (
             <div className="flex flex-col gap-2">

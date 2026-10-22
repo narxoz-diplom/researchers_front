@@ -10,11 +10,11 @@ import { TextWithLinks } from '@/shared/ui/TextWithLinks'
 import { api } from '@/shared/api/axios'
 import { API } from '@/shared/api/endpoints'
 import { COURSE_SECTION_CATEGORIES } from '@/features/courses/course-categories'
-import type { LandingSectionContent } from '@/features/landing-sections/hooks/useLandingSections'
+import { type LandingSectionContent, localizedSection } from '@/features/landing-sections/hooks/useLandingSections'
 import { cn } from '@/lib/utils'
 
 export function StudioLandingSectionsPage() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['landing-sections'],
@@ -52,7 +52,7 @@ export function StudioLandingSectionsPage() {
                     as="p"
                     className="mt-2 line-clamp-2 text-sm text-muted-foreground"
                     text={
-                      section?.description ??
+                      localizedSection(section, i18n.language).description ||
                       t(`landing.sections.${slug}.description`)
                     }
                   />

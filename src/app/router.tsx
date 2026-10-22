@@ -5,6 +5,7 @@ import { RootLayout } from '@/shared/components/RootLayout'
 import { AuthLayout } from '@/shared/components/AuthLayout'
 import { AdaptiveBrowseLayout } from '@/shared/components/AdaptiveBrowseLayout'
 import { ProtectedRoute } from '@/shared/components/ProtectedRoute'
+import { AuthorApprovalGate } from '@/features/authors/components/AuthorApprovalGate'
 import { LoadingState } from '@/shared/ui/LoadingState'
 import {
   AdminSubscriptionsPage,
@@ -12,6 +13,8 @@ import {
   AdminFoundersPage,
   AdminPlatformAiPage,
   AdminPaymentsPage,
+  AdminAuthorsPage,
+  OfferPage,
   CheckoutPage,
   MyRequestsPage,
   CatalogPage,
@@ -60,6 +63,7 @@ const routes: RouteObject[] = [
       { path: 'courses/:id', element: <Lazy><CourseDetailPage /></Lazy> },
       { path: 'courses/:cid/lessons/:lessonId', element: <Lazy><LessonPlayerPage /></Lazy> },
       { path: 'founders/:id', element: <Lazy><FounderPage /></Lazy> },
+      { path: 'offer', element: <Lazy><OfferPage /></Lazy> },
     ],
   },
   {
@@ -76,22 +80,30 @@ const routes: RouteObject[] = [
           {
             element: <ProtectedRoute allowedRoles={['AUTHOR', 'ADMIN']} />,
             children: [
-              { path: 'studio', element: <Lazy><StudioCoursesPage /></Lazy> },
-              { path: 'studio/courses/:id', element: <Lazy><StudioCourseEditPage /></Lazy> },
-              { path: 'studio/courses/:id/enrollments', element: <Lazy><StudioEnrollmentsPage /></Lazy> },
-              { path: 'studio/courses/:id/lessons/:lessonId', element: <Lazy><StudioLessonEditPage /></Lazy> },
-              { path: 'studio/sections', element: <Lazy><StudioLandingSectionsPage /></Lazy> },
-              { path: 'studio/sections/:slug', element: <Lazy><StudioLandingSectionEditPage /></Lazy> },
+              {
+                // Authors see the studio only after an admin approved their offer.
+                element: <AuthorApprovalGate />,
+                children: [
+                  { path: 'studio', element: <Lazy><StudioCoursesPage /></Lazy> },
+                  { path: 'studio/courses/:id', element: <Lazy><StudioCourseEditPage /></Lazy> },
+                  { path: 'studio/courses/:id/enrollments', element: <Lazy><StudioEnrollmentsPage /></Lazy> },
+                  { path: 'studio/courses/:id/lessons/:lessonId', element: <Lazy><StudioLessonEditPage /></Lazy> },
+                ],
+              },
             ],
           },
 
           {
             element: <ProtectedRoute allowedRoles={['ADMIN']} />,
             children: [
+              // Landing section texts are site copy, edited by admins only.
+              { path: 'studio/sections', element: <Lazy><StudioLandingSectionsPage /></Lazy> },
+              { path: 'studio/sections/:slug', element: <Lazy><StudioLandingSectionEditPage /></Lazy> },
               { path: 'admin/users', element: <Lazy><AdminUsersPage /></Lazy> },
               { path: 'admin/subscriptions', element: <Lazy><AdminSubscriptionsPage /></Lazy> },
               { path: 'admin/founders', element: <Lazy><AdminFoundersPage /></Lazy> },
               { path: 'admin/payments', element: <Lazy><AdminPaymentsPage /></Lazy> },
+              { path: 'admin/authors', element: <Lazy><AdminAuthorsPage /></Lazy> },
               { path: 'admin/ai', element: <Lazy><AdminPlatformAiPage /></Lazy> },
             ],
           },

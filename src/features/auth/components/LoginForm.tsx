@@ -4,10 +4,12 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
+import type { Role } from '@/shared/types'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
+import { PasswordInput } from '@/components/ui/password-input'
 import { extractApiError } from '@/shared/api/axios'
 import { createLoginSchema, type LoginSchema } from '../schemas'
 import { useLogin } from '../hooks/useLogin'
@@ -17,6 +19,13 @@ export function LoginForm() {
   const navigate = useNavigate()
   const location = useLocation()
   const from = (location.state as { from?: { pathname: string } })?.from?.pathname ?? '/catalog'
+
+  // The remembered page may belong to another role (an admin logged out on /admin/..., a student logs in).
+  function landingFor(role: Role): string {
+    if (from.startsWith('/admin') && role !== 'ADMIN') return '/catalog'
+    if (from.startsWith('/studio') && role === 'SUBSCRIBER') return '/catalog'
+    return from
+  }
 
   const { mutate: login, isPending } = useLogin()
   const loginSchema = useMemo(() => createLoginSchema(t), [t])
@@ -30,9 +39,9 @@ export function LoginForm() {
   function onSubmit(values: LoginSchema) {
     setNeedsVerification(false)
     login(values, {
-      onSuccess: () => {
+      onSuccess: (data) => {
         toast.success(t('auth.welcome'))
-        void navigate(from, { replace: true })
+        void navigate(landingFor(data.user.role), { replace: true })
       },
       onError: (err) => {
         const apiErr = extractApiError(err)
@@ -78,7 +87,7 @@ export function LoginForm() {
                 <FormItem>
                   <FormLabel>{t('common.password')}</FormLabel>
                   <FormControl>
-                    <Input type="password" placeholder="••••••••" {...field} />
+                    <PasswordInput  placeholder="••••••••" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

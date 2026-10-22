@@ -15,13 +15,14 @@ import { AboutSection } from './components/AboutSection'
 import { CourseMarketplaceSection } from './components/CourseMarketplaceSection'
 import type { CourseSectionCategory } from '@/features/courses/course-categories'
 import {
+  localizedSection,
   useLandingSectionMap,
   useLandingSections,
 } from '@/features/landing-sections/hooks/useLandingSections'
 import { TextWithLinks } from '@/shared/ui/TextWithLinks'
 
 export function LandingPage() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const user = useAuthStore((s) => s.user)
   const [courseSearch, setCourseSearch] = useState('')
 
@@ -88,12 +89,16 @@ export function LandingPage() {
           <CourseMarketplaceSection catalogHref={catalogHref} search={courseSearch} />
 
           {NAV_ITEMS.filter(({ id }) => id !== 'about').map(({ id, icon: Icon }, index) => {
-            const apiSection = sectionMap.get(id as CourseSectionCategory)
+            // Text in the site language; the built-in translation fills any gap.
+            const apiSection = localizedSection(
+              sectionMap.get(id as CourseSectionCategory),
+              i18n.language,
+            )
             const description =
-              apiSection?.description ?? t(`landing.sections.${id}.description`)
-            const points =
-              apiSection?.points ??
-              (t(`landing.sections.${id}.points`, { returnObjects: true }) as string[])
+              apiSection.description || t(`landing.sections.${id}.description`)
+            const points = apiSection.points.length
+              ? apiSection.points
+              : (t(`landing.sections.${id}.points`, { returnObjects: true }) as string[])
 
             return (
             <section

@@ -1,8 +1,9 @@
 import { useNavigate } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { format } from 'date-fns'
-import { ArrowRight, Wallet } from 'lucide-react'
+import { ArrowRight, Wallet, XCircle } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -18,12 +19,23 @@ import { getDateLocale } from '@/lib/date-locale'
 import type { CourseEnrollmentStatus, MyEnrollmentWithCourse } from '@/shared/types'
 
 function canPay(status: CourseEnrollmentStatus) {
-  return status === 'PENDING' || status === 'UNDERPAID' || status === 'REJECTED'
+  return (
+    status === 'PENDING' ||
+    status === 'UNDERPAID' ||
+    status === 'REJECTED' ||
+    status === 'CANCELLED'
+  )
+}
+
+// Until access is granted the student may withdraw; afterwards only the author/admin can.
+function canCancel(status: CourseEnrollmentStatus) {
+  return status === 'PENDING' || status === 'PAID' || status === 'UNDERPAID'
 }
 
 export function MyRequestsPage() {
   const { t, i18n } = useTranslation()
   const navigate = useNavigate()
+  const qc = useQueryClient()
   const dateLocale = getDateLocale(i18n.language)
 
   const { data, isLoading, isError, refetch } = useQuery({
@@ -32,9 +44,27 @@ export function MyRequestsPage() {
       api.get<MyEnrollmentWithCourse[]>(API.enrollments.mine).then((r) => r.data),
   })
 
+  const { mutate: cancelEnrollment, isPending: cancelling } = useMutation({
+    mutationFn: (courseId: string) => api.post(API.courses.enrollmentCancel(courseId)),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['my-enrollments'] })
+      void qc.invalidateQueries({ queryKey: ['course'] })
+      toast.success(t('enrollment.cancelled'))
+    },
+    onError: () => {
+      void qc.invalidateQueries({ queryKey: ['my-enrollments'] })
+      toast.error(t('enrollment.cancelFailed'))
+    },
+  })
+
+  function overpaidAmount(row: MyEnrollmentWithCourse) {
+    if (row.paidAmountCents == null || row.status === 'REJECTED' || row.status === 'CANCELLED') return 0
+    return Math.max(0, row.paidAmountCents - (row.expectedAmountCents ?? row.course.priceCents))
+  }
+
   function dueAmount(row: MyEnrollmentWithCourse) {
-    // A rejected payment is discarded by the API on resubmission.
-    if (row.status === 'REJECTED') return row.course.priceCents
+    // A rejected or cancelled payment is discarded by the API on resubmission.
+    if (row.status === 'REJECTED' || row.status === 'CANCELLED') return row.course.priceCents
     const expected = row.expectedAmountCents ?? row.course.priceCents
     return Math.max(0, expected - (row.paidAmountCents ?? 0))
   }
@@ -54,6 +84,24 @@ export function MyRequestsPage() {
       >
         <Wallet className="h-4 w-4 mr-1" />
         {label}
+      </Button>
+    )
+  }
+
+  function renderCancelButton(row: MyEnrollmentWithCourse, className?: string) {
+    if (!canCancel(row.status)) return null
+    return (
+      <Button
+        size="sm"
+        variant="outline"
+        className={className}
+        disabled={cancelling}
+        onClick={() => {
+          if (window.confirm(t('enrollment.cancelConfirm'))) cancelEnrollment(row.course.id)
+        }}
+      >
+        <XCircle className="h-4 w-4 mr-1" />
+        {t('enrollment.cancel')}
       </Button>
     )
   }
@@ -101,6 +149,11 @@ export function MyRequestsPage() {
                 {row.adminPaymentNote && (
                   <p className="text-xs text-amber-700 dark:text-amber-300">{row.adminPaymentNote}</p>
                 )}
+                {overpaidAmount(row) > 0 && (
+                  <p className="text-xs text-amber-700 dark:text-amber-300">
+                    {t('requests.overpaid', { amount: formatPriceCents(overpaidAmount(row), i18n.language) })}
+                  </p>
+                )}
                 {row.createdAt && (
                   <p className="text-xs text-muted-foreground">
                     {format(new Date(row.createdAt), 'd MMM yyyy HH:mm', { locale: dateLocale })}
@@ -108,6 +161,7 @@ export function MyRequestsPage() {
                 )}
                 <div className="flex flex-col gap-2">
                   {renderPayButton(row, 'w-full')}
+                  {renderCancelButton(row, 'w-full')}
                   <Button
                     variant="outline"
                     size="sm"
@@ -143,6 +197,11 @@ export function MyRequestsPage() {
                           {row.adminPaymentNote}
                         </p>
                       )}
+                      {overpaidAmount(row) > 0 && (
+                        <p className="text-xs text-amber-700 dark:text-amber-300 mt-1 max-w-xs">
+                          {t('requests.overpaid', { amount: formatPriceCents(overpaidAmount(row), i18n.language) })}
+                        </p>
+                      )}
                     </TableCell>
                     <TableCell>
                       <Badge variant="secondary">{t(`enrollmentStatuses.${row.status}`)}</Badge>
@@ -174,6 +233,7 @@ export function MyRequestsPage() {
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2 flex-wrap">
                         {renderPayButton(row)}
+                        {renderCancelButton(row)}
                         <Button
                           size="sm"
                           variant="outline"
