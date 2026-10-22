@@ -88,3 +88,6 @@ export const ForbiddenPage = lazy(() =>
 export const DesignSystemPage = lazy(() =>
   import('@/pages/dev/DesignSystemPage').then((m) => ({ default: m.DesignSystemPage })),
 )
+export const StudioImportCoursePage = lazy(() =>
+  import('@/pages/studio/StudioImportCoursePage').then((m) => ({ default: m.StudioImportCoursePage })),
+)

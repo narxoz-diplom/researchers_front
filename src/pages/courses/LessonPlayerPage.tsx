@@ -18,6 +18,7 @@ import { ProtectedVideoPlayer } from '@/features/lessons/components/ProtectedVid
 import { MaterialViewer } from '@/features/lessons/components/MaterialViewer'
 import type { Lesson, LessonMaterial } from '@/shared/types'
 import { LessonChatPanel } from '@/features/ai/components/LessonChatPanel'
+import { LessonMarkdownPreview } from '@/features/ai/components/LessonMarkdownPreview'
 import { CourseCompletionCelebration } from '@/shared/ui/CourseCompletionCelebration'
 
 interface CourseProgress {
@@ -273,11 +274,7 @@ export function LessonPlayerPage() {
             </div>
           </div>
 
-          {lesson.content && (
-            <div className="prose prose-sm dark:prose-invert max-w-none">
-              <p>{lesson.content}</p>
-            </div>
-          )}
+          {lesson.content && <LessonMarkdownPreview content={lesson.content} />}
 
           {lesson.materials.length > 0 && (
             <div className="flex flex-col gap-2">

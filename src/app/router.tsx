@@ -34,6 +34,7 @@ import {
   StudioLandingSectionsPage,
   StudioLandingSectionEditPage,
   StudioLessonEditPage,
+  StudioImportCoursePage,
   VerifyEmailPage,
   DesignSystemPage,
 } from './lazy-pages'
@@ -85,6 +86,7 @@ const routes: RouteObject[] = [
                 element: <AuthorApprovalGate />,
                 children: [
                   { path: 'studio', element: <Lazy><StudioCoursesPage /></Lazy> },
+                  { path: 'studio/import', element: <Lazy><StudioImportCoursePage /></Lazy> },
                   { path: 'studio/courses/:id', element: <Lazy><StudioCourseEditPage /></Lazy> },
                   { path: 'studio/courses/:id/enrollments', element: <Lazy><StudioEnrollmentsPage /></Lazy> },
                   { path: 'studio/courses/:id/lessons/:lessonId', element: <Lazy><StudioLessonEditPage /></Lazy> },

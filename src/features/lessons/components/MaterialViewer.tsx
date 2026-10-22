@@ -15,6 +15,7 @@ import { API } from '@/shared/api/endpoints'
 import { sanitizeHtml } from '@/shared/lib/sanitize-html'
 import { pdfjs } from '@/features/lessons/lib/pdf'
 import { materialKind } from '@/features/lessons/lib/material-kind'
+import { LessonMarkdownPreview } from '@/features/ai/components/LessonMarkdownPreview'
 import type { LessonMaterial } from '@/shared/types'
 
 const prevent = (e: SyntheticEvent) => e.preventDefault()
@@ -50,11 +51,18 @@ export function MaterialViewer({ material, onClose }: Props) {
   )
 }
 
+interface NotebookCell {
+  cell_type: 'markdown' | 'code' | 'raw'
+  source: string | string[]
+  outputs?: { output_type: string; text?: string | string[]; data?: Record<string, string | string[]> }[]
+}
+
 interface LoadedMaterial {
   html?: string
   text?: string
   pdf?: ArrayBuffer
   blobUrl?: string
+  notebook?: NotebookCell[]
 }
 
 function MaterialBody({ material }: { material: LessonMaterial }) {
@@ -72,6 +80,10 @@ function MaterialBody({ material }: { material: LessonMaterial }) {
         responseType: 'blob',
       })
       if (kind === 'text') return { text: await data.text() }
+      if (kind === 'notebook') {
+        const parsed = JSON.parse(await data.text()) as { cells?: NotebookCell[] }
+        return { notebook: parsed.cells ?? [] }
+      }
       if (kind === 'pdf') return { pdf: await data.arrayBuffer() }
       return { blobUrl: URL.createObjectURL(data) }
     },
@@ -103,6 +115,7 @@ function MaterialBody({ material }: { material: LessonMaterial }) {
     return <Notice icon={<FileWarning className="h-6 w-6" />} text={t('lesson.materialLoadFailed')} />
   }
   if (data.pdf) return <PdfPages data={data.pdf} />
+  if (data.notebook) return <NotebookCells cells={data.notebook} />
   if (data.blobUrl) {
     return (
       <img
@@ -127,6 +140,41 @@ function MaterialBody({ material }: { material: LessonMaterial }) {
       // Converter output filtered through sanitizeHtml above.
       dangerouslySetInnerHTML={{ __html: data.html ?? '' }}
     />
+  )
+}
+
+const joinSource = (src: string | string[]) => (Array.isArray(src) ? src.join('') : src)
+
+/** Jupyter notebook as the student sees it in Colab: text, code and saved text outputs. */
+function NotebookCells({ cells }: { cells: NotebookCell[] }) {
+  return (
+    <div className="mx-auto flex max-w-3xl flex-col gap-3 rounded-lg bg-background p-4 sm:p-6">
+      {cells.map((cell, i) => {
+        const source = joinSource(cell.source)
+        if (cell.cell_type === 'markdown') {
+          return <LessonMarkdownPreview key={i} content={source} />
+        }
+        const outputs = (cell.outputs ?? [])
+          .map((o) => {
+            if (o.text) return joinSource(o.text)
+            const plain = o.data?.['text/plain']
+            return plain ? joinSource(plain) : ''
+          })
+          .filter(Boolean)
+        return (
+          <div key={i} className="overflow-hidden rounded-lg border">
+            <pre className="overflow-x-auto bg-muted/60 p-3 font-mono text-xs leading-relaxed">
+              <code>{source}</code>
+            </pre>
+            {outputs.length > 0 && (
+              <pre className="overflow-x-auto border-t bg-background p-3 font-mono text-xs leading-relaxed text-muted-foreground">
+                {outputs.join('\n')}
+              </pre>
+            )}
+          </div>
+        )
+      })}
+    </div>
   )
 }
 

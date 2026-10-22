@@ -5,9 +5,8 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { cn } from '@/lib/utils'
-import { mediaApi, uploadToCloudinary } from '@/features/media/api'
+import { uploadMedia } from '@/features/media/upload'
 import type { CloudinaryUploadResult, UploadResourceType } from '@/features/media/types'
-import axios from 'axios'
 import { extractApiError } from '@/shared/api/axios'
 
 interface Props {
@@ -48,25 +47,7 @@ export function MediaUploader({
     setProgress(0)
 
     try {
-      let result: CloudinaryUploadResult
-      try {
-        const sign = await mediaApi.sign({ resourceType, folder })
-        result = await uploadToCloudinary(file, sign, setProgress)
-      } catch (err) {
-        const status = axios.isAxiosError(err) ? err.response?.status : undefined
-        const apiErr = extractApiError(err)
-        const cloudinaryOff =
-          status === 503 ||
-          apiErr?.message?.toLowerCase().includes('cloudinary')
-        if (!cloudinaryOff) {
-          throw err
-        }
-        result = await mediaApi.uploadLocal(
-          file,
-          { resourceType, folder },
-          setProgress,
-        )
-      }
+      const result = await uploadMedia(file, { resourceType, folder }, setProgress)
       await onUploaded(result, file)
     } catch (err) {
       const apiErr = extractApiError(err)

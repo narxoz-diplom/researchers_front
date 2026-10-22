@@ -115,7 +115,7 @@ export function CourseDetailPage() {
           {course.description && (
             <TextWithLinks
               as="p"
-              className="text-sm text-muted-foreground leading-relaxed"
+              className="whitespace-pre-line text-sm text-muted-foreground leading-relaxed"
               text={course.description}
             />
           )}
@@ -225,7 +225,7 @@ export function CourseDetailPage() {
             <p className="text-sm text-muted-foreground">
               <TextWithLinks
                 as="p"
-                className="text-sm leading-relaxed text-muted-foreground"
+                className="whitespace-pre-line text-sm leading-relaxed text-muted-foreground"
                 text={course.description ?? t('common.noDescription')}
               />
             </p>

@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Plus, MoreHorizontal, Pencil, Trash2 } from 'lucide-react'
+import { FileArchive, Plus, MoreHorizontal, Pencil, Trash2 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -63,10 +63,16 @@ export function StudioCoursesPage() {
         title={t('nav.studio')}
         subtitle={t('common.yourCourses')}
         actions={
-          <Button onClick={() => createCourse()} disabled={creating}>
-            <Plus className="mr-2 h-4 w-4" />
-            {t('common.newCourse')}
-          </Button>
+          <>
+            <Button variant="outline" onClick={() => navigate('/studio/import')}>
+              <FileArchive className="mr-2 h-4 w-4" />
+              {t('studio.import.button')}
+            </Button>
+            <Button onClick={() => createCourse()} disabled={creating}>
+              <Plus className="mr-2 h-4 w-4" />
+              {t('common.newCourse')}
+            </Button>
+          </>
         }
       />
 
