@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Check, ChevronDown, ChevronUp, X } from 'lucide-react'
+import { Check, ChevronDown, ChevronUp, MailCheck, X } from 'lucide-react'
 import { format } from 'date-fns'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
@@ -11,6 +11,8 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Textarea } from '@/components/ui/textarea'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { authorsApi } from '@/features/authors/api'
+import { api } from '@/shared/api/axios'
+import { API } from '@/shared/api/endpoints'
 import type { AdminAuthor } from '@/features/authors/types'
 import { getDateLocale } from '@/lib/date-locale'
 import { cn } from '@/lib/utils'
@@ -69,6 +71,19 @@ export function AdminAuthorsPage() {
     },
   })
 
+  // The confirmation mail may never arrive; the admin can confirm the address here.
+  const { mutate: verifyEmail, isPending: verifyingEmail } = useMutation({
+    mutationFn: (author: AdminAuthor) => api.patch(API.users.verifyEmail(author.id)),
+    onSuccess: () => {
+      invalidate()
+      toast.success(t('admin.users.emailVerified'))
+    },
+    onError: () => {
+      invalidate()
+      toast.error(t('admin.users.verifyEmailFailed'))
+    },
+  })
+
   if (isError) return <ErrorState onRetry={() => void refetch()} />
 
   return (
@@ -98,8 +113,9 @@ export function AdminAuthorsPage() {
             <AuthorCard
               key={author.id}
               author={author}
-              busy={approving || rejectingNow}
+              busy={approving || rejectingNow || verifyingEmail}
               onApprove={() => approve(author)}
+              onVerifyEmail={() => verifyEmail(author)}
               onReject={() => {
                 setRejecting(author)
                 setNote('')
@@ -158,11 +174,13 @@ function AuthorCard({
   busy,
   onApprove,
   onReject,
+  onVerifyEmail,
 }: {
   author: AdminAuthor
   busy: boolean
   onApprove: () => void
   onReject: () => void
+  onVerifyEmail: () => void
 }) {
   const { t, i18n } = useTranslation()
   const [open, setOpen] = useState(author.status === 'PENDING')
@@ -192,6 +210,12 @@ function AuthorCard({
         </div>
 
         <div className="flex shrink-0 flex-wrap gap-2">
+          {!author.emailVerified && (
+            <Button size="sm" variant="outline" disabled={busy} onClick={onVerifyEmail}>
+              <MailCheck className="mr-1 h-4 w-4" />
+              {t('admin.users.verifyEmail')}
+            </Button>
+          )}
           {author.status !== 'APPROVED' && (
             <Button size="sm" disabled={busy || !app} onClick={onApprove}>
               <Check className="mr-1 h-4 w-4" />
