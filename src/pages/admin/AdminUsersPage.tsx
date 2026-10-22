@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { isAxiosError } from 'axios'
-import { Check, Copy, MailCheck, Search, UserPlus } from 'lucide-react'
+import { Check, Copy, MailCheck, MailWarning, Search, UserPlus } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { Input } from '@/components/ui/input'
@@ -79,6 +79,15 @@ export function AdminUsersPage() {
       toast.error(t('admin.copyFailed'))
     }
   }
+
+  // The API reports whether SMTP is set up; without it no confirmation or password mails leave the server.
+  const { data: health } = useQuery({
+    queryKey: ['health'],
+    queryFn: () =>
+      api.get<{ checks?: { mail?: 'ok' | 'not_configured' } }>(API.health).then((r) => r.data),
+    staleTime: 5 * 60 * 1000,
+  })
+  const mailNotConfigured = health?.checks?.mail === 'not_configured'
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['admin', 'users', search],
@@ -241,6 +250,13 @@ export function AdminUsersPage() {
           </div>
         }
       />
+
+      {mailNotConfigured && (
+        <div className="mb-4 flex items-start gap-2 rounded-xl border border-amber-500/40 bg-amber-500/10 p-4 text-sm text-amber-900 dark:text-amber-200">
+          <MailWarning className="mt-0.5 h-4 w-4 shrink-0" />
+          <p>{t('admin.users.mailNotConfigured')}</p>
+        </div>
+      )}
 
       <div className="flex flex-col gap-3 pb-12 md:hidden">
         {isLoading &&

@@ -356,7 +356,8 @@
       "emailUnverified": "Email не подтверждён",
       "verifyEmail": "Подтвердить email",
       "emailVerified": "Email подтверждён",
-      "verifyEmailFailed": "Не удалось подтвердить email"
+      "verifyEmailFailed": "Не удалось подтвердить email",
+      "mailNotConfigured": "На сервере не настроена почта (SMTP): письма с подтверждением email и паролями не отправляются. Подтверждайте email вручную в меню пользователя или задайте SMTP_HOST, SMTP_USER, SMTP_PASS и MAIL_FROM в .env на сервере."
     },
     "payments": {
       "title": "Заявки и оплаты",

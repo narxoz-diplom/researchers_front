@@ -356,7 +356,8 @@
       "emailUnverified": "Email расталмаған",
       "verifyEmail": "Email-ді растау",
       "emailVerified": "Email расталды",
-      "verifyEmailFailed": "Email-ді растау сәтсіз аяқталды"
+      "verifyEmailFailed": "Email-ді растау сәтсіз аяқталды",
+      "mailNotConfigured": "Серверде пошта (SMTP) бапталмаған: email растау және құпия сөз хаттары жіберілмейді. Email-ді пайдаланушы мәзірінен қолмен растаңыз немесе сервердегі .env-ке SMTP_HOST, SMTP_USER, SMTP_PASS және MAIL_FROM қосыңыз."
     },
     "payments": {
       "title": "Өтінімдер мен төлемдер",

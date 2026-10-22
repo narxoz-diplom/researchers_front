@@ -1,4 +1,5 @@
 export const API = {
+  health: '/health',
   auth: {
     register: '/auth/register',
     login: '/auth/login',
