@@ -10,7 +10,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Skeleton } from '@/components/ui/skeleton'
-import { api } from '@/shared/api/axios'
+import { api, extractApiError } from '@/shared/api/axios'
 import { API } from '@/shared/api/endpoints'
 import { sanitizeHtml } from '@/shared/lib/sanitize-html'
 import { pdfjs } from '@/features/lessons/lib/pdf'
@@ -69,7 +69,7 @@ function MaterialBody({ material }: { material: LessonMaterial }) {
   const { t } = useTranslation()
   const kind = materialKind(material)
 
-  const { data, isLoading, isError } = useQuery<LoadedMaterial>({
+  const { data, isLoading, isError, error } = useQuery<LoadedMaterial>({
     queryKey: ['material-view', material.id, kind],
     queryFn: async () => {
       if (kind === 'docx') {
@@ -112,7 +112,14 @@ function MaterialBody({ material }: { material: LessonMaterial }) {
     )
   }
   if (isError || !data) {
-    return <Notice icon={<FileWarning className="h-6 w-6" />} text={t('lesson.materialLoadFailed')} />
+    const apiErr = extractApiError(error) as { message?: string; detail?: string } | null
+    const detail = [apiErr?.message, apiErr?.detail].filter(Boolean).join(' · ')
+    return (
+      <Notice
+        icon={<FileWarning className="h-6 w-6" />}
+        text={detail ? `${t('lesson.materialLoadFailed')} (${detail})` : t('lesson.materialLoadFailed')}
+      />
+    )
   }
   if (data.pdf) return <PdfPages data={data.pdf} />
   if (data.notebook) return <NotebookCells cells={data.notebook} />

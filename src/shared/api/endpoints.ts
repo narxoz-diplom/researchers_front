@@ -71,6 +71,7 @@ export const API = {
     view: (id: string) => `/materials/${id}/view`,
     html: (id: string) => `/materials/${id}/html`,
     download: (id: string) => `/materials/${id}/download`,
+    diagnose: (id: string) => `/materials/${id}/diagnose`,
     delete: (id: string) => `/materials/${id}`,
   },
   media: {

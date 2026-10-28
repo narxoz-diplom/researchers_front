@@ -223,7 +223,9 @@
     "materialLoadFailed": "Не удалось открыть материал",
     "previewUnsupported": "Этот формат нельзя показать в браузере. Попросите автора загрузить материал в PDF.",
     "pdfPage": "Страница {{page}} из {{total}}",
-    "videoUnavailable": "Видео недоступно"
+    "videoUnavailable": "Видео недоступно",
+    "diagnose": "Диагностика доставки файла (админ)",
+    "diagnoseFailed": "Диагностика не выполнена"
   },
   "studio": {
     "createFailed": "Не удалось создать курс",

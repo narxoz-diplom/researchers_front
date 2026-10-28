@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, CheckCircle, Download, Eye, FileText, List, Lock, Sparkles } from 'lucide-react'
+import { ArrowLeft, CheckCircle, Download, Eye, FileText, List, Lock, Sparkles, Stethoscope } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { Button, buttonVariants } from '@/components/ui/button'
@@ -314,11 +314,36 @@ export function LessonPlayerPage() {
                       title={t('common.download')}
                       onClick={() => {
                         void downloadMaterialById(m.id, m.title).catch((err) => {
-                          toast.error(extractApiError(err)?.message ?? t('common.downloadFailed'))
+                          const apiErr = extractApiError(err) as { message?: string; detail?: string } | null
+                          toast.error(t('common.downloadFailed'), {
+                            description: [apiErr?.message, apiErr?.detail].filter(Boolean).join(' · ') || undefined,
+                            duration: 10000,
+                          })
                         })
                       }}
                     >
                       <Download className="h-4 w-4" />
+                    </Button>
+                  )}
+                  {user?.role === 'ADMIN' && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 shrink-0 text-muted-foreground"
+                      title={t('lesson.diagnose')}
+                      onClick={() => {
+                        void api
+                          .get<Record<string, string>>(API.materials.diagnose(m.id))
+                          .then((r) => {
+                            const lines = Object.entries(r.data).map(([k, v]) => `${k}: ${v}`)
+                            console.info('material diagnostics', r.data)
+                            toast.message(t('lesson.diagnose'), { description: lines.join('\n'), duration: 30000 })
+                          })
+                          .catch((err) => toast.error(extractApiError(err)?.message ?? t('lesson.diagnoseFailed')))
+                      }}
+                    >
+                      <Stethoscope className="h-4 w-4" />
                     </Button>
                   )}
                 </div>
